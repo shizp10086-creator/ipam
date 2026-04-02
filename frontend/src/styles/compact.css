@@ -1,0 +1,356 @@
+/* 紧凑布局全局样式 */
+
+/* 减少 Element Plus 组件的默认间距 */
+.el-card {
+  margin-bottom: 12px !important;
+}
+
+.el-card__header {
+  padding: 10px 14px !important;
+  font-size: 15px !important;
+}
+
+.el-card__body {
+  padding: 14px !important;
+}
+
+/* 减少表格行高 */
+.el-table {
+  font-size: 13px !important;
+}
+
+.el-table th.el-table__cell {
+  padding: 6px 0 !important;
+  background-color: #f5f7fa !important;
+  font-size: 13px !important;
+}
+
+.el-table td.el-table__cell {
+  padding: 6px 0 !important;
+}
+
+.el-table .cell {
+  padding: 0 6px !important;
+  line-height: 1.4 !important;
+}
+
+/* 减少表单项间距 */
+.el-form-item {
+  margin-bottom: 14px !important;
+}
+
+.el-form-item__label {
+  padding-bottom: 3px !important;
+  font-size: 13px !important;
+}
+
+/* 减少描述列表间距 */
+.el-descriptions__body .el-descriptions__table .el-descriptions__cell {
+  padding: 6px 10px !important;
+  font-size: 13px !important;
+}
+
+.el-descriptions__label {
+  font-size: 13px !important;
+}
+
+.el-descriptions__content {
+  font-size: 13px !important;
+}
+
+/* 减少统计卡片内边距 */
+.stat-item,
+.stat-card {
+  padding: 10px !important;
+}
+
+.stat-label {
+  margin-bottom: 5px !important;
+  font-size: 12px !important;
+}
+
+.stat-value {
+  font-size: 22px !important;
+}
+
+/* 减少分页组件间距 */
+.el-pagination {
+  padding: 10px 0 !important;
+  margin-top: 10px !important;
+}
+
+/* 减少按钮间距 */
+.el-button + .el-button {
+  margin-left: 6px !important;
+}
+
+.el-button {
+  padding: 7px 13px !important;
+  font-size: 13px !important;
+}
+
+.el-button--small {
+  padding: 4px 10px !important;
+  font-size: 12px !important;
+}
+
+/* 减少分隔线间距 */
+.el-divider {
+  margin: 12px 0 !important;
+}
+
+/* 减少行间距 */
+.el-row {
+  margin-bottom: 10px !important;
+}
+
+/* 减少进度条高度 */
+.el-progress {
+  margin-bottom: 10px !important;
+}
+
+.el-progress-bar__outer {
+  height: 14px !important;
+}
+
+.el-progress__text {
+  font-size: 12px !important;
+}
+
+/* 减少 Alert 组件内边距 */
+.el-alert {
+  padding: 6px 10px !important;
+  margin-bottom: 10px !important;
+  font-size: 13px !important;
+}
+
+.el-alert__title {
+  font-size: 13px !important;
+}
+
+/* 减少标签间距 */
+.el-tag {
+  margin-right: 5px !important;
+  padding: 0 8px !important;
+  height: 24px !important;
+  line-height: 22px !important;
+  font-size: 12px !important;
+}
+
+.el-tag--small {
+  height: 20px !important;
+  line-height: 18px !important;
+  padding: 0 6px !important;
+}
+
+/* 减少选择器高度 */
+.el-select {
+  line-height: 30px !important;
+}
+
+.el-input__inner {
+  height: 30px !important;
+  line-height: 30px !important;
+  font-size: 13px !important;
+}
+
+.el-input__wrapper {
+  padding: 0 10px !important;
+}
+
+/* 减少页面容器内边距 */
+.segment-detail-container,
+.scanner-container,
+.dashboard-container,
+.segment-list-container,
+.ip-list-container {
+  padding: 10px !important;
+}
+
+/* 减少卡片之间的间距 */
+.stats-card,
+.ip-list-card {
+  margin-top: 10px !important;
+}
+
+/* 减少统计行间距 */
+.stats-row {
+  margin-bottom: 10px !important;
+}
+
+/* 减少使用率部分内边距 */
+.usage-section {
+  padding: 0 10px !important;
+}
+
+.usage-label {
+  margin-bottom: 6px !important;
+  font-size: 14px !important;
+}
+
+.usage-percentage {
+  font-size: 18px !important;
+}
+
+.usage-tip {
+  margin-top: 8px !important;
+}
+
+/* 减少扫描进度部分间距 */
+.scan-progress {
+  margin-top: 10px !important;
+}
+
+.progress-info {
+  margin: 10px 0 !important;
+}
+
+.progress-text {
+  margin-top: 6px !important;
+  font-size: 12px !important;
+}
+
+.scan-result {
+  margin-top: 10px !important;
+}
+
+.unregistered-ips {
+  margin-top: 10px !important;
+}
+
+.unregistered-ips h4 {
+  margin: 0 0 6px 0 !important;
+  font-size: 14px !important;
+}
+
+.result-actions {
+  margin-top: 10px !important;
+}
+
+/* 减少标题间距 */
+h3 {
+  margin: 0 0 10px 0 !important;
+  font-size: 15px !important;
+}
+
+h4 {
+  margin: 0 0 6px 0 !important;
+  font-size: 14px !important;
+}
+
+/* 减少表格最大高度,使其更紧凑 */
+.el-table {
+  max-height: 420px !important;
+}
+
+/* 减少输入框数字选择器的高度 */
+.el-input-number {
+  line-height: 30px !important;
+}
+
+.el-input-number .el-input__inner {
+  height: 30px !important;
+  line-height: 30px !important;
+}
+
+.el-input-number__decrease,
+.el-input-number__increase {
+  width: 28px !important;
+  font-size: 12px !important;
+}
+
+/* 减少单选按钮组间距 */
+.el-radio-group {
+  line-height: 30px !important;
+}
+
+.el-radio {
+  margin-right: 14px !important;
+  font-size: 13px !important;
+}
+
+/* 减少列间距 */
+.el-col {
+  padding: 0 6px !important;
+}
+
+/* 减少分页器高度 */
+.el-pagination .el-pager li {
+  min-width: 26px !important;
+  height: 26px !important;
+  line-height: 26px !important;
+  font-size: 12px !important;
+}
+
+.el-pagination button {
+  padding: 0 6px !important;
+  height: 26px !important;
+  line-height: 26px !important;
+  font-size: 12px !important;
+}
+
+.el-pagination__sizes .el-input__inner {
+  height: 26px !important;
+  line-height: 26px !important;
+}
+
+.el-pagination__jump {
+  font-size: 12px !important;
+}
+
+/* 减少下拉选项高度 */
+.el-select-dropdown__item {
+  height: 30px !important;
+  line-height: 30px !important;
+  padding: 0 10px !important;
+  font-size: 13px !important;
+}
+
+/* 减少时间线间距 */
+.el-timeline-item {
+  padding-bottom: 12px !important;
+}
+
+.el-timeline-item__timestamp {
+  font-size: 12px !important;
+}
+
+.el-timeline-item__content {
+  font-size: 13px !important;
+}
+
+/* 减少对话框内边距 */
+.el-dialog__header {
+  padding: 12px 16px !important;
+}
+
+.el-dialog__body {
+  padding: 14px 16px !important;
+}
+
+/* 减少空状态组件的内边距 */
+.el-empty {
+  padding: 20px 0 !important;
+}
+
+.el-empty__description {
+  font-size: 13px !important;
+}
+
+/* 减少消息框的内边距 */
+.el-message-box {
+  padding: 14px !important;
+}
+
+.el-message-box__header {
+  padding-bottom: 8px !important;
+}
+
+.el-message-box__title {
+  font-size: 15px !important;
+}
+
+.el-message-box__content {
+  padding: 8px 0 !important;
+  font-size: 13px !important;
+}

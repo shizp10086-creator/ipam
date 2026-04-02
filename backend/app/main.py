@@ -1,0 +1,173 @@
+"""
+IPAM System - Main Application Entry Point
+"""
+import logging
+import os
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
+from app.core.config import settings
+from app.utils.db_init import initialize_database, check_database_connection
+from app.core.middleware import (
+    RateLimitMiddleware,
+    SecurityHeadersMiddleware,
+    SecurityLogMiddleware,
+    RequestValidationMiddleware
+)
+from app.core.exceptions import register_exception_handlers
+
+# Configure logging
+os.makedirs("logs", exist_ok=True)  # 确保日志目录存在
+logging.basicConfig(
+    level=getattr(logging, settings.LOG_LEVEL),
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler('logs/app.log') if settings.ENVIRONMENT == 'production' else logging.NullHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Application lifespan manager.
+    Handles startup and shutdown events.
+    """
+    # Startup: Initialize database
+    logger.info("Application startup: Initializing database...")
+    
+    # Check database connection
+    if not check_database_connection():
+        logger.error("Cannot connect to database. Please check your database configuration.")
+        raise Exception("Database connection failed")
+    
+    # Run migrations and create default admin
+    if not initialize_database():
+        logger.error("Database initialization failed")
+        raise Exception("Database initialization failed")
+    
+    logger.info("Application startup complete")
+    
+    yield
+    
+    # Shutdown
+    logger.info("Application shutdown")
+
+
+# Create FastAPI application
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    version=settings.VERSION,
+    description="""
+    # IP Address Management System (IPAM)
+    
+    轻量版 IP 地址管理系统，提供网段管理、IP 地址分配、设备管理等功能。
+    
+    ## 主要功能
+    
+    * **网段管理** - 创建、查询、更新、删除网段
+    * **IP 地址管理** - IP 分配、回收、保留、冲突检测
+    * **设备管理** - 设备资产管理和 IP 关联
+    * **IP 扫描** - Ping 扫描网段内的 IP 地址
+    * **告警管理** - 网段使用率告警
+    * **操作日志** - 记录所有操作历史
+    * **数据导入导出** - Excel 批量导入导出
+    * **数据可视化** - 仪表板和统计图表
+    
+    ## 认证方式
+    
+    使用 JWT (JSON Web Token) 进行身份认证。
+    
+    1. 调用 `/api/v1/login` 端点获取 access_token
+    2. 在后续请求的 Header 中添加：`Authorization: Bearer <access_token>`
+    
+    ## 用户角色
+    
+    * **Administrator** - 管理员，拥有所有权限
+    * **Regular_User** - 普通用户，可以查看和操作 IP、设备
+    * **ReadOnly_User** - 只读用户，只能查看数据
+    
+    ## 错误码
+    
+    * **200** - 成功
+    * **201** - 创建成功
+    * **400** - 请求参数错误
+    * **401** - 未认证
+    * **403** - 权限不足
+    * **404** - 资源不存在
+    * **409** - 资源冲突
+    * **422** - 数据验证失败
+    * **429** - 请求频率超限
+    * **500** - 服务器内部错误
+    """,
+    docs_url="/api/docs",
+    redoc_url="/api/redoc",
+    openapi_url="/api/openapi.json",
+    lifespan=lifespan,
+    contact={
+        "name": "IPAM System",
+        "email": "support@ipam.local"
+    },
+    license_info={
+        "name": "MIT License"
+    }
+)
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.BACKEND_CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Add security middleware
+app.add_middleware(RequestValidationMiddleware)
+app.add_middleware(SecurityLogMiddleware)
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(RateLimitMiddleware, calls=100, period=60)
+
+# Register exception handlers
+register_exception_handlers(app)
+
+
+@app.get("/health", tags=["Health"])
+async def health_check():
+    """
+    Health check endpoint for monitoring service status
+    """
+    return {
+        "status": "healthy",
+        "service": settings.PROJECT_NAME,
+        "version": settings.VERSION
+    }
+
+
+@app.get("/", tags=["Root"])
+async def root():
+    """
+    Root endpoint
+    """
+    return {
+        "message": "Welcome to IPAM System API",
+        "docs": "/api/docs",
+        "health": "/health"
+    }
+
+
+# Include API routers
+from app.api import ip_addresses, devices, network_segments, users, auth, alerts, logs, dashboard, import_export, search
+
+app.include_router(auth.router, prefix="/api/v1", tags=["Authentication"])
+app.include_router(search.router, prefix="/api/v1/search", tags=["Search"])
+app.include_router(ip_addresses.router, prefix="/api/v1/ips", tags=["IP Addresses"])
+app.include_router(devices.router, prefix="/api/v1/devices", tags=["Devices"])
+app.include_router(network_segments.router, prefix="/api/v1/segments", tags=["Network Segments"])
+app.include_router(users.router, prefix="/api/v1/users", tags=["Users"])
+app.include_router(alerts.router, prefix="/api/v1/alerts", tags=["Alerts"])
+app.include_router(logs.router, prefix="/api/v1/logs", tags=["Operation Logs"])
+app.include_router(dashboard.router, prefix="/api/v1/dashboard", tags=["Dashboard"])
+app.include_router(import_export.router, prefix="/api/v1/import-export", tags=["Import/Export"])

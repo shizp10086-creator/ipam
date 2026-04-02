@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>测试网段详情页面</title>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <h1>测试页面</h1>
+    <p>如果你能看到这个页面，说明前端服务器正在运行。</p>
+    <p>当前时间: <span id="time"></span></p>
+    <script>
+        document.getElementById('time').textContent = new Date().toLocaleString();
+        console.log('测试页面加载成功');
+    </script>
+    <hr>
+    <p>请访问: <a href="http://localhost:5173/segments/1">http://localhost:5173/segments/1</a></p>
+    <p>如果"刷新"按钮显示为"刷新列表"，说明代码已更新。</p>
+</body>
+</html>

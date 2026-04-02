@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录调试工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>IPAM 登录调试工具</h1>
+    
+    <div class="test-section">
+        <h2>测试 1: 直接 API 调用（模拟后端）</h2>
+        <button onclick="testDirectAPI()">测试直接 API</button>
+        <div id="direct-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>测试 2: 模拟前端请求（使用拦截器逻辑）</h2>
+        <button onclick="testFrontendFlow()">测试前端流程</button>
+        <div id="frontend-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>测试 3: 检查环境变量</h2>
+        <button onclick="checkEnv()">检查环境</button>
+        <div id="env-result"></div>
+    </div>
+
+    <script>
+        // 测试 1: 直接调用后端 API
+        async function testDirectAPI() {
+            const resultDiv = document.getElementById('direct-result');
+            resultDiv.innerHTML = '<p>测试中...</p>';
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/v1/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'admin123'
+                    })
+                });
+
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <p class="success">✅ API 调用成功</p>
+                    <p>状态码: ${response.status}</p>
+                    <p>响应数据:</p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                    <p>包含 access_token: ${data.access_token ? '✅ 是' : '❌ 否'}</p>
+                    <p>包含 user: ${data.user ? '✅ 是' : '❌ 否'}</p>
+                    ${data.user ? `<p>用户名: ${data.user.username}</p>` : ''}
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <p class="error">❌ 测试失败</p>
+                    <pre>${error.message}</pre>
+                `;
+            }
+        }
+
+        // 测试 2: 模拟前端请求流程
+        async function testFrontendFlow() {
+            const resultDiv = document.getElementById('frontend-result');
+            resultDiv.innerHTML = '<p>测试中...</p>';
+            
+            try {
+                // 步骤 1: 发送登录请求
+                const response = await fetch('http://localhost:8000/api/v1/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'admin123'
+                    })
+                });
+
+                // 步骤 2: 获取响应数据（模拟拦截器）
+                const fullResponse = await response.json();
+                
+                // 步骤 3: 模拟前端 auth store 的处理
+                const { access_token, user } = fullResponse;
+                
+                let result = `
+                    <p class="success">✅ 前端流程测试</p>
+                    <p>步骤 1 - API 响应: ${response.status}</p>
+                    <p>步骤 2 - 解析数据: ${fullResponse ? '✅' : '❌'}</p>
+                    <p>步骤 3 - 提取 access_token: ${access_token ? '✅' : '❌'}</p>
+                    <p>步骤 4 - 提取 user: ${user ? '✅' : '❌'}</p>
+                `;
+
+                if (access_token && user) {
+                    result += `
+                        <p class="success">✅ 所有数据提取成功！</p>
+                        <p>Token: ${access_token.substring(0, 50)}...</p>
+                        <p>用户: ${user.username} (${user.role})</p>
+                        <p><strong>前端应该能够成功登录</strong></p>
+                    `;
+                } else {
+                    result += `
+                        <p class="error">❌ 数据提取失败</p>
+                        <p>完整响应:</p>
+                        <pre>${JSON.stringify(fullResponse, null, 2)}</pre>
+                    `;
+                }
+
+                resultDiv.innerHTML = result;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <p class="error">❌ 测试失败</p>
+                    <pre>${error.message}</pre>
+                `;
+            }
+        }
+
+        // 测试 3: 检查环境
+        function checkEnv() {
+            const resultDiv = document.getElementById('env-result');
+            
+            const info = {
+                'localStorage token': localStorage.getItem('token') || '无',
+                'API Base URL (预期)': 'http://localhost:8000/api/v1',
+                '浏览器': navigator.userAgent,
+                '当前页面': window.location.href
+            };
+
+            let html = '<h3>环境信息:</h3>';
+            for (const [key, value] of Object.entries(info)) {
+                html += `<p><strong>${key}:</strong> ${value}</p>`;
+            }
+
+            html += `
+                <h3>建议操作:</h3>
+                <ol>
+                    <li>清除 localStorage: <button onclick="localStorage.clear(); alert('已清除')">清除</button></li>
+                    <li>强制刷新页面: Ctrl+Shift+R 或 Ctrl+F5</li>
+                    <li>使用无痕模式测试</li>
+                </ol>
+            `;
+
+            resultDiv.innerHTML = html;
+        }
+
+        // 页面加载时自动运行测试
+        window.onload = function() {
+            console.log('登录调试工具已加载');
+            console.log('请点击按钮运行测试');
+        };
+    </script>
+</body>
+</html>

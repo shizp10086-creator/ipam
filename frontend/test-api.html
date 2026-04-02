@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API 测试</title>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        pre { background: #f5f5f5; padding: 10px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>IPAM API 完整测试</h1>
+    <div id="result"></div>
+    
+    <script>
+        const resultDiv = document.getElementById('result');
+        
+        function log(message, type = 'info') {
+            const p = document.createElement('p');
+            p.className = type;
+            p.innerHTML = message;
+            resultDiv.appendChild(p);
+        }
+        
+        function logJson(title, data) {
+            log(`<strong>${title}:</strong>`, 'info');
+            const pre = document.createElement('pre');
+            pre.textContent = JSON.stringify(data, null, 2);
+            resultDiv.appendChild(pre);
+        }
+        
+        async function runTests() {
+            try {
+                // 测试 1: 健康检查
+                log('=== 测试 1: 健康检查 ===', 'info');
+                const healthRes = await fetch('http://localhost:8000/health');
+                const healthData = await healthRes.json();
+                log('✅ 健康检查成功', 'success');
+                logJson('健康检查响应', healthData);
+                
+                // 测试 2: 登录 API
+                log('<br>=== 测试 2: 登录 API ===', 'info');
+                const loginRes = await fetch('http://localhost:8000/api/v1/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'admin123'
+                    })
+                });
+                
+                log(`登录响应状态: ${loginRes.status} ${loginRes.statusText}`, loginRes.ok ? 'success' : 'error');
+                
+                if (!loginRes.ok) {
+                    const errorText = await loginRes.text();
+                    log('❌ 登录失败', 'error');
+                    logJson('错误响应', errorText);
+                    return;
+                }
+                
+                const loginData = await loginRes.json();
+                log('✅ 登录成功', 'success');
+                logJson('登录响应数据', loginData);
+                
+                // 验证响应结构
+                log('<br>=== 测试 3: 验证响应结构 ===', 'info');
+                if (loginData.access_token) {
+                    log('✅ access_token 存在', 'success');
+                } else {
+                    log('❌ access_token 不存在', 'error');
+                }
+                
+                if (loginData.user) {
+                    log('✅ user 对象存在', 'success');
+                    logJson('用户信息', loginData.user);
+                } else {
+                    log('❌ user 对象不存在', 'error');
+                }
+                
+                // 测试 4: 使用 token 访问受保护的端点
+                log('<br>=== 测试 4: 使用 token 访问 /auth/me ===', 'info');
+                const meRes = await fetch('http://localhost:8000/api/v1/auth/me', {
+                    headers: {
+                        'Authorization': `Bearer ${loginData.access_token}`
+                    }
+                });
+                
+                if (meRes.ok) {
+                    const meData = await meRes.json();
+                    log('✅ 获取当前用户信息成功', 'success');
+                    logJson('当前用户信息', meData);
+                } else {
+                    log('❌ 获取当前用户信息失败', 'error');
+                }
+                
+            } catch (error) {
+                log('❌ 测试过程中发生错误: ' + error.message, 'error');
+                console.error(error);
+            }
+        }
+        
+        // 运行测试
+        runTests();
+    </script>
+</body>
+</html>
