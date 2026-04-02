@@ -172,6 +172,8 @@ from app.domains.nac.api import router as nac_router
 from app.domains.asset.terminal_api import router as terminal_router
 from app.domains.ticket.api import router as ticket_router
 from app.domains.ai.api import router as ai_router
+from app.domains.value.api import router as value_router
+from app.domains.ai.ppt_api import router as ppt_router
 
 app.include_router(auth.router, prefix="/api/v1", tags=["Authentication"])
 app.include_router(tenants.router, prefix="/api/v1/tenants", tags=["Tenants"])
@@ -182,6 +184,8 @@ app.include_router(nac_router, prefix="/api/v1/nac", tags=["NAC"])
 app.include_router(terminal_router, prefix="/api/v1/assets", tags=["Terminals"])
 app.include_router(ticket_router, prefix="/api/v1/tickets", tags=["Tickets"])
 app.include_router(ai_router, prefix="/api/v1/ai", tags=["AI"])
+app.include_router(value_router, prefix="/api/v1/value", tags=["IT Value"])
+app.include_router(ppt_router, prefix="/api/v1/ppt", tags=["PPT"])
 app.include_router(search.router, prefix="/api/v1/search", tags=["Search"])
 app.include_router(ip_addresses.router, prefix="/api/v1/ips", tags=["IP Addresses"])
 app.include_router(devices.router, prefix="/api/v1/devices", tags=["Devices"])
