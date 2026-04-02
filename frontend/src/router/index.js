@@ -297,7 +297,7 @@ const routes = [
       {
         path: 'tickets',
         name: 'TicketList',
-        component: () => import('@/views/ComingSoon.vue'),
+        component: () => import('@/views/app/tickets/List.vue'),
         meta: { title: '工单协作' }
       },
       // 报表
