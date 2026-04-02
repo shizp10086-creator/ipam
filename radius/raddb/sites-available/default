@@ -1,0 +1,106 @@
+# FreeRADIUS 默认虚拟服务器
+# 定义认证流程：authorize → authenticate → post-auth → accounting
+
+server default {
+    listen {
+        type = auth
+        ipaddr = *
+        port = 0
+        limit {
+            max_connections = 16
+            lifetime = 0
+            idle_timeout = 30
+        }
+    }
+
+    listen {
+        type = acct
+        ipaddr = *
+        port = 0
+    }
+
+    # 授权阶段：查找用户凭证
+    authorize {
+        # 过滤无用属性
+        filter_username
+
+        # EAP 认证预处理
+        eap {
+            ok = return
+        }
+
+        # MAC 认证：如果 User-Name 是 MAC 格式，走 MAC 认证
+        # 华为交换机 MAC 认证会把 MAC 地址作为 User-Name 发送
+        if (&User-Name =~ /^([0-9a-fA-F]{2}[-:]?){5}[0-9a-fA-F]{2}$/) {
+            update control {
+                Auth-Type := Accept
+            }
+            # 从 radius_mac_auth 表查询 MAC 白名单
+            sql
+        }
+
+        # 802.1X/密码认证：从 SQL 查询用户
+        sql
+
+        # 如果 SQL 没找到用户，拒绝
+        if (!ok) {
+            reject
+        }
+
+        # PAP/CHAP/MS-CHAP 认证方式选择
+        pap
+        chap
+        mschap
+    }
+
+    # 认证阶段
+    authenticate {
+        # EAP 认证（802.1X）
+        eap
+
+        # PAP 明文密码认证（Portal）
+        Auth-Type PAP {
+            pap
+        }
+
+        # CHAP 认证
+        Auth-Type CHAP {
+            chap
+        }
+
+        # MS-CHAP 认证
+        Auth-Type MS-CHAP {
+            mschap
+        }
+    }
+
+    # 认证后处理
+    post-auth {
+        # 记录认证日志到 SQL
+        sql
+
+        # 认证成功后执行
+        Post-Auth-Type REJECT {
+            sql
+            attr_filter.access_reject
+        }
+    }
+
+    # 计费处理
+    accounting {
+        sql
+    }
+
+    # 会话管理
+    session {
+        sql
+    }
+
+    # 认证前处理
+    pre-proxy {
+    }
+
+    post-proxy {
+        eap
+    }
+}

@@ -169,6 +169,12 @@ from app.api import ip_addresses, devices, network_segments, users, auth, alerts
 from app.domains.dcim.api import router as dcim_router
 from app.domains.collector.api import router as collector_router
 from app.domains.nac.api import router as nac_router
+from app.domains.nac.radius_api import router as radius_router
+from app.domains.collab.api import router as collab_router
+from app.domains.collab.change_api import router as change_router
+from app.domains.asset.lifecycle_api import router as lifecycle_router
+from app.domains.auth.integration_api import router as integration_router
+from app.domains.ipam.data_governance_api import router as governance_router
 from app.domains.asset.terminal_api import router as terminal_router
 from app.domains.ticket.api import router as ticket_router
 from app.domains.ai.api import router as ai_router
@@ -181,6 +187,12 @@ app.include_router(designer.router, prefix="/api/v1/designer", tags=["Designer"]
 app.include_router(dcim_router, prefix="/api/v1/dcim", tags=["DCIM"])
 app.include_router(collector_router, prefix="/api/v1/collector", tags=["Collector"])
 app.include_router(nac_router, prefix="/api/v1/nac", tags=["NAC"])
+app.include_router(radius_router, prefix="/api/v1/nac", tags=["RADIUS"])
+app.include_router(collab_router, prefix="/api/v1/collab", tags=["Collaboration"])
+app.include_router(change_router, prefix="/api/v1/collab", tags=["Change Management"])
+app.include_router(lifecycle_router, prefix="/api/v1/assets", tags=["Asset Lifecycle"])
+app.include_router(integration_router, prefix="/api/v1/auth", tags=["Integrations"])
+app.include_router(governance_router, prefix="/api/v1/governance", tags=["Data Governance"])
 app.include_router(terminal_router, prefix="/api/v1/assets", tags=["Terminals"])
 app.include_router(ticket_router, prefix="/api/v1/tickets", tags=["Tickets"])
 app.include_router(ai_router, prefix="/api/v1/ai", tags=["AI"])

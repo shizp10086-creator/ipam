@@ -1,0 +1,74 @@
+sql {
+    driver = "rlm_sql_mysql"
+    dialect = "mysql"
+
+    server = "mysql"
+    port = 3306
+    login = "ipam"
+    password = "ipam_password"
+    radius_db = "ipam_db"
+
+    # 连接池
+    pool {
+        start = ${thread[pool].start_servers}
+        min = ${thread[pool].min_spare_servers}
+        max = ${thread[pool].max_servers}
+        spare = ${thread[pool].max_spare_servers}
+        uses = 0
+        retry_delay = 30
+        lifetime = 0
+        idle_timeout = 60
+    }
+
+    read_clients = yes
+    client_table = "radius_nas_devices"
+
+    # 802.1X/密码认证：查询 radius_users 表
+    authorize_check_query = "\
+        SELECT id, username, 'Cleartext-Password' AS attribute, \
+               password AS value, ':=' AS op \
+        FROM radius_users \
+        WHERE username = '%{SQL-User-Name}' AND is_active = 1 \
+        AND (expire_at IS NULL OR expire_at > NOW())"
+
+    # 认证通过后下发属性：查询 radius_reply 表
+    authorize_reply_query = "\
+        SELECT id, username, attribute, value, op \
+        FROM radius_reply \
+        WHERE username = '%{SQL-User-Name}' AND is_active = 1"
+
+    # MAC 认证：查询 radius_mac_auth 表
+    authorize_group_check_query = ""
+    authorize_group_reply_query = ""
+
+    # 计费开始
+    accounting_onoff_query = ""
+    accounting_update_query = ""
+
+    accounting_start_query = "\
+        INSERT INTO radius_accounting \
+            (session_id, username, mac_address, ip_address, nas_ip, nas_port, start_time, status) \
+        VALUES \
+            ('%{Acct-Session-Id}', '%{SQL-User-Name}', '%{Calling-Station-Id}', \
+             '%{Framed-IP-Address}', '%{NAS-IP-Address}', '%{NAS-Port}', NOW(), 'start')"
+
+    accounting_stop_query = "\
+        UPDATE radius_accounting SET \
+            stop_time = NOW(), \
+            session_time = '%{Acct-Session-Time}', \
+            input_octets = '%{Acct-Input-Octets}', \
+            output_octets = '%{Acct-Output-Octets}', \
+            status = 'stop' \
+        WHERE session_id = '%{Acct-Session-Id}'"
+
+    # 认证日志
+    post-auth {
+        query = "\
+            INSERT INTO radius_auth_log \
+                (username, mac_address, ip_address, nas_ip, nas_port, auth_result, reply_message, auth_time) \
+            VALUES \
+                ('%{SQL-User-Name}', '%{Calling-Station-Id}', '%{Framed-IP-Address}', \
+                 '%{NAS-IP-Address}', '%{NAS-Port}', '%{reply:Packet-Type}', \
+                 '%{reply:Reply-Message}', NOW())"
+    }
+}

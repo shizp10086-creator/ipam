@@ -1,0 +1,49 @@
+eap {
+    default_eap_type = peap
+    timer_expire = 60
+    ignore_unknown_eap_types = no
+    cisco_accounting_username_bug = no
+    max_sessions = ${max_requests}
+
+    # EAP-TLS（证书认证）
+    tls-config tls-common {
+        private_key_password = whatever
+        private_key_file = /etc/raddb/certs/server.pem
+        certificate_file = /etc/raddb/certs/server.pem
+        ca_file = /etc/raddb/certs/ca.pem
+        dh_file = ${certdir}/dh
+        ca_path = ${cadir}
+        cipher_list = "DEFAULT"
+        cipher_server_preference = no
+        tls_min_version = "1.2"
+        tls_max_version = "1.3"
+
+        cache {
+            enable = yes
+            lifetime = 24
+            max_entries = 255
+        }
+    }
+
+    # EAP-PEAP（最常用，华为交换机默认支持）
+    peap {
+        tls = tls-common
+        default_eap_type = mschapv2
+        copy_request_to_tunnel = no
+        use_tunneled_reply = no
+        virtual_server = "inner-tunnel"
+    }
+
+    # EAP-TTLS
+    ttls {
+        tls = tls-common
+        default_eap_type = mschapv2
+        copy_request_to_tunnel = no
+        use_tunneled_reply = yes
+        virtual_server = "inner-tunnel"
+    }
+
+    # MSCHAPv2（PEAP 内层认证）
+    mschapv2 {
+    }
+}

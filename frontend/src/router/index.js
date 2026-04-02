@@ -211,6 +211,18 @@ const routes = [
         component: () => import('@/views/IPAddress/Scanner.vue'),
         meta: { title: 'Ping 扫描' }
       },
+      {
+        path: 'ipam/heatmap',
+        name: 'IPHeatmap',
+        component: () => import('@/views/app/ipam/Heatmap.vue'),
+        meta: { title: 'IP 使用率热力图' }
+      },
+      {
+        path: 'ipam/recycle',
+        name: 'IPRecycleBin',
+        component: () => import('@/views/app/ipam/RecycleBin.vue'),
+        meta: { title: 'IP 回收站' }
+      },
       // 资产管理
       {
         path: 'assets/devices',
@@ -242,6 +254,18 @@ const routes = [
         component: () => import('@/views/app/inventory/List.vue'),
         meta: { title: '资产盘点' }
       },
+      {
+        path: 'assets/licenses',
+        name: 'Licenses',
+        component: () => import('@/views/app/assets/Licenses.vue'),
+        meta: { title: '软件许可' }
+      },
+      {
+        path: 'assets/contracts',
+        name: 'Contracts',
+        component: () => import('@/views/app/assets/Contracts.vue'),
+        meta: { title: '合同管理' }
+      },
       // DCIM
       {
         path: 'dcim/datacenters',
@@ -269,6 +293,24 @@ const routes = [
         meta: { title: '告警中心' }
       },
       // NAC 准入控制
+      {
+        path: 'nac/radius-users',
+        name: 'RadiusUsers',
+        component: () => import('@/views/app/nac/RadiusUsers.vue'),
+        meta: { title: 'RADIUS 用户' }
+      },
+      {
+        path: 'nac/mac-auth',
+        name: 'MacAuth',
+        component: () => import('@/views/app/nac/MacAuth.vue'),
+        meta: { title: 'MAC 白名单' }
+      },
+      {
+        path: 'nac/nas-devices',
+        name: 'NasDevices',
+        component: () => import('@/views/app/nac/NasDevices.vue'),
+        meta: { title: 'NAS 设备' }
+      },
       {
         path: 'nac/policies',
         name: 'NacPolicies',
@@ -304,7 +346,7 @@ const routes = [
       {
         path: 'reports',
         name: 'ReportCenter',
-        component: () => import('@/views/ComingSoon.vue'),
+        component: () => import('@/views/app/reports/ReportCenter.vue'),
         meta: { title: '报表中心' }
       },
       // 日志
@@ -321,6 +363,20 @@ const routes = [
         component: () => import('@/views/ImportExport/Index.vue'),
         meta: { title: '导入导出', requiresRole: ['admin'] }
       },
+      // IT 价值量化
+      {
+        path: 'value',
+        name: 'ValueDashboard',
+        component: () => import('@/views/app/value/Dashboard.vue'),
+        meta: { title: 'IT 价值量化' }
+      },
+      // AI 助手
+      {
+        path: 'ai',
+        name: 'AiAssistant',
+        component: () => import('@/views/app/ai/AiAssistant.vue'),
+        meta: { title: 'AI 助手' }
+      },
       // 用户管理
       {
         path: 'users',
@@ -332,8 +388,60 @@ const routes = [
       {
         path: 'settings',
         name: 'UserSettings',
-        component: () => import('@/views/ComingSoon.vue'),
+        component: () => import('@/views/app/settings/UserSettings.vue'),
         meta: { title: '个人设置' }
+      },
+      // 运维协作
+      {
+        path: 'collab/knowledge',
+        name: 'Knowledge',
+        component: () => import('@/views/app/collab/Knowledge.vue'),
+        meta: { title: '知识库' }
+      },
+      {
+        path: 'collab/duty',
+        name: 'DutySchedule',
+        component: () => import('@/views/app/collab/DutySchedule.vue'),
+        meta: { title: '值班排班' }
+      },
+      {
+        path: 'collab/changes',
+        name: 'ChangeWindows',
+        component: () => import('@/views/app/collab/ChangeWindows.vue'),
+        meta: { title: '变更窗口' }
+      },
+      // 数据治理
+      {
+        path: 'governance/cleaning',
+        name: 'DataCleaning',
+        component: () => import('@/views/app/governance/DataCleaning.vue'),
+        meta: { title: '数据清洗' }
+      },
+      {
+        path: 'governance/capacity',
+        name: 'CapacityPlanning',
+        component: () => import('@/views/app/governance/CapacityPlanning.vue'),
+        meta: { title: '容量规划' }
+      },
+      // 运维工具
+      {
+        path: 'tools/diag',
+        name: 'NetworkDiag',
+        component: () => import('@/views/app/tools/NetworkDiag.vue'),
+        meta: { title: '网络诊断' }
+      },
+      {
+        path: 'tools/catalog',
+        name: 'ServiceCatalog',
+        component: () => import('@/views/app/tools/ServiceCatalog.vue'),
+        meta: { title: '服务目录' }
+      },
+      // 自助门户
+      {
+        path: 'portal',
+        name: 'SelfService',
+        component: () => import('@/views/app/portal/SelfService.vue'),
+        meta: { title: '自助门户' }
       },
     ]
   },

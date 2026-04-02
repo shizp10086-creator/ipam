@@ -193,6 +193,22 @@ services:
     networks:
       - ipam-network
 
+  # FreeRADIUS 认证服务（802.1X/Portal/MAC 准入认证）
+  freeradius:
+    build:
+      context: ./radius
+      dockerfile: Dockerfile
+    container_name: ipam-freeradius
+    restart: unless-stopped
+    ports:
+      - "1812:1812/udp"
+      - "1813:1813/udp"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - ipam-network
+
 volumes:
   mysql_data:
     driver: local

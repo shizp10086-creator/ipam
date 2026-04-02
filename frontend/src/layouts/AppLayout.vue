@@ -80,6 +80,8 @@
             <el-menu-item index="/app/ipam/segments">网段管理</el-menu-item>
             <el-menu-item index="/app/ipam/ips">IP 地址</el-menu-item>
             <el-menu-item index="/app/ipam/scan">Ping 扫描</el-menu-item>
+            <el-menu-item index="/app/ipam/heatmap">使用率热力图</el-menu-item>
+            <el-menu-item index="/app/ipam/recycle">回收站</el-menu-item>
           </el-sub-menu>
 
           <el-sub-menu index="assets">
@@ -90,6 +92,8 @@
             <el-menu-item index="/app/assets/devices">设备资产</el-menu-item>
             <el-menu-item index="/app/assets/terminals">终端管理</el-menu-item>
             <el-menu-item index="/app/assets/inventory">资产盘点</el-menu-item>
+            <el-menu-item index="/app/assets/licenses">软件许可</el-menu-item>
+            <el-menu-item index="/app/assets/contracts">合同管理</el-menu-item>
           </el-sub-menu>
 
           <el-sub-menu index="dcim">
@@ -107,6 +111,9 @@
               <el-icon><Lock /></el-icon>
               <span>准入控制</span>
             </template>
+            <el-menu-item index="/app/nac/radius-users">RADIUS 用户</el-menu-item>
+            <el-menu-item index="/app/nac/mac-auth">MAC 白名单</el-menu-item>
+            <el-menu-item index="/app/nac/nas-devices">NAS 设备</el-menu-item>
             <el-menu-item index="/app/nac/policies">认证策略</el-menu-item>
             <el-menu-item index="/app/nac/sessions">在线终端</el-menu-item>
             <el-menu-item index="/app/nac/auth-logs">认证日志</el-menu-item>
@@ -137,6 +144,49 @@
           <el-menu-item index="/app/import-export">
             <el-icon><Upload /></el-icon>
             <span>导入导出</span>
+          </el-menu-item>
+
+          <el-menu-item index="/app/value">
+            <el-icon><Coin /></el-icon>
+            <span>IT 价值量化</span>
+          </el-menu-item>
+
+          <el-menu-item index="/app/ai">
+            <el-icon><ChatDotRound /></el-icon>
+            <span>AI 助手</span>
+          </el-menu-item>
+
+          <el-sub-menu index="collab">
+            <template #title>
+              <el-icon><Reading /></el-icon>
+              <span>运维协作</span>
+            </template>
+            <el-menu-item index="/app/collab/knowledge">知识库</el-menu-item>
+            <el-menu-item index="/app/collab/duty">值班排班</el-menu-item>
+            <el-menu-item index="/app/collab/changes">变更窗口</el-menu-item>
+          </el-sub-menu>
+
+          <el-sub-menu index="governance">
+            <template #title>
+              <el-icon><TrendCharts /></el-icon>
+              <span>数据治理</span>
+            </template>
+            <el-menu-item index="/app/governance/cleaning">数据清洗</el-menu-item>
+            <el-menu-item index="/app/governance/capacity">容量规划</el-menu-item>
+          </el-sub-menu>
+
+          <el-sub-menu index="tools">
+            <template #title>
+              <el-icon><Tools /></el-icon>
+              <span>运维工具</span>
+            </template>
+            <el-menu-item index="/app/tools/diag">网络诊断</el-menu-item>
+            <el-menu-item index="/app/tools/catalog">服务目录</el-menu-item>
+          </el-sub-menu>
+
+          <el-menu-item index="/app/portal">
+            <el-icon><User /></el-icon>
+            <span>自助门户</span>
           </el-menu-item>
         </el-menu>
       </div>

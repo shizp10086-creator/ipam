@@ -285,6 +285,31 @@
         style="margin-top: 20px; justify-content: flex-end"
       />
     </el-card>
+
+    <!-- 扫描历史详情 Drawer -->
+    <el-drawer v-model="showHistoryDetail" title="扫描历史详情" size="500px">
+      <template v-if="historyDetail">
+        <el-descriptions :column="2" border size="small" style="margin-bottom:16px;">
+          <el-descriptions-item label="网段">{{ historyDetail.segment_name || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="状态"><el-tag :type="historyDetail.status==='completed'?'success':'warning'" size="small">{{ historyDetail.status==='completed'?'已完成':'进行中' }}</el-tag></el-descriptions-item>
+          <el-descriptions-item label="总 IP 数">{{ historyDetail.total_ips }}</el-descriptions-item>
+          <el-descriptions-item label="在线数"><span style="color:#67c23a;font-weight:bold;">{{ historyDetail.online_ips }}</span></el-descriptions-item>
+          <el-descriptions-item label="耗时">{{ historyDetail.duration?.toFixed(2) }} 秒</el-descriptions-item>
+          <el-descriptions-item label="扫描时间">{{ formatDateTime(historyDetail.created_at) }}</el-descriptions-item>
+        </el-descriptions>
+        <h4 style="margin-bottom:8px;">扫描结果明细</h4>
+        <el-table :data="historyDetail.results||[]" stripe size="small" max-height="400">
+          <el-table-column prop="ip_address" label="IP 地址" width="140" />
+          <el-table-column label="状态" width="80">
+            <template #default="{row}"><el-tag :type="row.is_online?'success':'info'" size="small">{{ row.is_online?'在线':'离线' }}</el-tag></template>
+          </el-table-column>
+          <el-table-column prop="response_time" label="响应时间" width="100">
+            <template #default="{row}">{{ row.response_time ? row.response_time.toFixed(1)+'ms' : '-' }}</template>
+          </el-table-column>
+          <el-table-column prop="hostname" label="主机名" min-width="120" />
+        </el-table>
+      </template>
+    </el-drawer>
   </div>
 </template>
 
@@ -481,8 +506,19 @@ const handleAllocateIP = (ipAddress) => {
 }
 
 // 查看历史详情
-const handleViewHistory = (row) => {
-  ElMessage.info('查看扫描历史详情功能待实现')
+const showHistoryDetail = ref(false)
+const historyDetail = ref(null)
+const handleViewHistory = async (row) => {
+  historyDetail.value = { ...row, results: [] }
+  showHistoryDetail.value = true
+  try {
+    const r = await getScanHistory({ scan_id: row.id })
+    if (r.data?.results) {
+      historyDetail.value.results = r.data.results
+    }
+  } catch (e) {
+    // 如果没有详细结果 API，展示基本信息即可
+  }
 }
 
 // 返回

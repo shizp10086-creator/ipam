@@ -3,8 +3,8 @@
     <div class="login-box">
       <div class="login-header">
         <el-icon class="logo-icon"><Monitor /></el-icon>
-        <h2>IPAM 系统</h2>
-        <p>IP 地址管理系统</p>
+        <h2>IT 智维平台</h2>
+        <p>低代码驱动的一体化 IT 运维管理平台</p>
       </div>
 
       <el-form
@@ -105,8 +105,14 @@ async function handleLogin() {
       await authStore.fetchCurrentUser()
       
       // Redirect to the page user was trying to access or dashboard
-      const redirect = route.query.redirect || '/'
-      router.push(redirect)
+      const redirect = route.query.redirect
+      if (redirect) {
+        router.push(redirect)
+      } else {
+        // 根据角色跳转：管理员 → /admin，普通用户 → /app
+        const role = authStore.userRole
+        router.push(role === 'admin' ? '/admin/dashboard' : '/app/dashboard')
+      }
     } else {
       ElMessage.error(result.message || '登录失败')
     }
