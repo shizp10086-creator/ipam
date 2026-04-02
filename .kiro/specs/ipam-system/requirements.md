@@ -1,8 +1,8 @@
-# 需求文档：轻量版 IP 地址管理系统（IPAM）
+# 需求文档：IT 智维平台（低代码驱动的一体化 IT 运维管理平台）
 
 ## 简介
 
-本系统是一个轻量级的 IP 地址管理系统（IPAM），旨在为中小型网络环境提供完整的 IP 地址生命周期管理、设备资产管理、操作审计和可视化分析功能。系统采用前后端分离架构，支持 Docker 容器化部署，适合新手开发者学习和实际生产环境使用。
+IT 智维平台是一个面向中大型企业的**低代码驱动的一体化 IT 运维管理平台**，涵盖 IP 地址管理（IPAM）、数据中心基础设施管理（DCIM）、网络准入控制（NAC）、IT 资产全生命周期管理、终端管理、网络自动化、数据采集与监控、AI 智能分析、工单协同与 IT 服务管理（ITSM）等核心能力。系统以**低代码平台为底座**，所有业务功能均通过可视化拖拽设计器构建和配置，用户无需编写代码即可自定义表单、流程、报表、仪表盘、大屏、自动化工作流等。系统采用前后端分离架构，支持 Docker/K8s 容器化部署，内置统一设计器框架、插件化扩展引擎和 AI 智能助手，实现 IT 基础设施的统一纳管、智能运维和数字化决策。每个功能模块均内置交互式帮助向导和案例参考，确保零代码基础的 IT 管理人员也能快速上手。
 
 ## 术语表
 
@@ -21,207 +21,304 @@
 - **Usage_Threshold**: 使用率阈值，触发告警的网段使用率百分比
 - **Ping_Scanner**: Ping 扫描器，用于检测 IP 地址存活状态的工具
 - **ARP_Protocol**: 地址解析协议，用于检测 IP 与 MAC 地址映射关系
+- **Tenant**: 租户，用于多组织/多部门资源隔离的逻辑单元
+- **DHCP_Server**: 动态主机配置协议服务器，负责 IP 地址自动分配
+- **DNS_Server**: 域名系统服务器，负责 IP 与域名映射管理
+- **Network_Device**: 网络设备，特指交换机、路由器、无线 AP 等物理/虚拟化网络硬件
+- **LDAP**: 轻量级目录访问协议，用于企业统一身份认证集成
+- **CMDB**: 配置管理数据库，用于 IT 资产全生命周期管理联动
+- **Webhook**: 网络钩子，用于触发第三方系统自动化流程的回调接口
+- **HA_Cluster**: 高可用集群，保障系统核心服务不间断运行
+- **Custom_Field**: 自定义字段，支持用户按需扩展数据模型的字段
+- **Data_Cleaning**: 数据清洗，用于检测并修复 IPAM 数据中的冗余、冲突、错误信息
+- **Capacity_Planning**: 容量规划，基于历史数据预测 IP 资源未来使用趋势
+- **Data_Center**: 数据中心/机房，承载 IT 基础设施的物理场所
+- **Rack**: 机架/机柜，机房中用于安装设备的标准化框架（通常以 U 为单位）
+- **Rack_Unit**: 机架单元（U），机架空间的标准度量单位（1U = 44.45mm）
+- **PDU**: 电源分配单元，为机架内设备提供电力分配的设备
+- **VLAN**: 虚拟局域网，用于在物理网络上划分逻辑隔离的广播域
+- **VLAN_ID**: VLAN 标识符，范围 1-4094 的数字标签
+- **Network_Topology**: 网络拓扑，描述网络设备间物理或逻辑连接关系的结构图
+- **Cable**: 线缆，连接网络设备端口的物理介质（光纤、网线等）
+- **Notification_Channel**: 通知渠道，系统告警与事件推送的目标通道（邮件、企业微信、钉钉等）
+- **IP_Reservation_Template**: IP 预留模板，用于批量创建符合业务规范的预留 IP 段
+- **Configuration_Rollback**: 配置回滚，用于恢复系统或设备配置至历史版本，应对配置错误
+- **NAC**: 网络准入控制（Network Access Control），用于控制终端设备接入网络的安全机制
+- **RADIUS**: 远程认证拨号用户服务，用于网络准入认证、授权和计费的协议
+- **802.1X**: IEEE 802.1X 端口访问控制协议，用于有线/无线网络的终端认证
+- **Portal_Auth**: Portal 认证，基于 Web 页面的网络准入认证方式
+- **PPSK**: 私有预共享密钥（Private Pre-Shared Key），为不同用户分配独立无线密钥
+- **CoA**: 授权变更（Change of Authorization），RADIUS 协议动态更新终端授权的机制
+- **ZTP**: 零配置部署（Zero Touch Provisioning），设备开机自动拉取配置并注册入库
+- **ACL**: 访问控制列表（Access Control List），用于控制网络流量的安全策略
+- **DACL**: 可下载访问控制列表，通过 RADIUS 动态下发至网络设备的 ACL
+- **Work_Order**: 工单，用于 IP 申请/变更/回收等业务流程的审批载体
+- **SIEM**: 安全信息与事件管理，用于日志集中分析与安全态势感知
+- **VPC**: 虚拟私有云，公有云中逻辑隔离的网络环境
+- **Supernet**: 超网/聚合地址，多个子网汇总后的大网段，用于路由汇总规划
+- **RFID**: 射频识别，用于资产标签自动识别与盘点的技术
+- **Spare_Parts**: 备品备件，机房中闲置的硬件配件库存
+- **AI_Engine**: AI 智能分析引擎，基于大语言模型对日志、告警、知识库进行智能分析和问答的核心模块
+- **Low_Code_Designer**: 低代码设计器，通过可视化拖拽方式配置表单、流程、报表、仪表盘、大屏等系统功能的统一设计器框架
+- **Automation_Workflow**: 自动化工作流，基于事件触发的自动化流程引擎，支持数据变更触发、定时触发、Webhook 触发等多种触发方式
+- **Custom_Connector**: 自定义连接器，通过可视化配置对接外部系统 API/数据库的标准化接口适配器
 
 ## 需求
 
 ### 需求 1：网段管理
 
-**用户故事：** 作为管理员，我希望能够创建、编辑和删除网段，以便组织和管理不同的 IP 地址范围。
+**用户故事：** 作为管理员，我希望能够创建、编辑和删除网段，对网段进行分组、标签管理，支持子网嵌套，以便更精细化组织和管理不同场景的 IP 地址范围，贴合实际网络层级架构。
 
 #### 验收标准
 
-1. WHEN 管理员创建网段时，THE IPAM_System SHALL 验证网段格式（CIDR 表示法）并存储网段信息
-2. WHEN 管理员编辑网段时，THE IPAM_System SHALL 更新网段信息并保持已分配 IP 地址的关联关系
-3. WHEN 管理员删除网段时，THE IPAM_System SHALL 检查网段内是否存在已分配的 IP 地址
-4. IF 网段内存在已分配的 IP 地址，THEN THE IPAM_System SHALL 拒绝删除操作并返回错误信息
-5. THE IPAM_System SHALL 计算并显示每个网段的可用 IP 地址总数
+1. WHEN 管理员创建网段时，THE IPAM_System SHALL 验证网段格式（CIDR 表示法，支持 IPv4）并存储网段信息，同时支持设置网段描述（富文本）、所属业务组、自定义标签
+2. WHEN 管理员编辑网段时，THE IPAM_System SHALL 更新网段信息并保持已分配 IP 地址的关联关系，不影响现有 IP 的正常使用，同时记录网段变更前后的完整差异
+3. WHEN 管理员删除网段时，THE IPAM_System SHALL 检查网段内是否存在已分配的 IP 地址，支持"强制删除"（需二次确认，自动回收所有关联 IP）和"正常删除"（仅允许无已分配 IP 的网段删除）两种模式
+4. IF 网段内存在已分配的 IP 地址且选择"正常删除"，THEN THE IPAM_System SHALL 拒绝删除操作并返回错误信息，明确提示已分配 IP 的数量及详情
+5. THE IPAM_System SHALL 计算并显示每个网段的可用 IP 地址总数、已用 IP 数、保留 IP 数、使用率，支持按使用率升序/降序排序
 6. THE IPAM_System SHALL 计算并显示每个网段的已用 IP 地址数量和使用率
+7. THE IPAM_System SHALL 支持网段分组管理（如生产网段、测试网段、办公网段），分组可嵌套，支持按分组筛选、统计网段资源
+8. THE IPAM_System SHALL 支持子网嵌套管理（如 192.168.0.0/16 下嵌套 192.168.1.0/24、192.168.2.0/24），父子网使用率自动汇总子子网资源，子子网不可超出父子网范围
+9. THE IPAM_System SHALL 支持网段标签筛选（如"核心业务""临时网段"），标签可自定义添加、删除，支持多标签组合筛选
+10. WHEN 创建超网（如 10.0.0.0/8）时，THE IPAM_System SHALL 自动扫描并提示该网段已包含的现有子网列表，由管理员确认是合并还是拒绝创建
 
 ### 需求 2：IP 地址生命周期管理
 
-**用户故事：** 作为普通用户，我希望能够分配、回收和查询 IP 地址，以便管理网络资源的使用情况。
+**用户故事：** 作为普通用户，我希望能够分配、回收、查询 IP 地址，支持临时 IP 分配与自动回收，给 IP 打标签，同时可追溯 IP 的完整使用历史，以便更高效管理网络资源的使用情况。
 
 #### 验收标准
 
-1. WHEN 用户分配 IP 地址时，THE IPAM_System SHALL 验证 IP 地址属于已存在的网段
+1. WHEN 用户分配 IP 地址时，THE IPAM_System SHALL 验证 IP 地址属于已存在的网段，支持手动指定 IP 或系统自动分配（优先分配连续空闲 IP）
 2. WHEN 用户分配 IP 地址时，THE IPAM_System SHALL 执行双重冲突检测（逻辑和物理）
-3. WHEN 用户回收 IP 地址时，THE IPAM_System SHALL 将 IP 地址状态更改为"空闲"并解除设备关联
-4. THE IPAM_System SHALL 支持三种 IP 地址状态：空闲（Available）、已用（Used）、保留（Reserved）
-5. WHEN 用户查询 IP 地址时，THE IPAM_System SHALL 返回 IP 地址的当前状态、关联设备和历史操作记录
-6. WHEN 用户手动标记 IP 为保留状态时，THE IPAM_System SHALL 阻止该 IP 被自动分配
+3. WHEN 用户回收 IP 地址时，THE IPAM_System SHALL 将 IP 地址状态更改为"空闲"并解除设备关联，支持批量回收，同时记录回收原因（可选填写）
+4. THE IPAM_System SHALL 支持四种 IP 地址状态：空闲（Available）、已用（Used）、保留（Reserved）、临时（Temporary），临时 IP 需设置有效期，到期前自动提醒并可配置自动回收
+5. WHEN 用户查询 IP 地址时，THE IPAM_System SHALL 返回 IP 地址的当前状态、关联设备、分配时间、责任人、使用历史记录（所有分配/回收/变更操作）、标签信息
+6. WHEN 用户手动标记 IP 为保留状态时，THE IPAM_System SHALL 阻止该 IP 被自动分配，支持为保留 IP 设置保留原因、保留期限，到期后可自动转为空闲
+7. THE IPAM_System SHALL 支持为 IP 地址添加自定义标签（如"服务器""终端""物联网设备"），支持按标签筛选 IP，提升查询效率
+8. THE IPAM_System SHALL 记录 IP 地址的完整生命周期日志，包括分配、回收、状态变更、标签修改等所有操作，支持按 IP、时间范围、操作人筛选追溯
 
 ### 需求 3：设备资产管理
 
-**用户故事：** 作为普通用户，我希望能够录入和管理设备信息，以便追踪网络中的设备资产。
+**用户故事：** 作为普通用户，我希望能够录入和管理设备信息，记录设备全生命周期状态、配件信息，上传设备图片，同时支持多维度搜索与资产盘点，以便全面追踪网络中的设备资产。
 
 #### 验收标准
 
-1. WHEN 用户创建设备记录时，THE IPAM_System SHALL 要求提供设备名称、MAC 地址和责任人信息
-2. THE IPAM_System SHALL 验证 MAC 地址格式的有效性
-3. WHEN 用户关联设备与 IP 地址时，THE IPAM_System SHALL 验证 IP 地址处于可分配状态
-4. WHEN 用户编辑设备信息时，THE IPAM_System SHALL 保持设备与 IP 地址的关联关系
-5. WHEN 用户删除设备时，THE IPAM_System SHALL 自动回收该设备关联的所有 IP 地址
-6. THE IPAM_System SHALL 支持按设备名称、MAC 地址、责任人进行模糊搜索
+1. WHEN 用户创建设备记录时，THE IPAM_System SHALL 要求提供设备名称、MAC 地址和责任人信息，同时支持填写设备型号、厂商、采购日期、保修期限、退役日期、设备位置等扩展信息
+2. THE IPAM_System SHALL 验证 MAC 地址格式的有效性（支持大小写、带分隔符/不带分隔符两种格式），同一 MAC 地址不可重复录入（可配置是否允许例外）
+3. WHEN 用户关联设备与 IP 地址时，THE IPAM_System SHALL 验证 IP 地址处于可分配状态（空闲/临时），支持一台设备关联多个 IP 地址（如服务器多网卡）
+4. WHEN 用户编辑设备信息时，THE IPAM_System SHALL 保持设备与 IP 地址的关联关系，若修改 MAC 地址，需重新验证唯一性
+5. WHEN 用户删除设备时，THE IPAM_System SHALL 自动回收该设备关联的所有 IP 地址（可选择是否保留 IP 分配记录），同时标记设备为"已删除"（逻辑删除，支持恢复）
+6. THE IPAM_System SHALL 支持按设备名称、MAC 地址、责任人、设备型号、厂商、状态（在用/闲置/退役）进行模糊搜索，支持多条件组合筛选
+7. THE IPAM_System SHALL 支持设备配件管理，可记录设备关联的配件（如网卡、电源、硬盘）信息，包括配件型号、数量、更换记录
+8. THE IPAM_System SHALL 支持上传设备图片（正面、接口面），便于可视化识别，图片支持预览、删除、替换
+9. THE IPAM_System SHALL 支持设备资产盘点功能，可生成盘点清单，标记盘点状态（已盘/未盘/盘盈/盘亏），生成盘点报告
 
 ### 需求 4：双重 IP 冲突检测
 
-**用户故事：** 作为系统管理员，我希望系统能够自动检测 IP 地址冲突，以便避免网络配置错误。
+**用户故事：** 作为系统管理员，我希望系统能够自动检测 IP 地址冲突，记录冲突历史，触发冲突告警，以便避免网络配置错误，快速排查冲突源。
 
 #### 验收标准
 
 1. WHEN 用户尝试分配 IP 地址时，THE IPAM_System SHALL 首先执行逻辑冲突检测
 2. THE IPAM_System SHALL 在数据库中查询该 IP 地址是否已被标记为"已用"或"保留"
-3. IF 逻辑冲突检测通过，THEN THE IPAM_System SHALL 执行物理冲突检测
-4. THE IPAM_System SHALL 通过 Ping 或 ARP 协议检测 IP 地址在网络中的实际使用状态
-5. IF 物理冲突检测发现 IP 已被使用，THEN THE IPAM_System SHALL 拒绝分配并记录冲突信息
-6. THE IPAM_System SHALL 在冲突检测失败时返回详细的错误信息（逻辑冲突或物理冲突）
+3. IF 逻辑冲突检测通过，THEN THE IPAM_System SHALL 执行物理冲突检测，支持自定义检测方式（Ping/ARP），可配置检测超时时间
+4. THE IPAM_System SHALL 通过 Ping 或 ARP 协议检测 IP 地址在网络中的实际使用状态，支持批量冲突检测
+5. IF 物理冲突检测发现 IP 已被使用，THEN THE IPAM_System SHALL 拒绝分配并记录冲突信息（冲突 IP、检测时间、检测方式、冲突设备 MAC 地址（若可获取））
+6. THE IPAM_System SHALL 在冲突检测失败时返回详细的错误信息（逻辑冲突或物理冲突），明确提示冲突原因及排查建议
+7. THE IPAM_System SHALL 记录所有冲突检测历史，包括检测时间、IP 地址、检测结果、冲突详情，支持按时间、IP、冲突类型筛选查询
+8. THE IPAM_System SHALL 针对物理冲突触发告警，推送至指定通知渠道，提醒管理员及时排查
+9. THE IPAM_System SHALL 支持动态 ARP 检测（DAI）联动，与华为交换机 DAI 功能配合，防止 ARP 欺骗导致的冲突误判
 
 ### 需求 5：IP Ping 扫描
 
-**用户故事：** 作为网络管理员，我希望能够批量扫描网段内的 IP 地址存活状态，以便发现未注册的设备或验证 IP 使用情况。
+**用户故事：** 作为网络管理员，我希望能够批量扫描网段内的 IP 地址存活状态，支持定时扫描，对比扫描结果差异，标识未注册在线 IP 并触发告警，以便发现未注册的设备或验证 IP 使用情况。
 
 #### 验收标准
 
-1. WHEN 用户启动 Ping 扫描时，THE IPAM_System SHALL 允许用户选择要扫描的网段
-2. THE IPAM_System SHALL 并发执行 Ping 操作以提高扫描效率
-3. WHEN 扫描进行时，THE IPAM_System SHALL 实时更新扫描进度和结果
-4. THE IPAM_System SHALL 记录每个 IP 地址的响应状态（在线/离线）和响应时间
-5. WHEN 扫描完成时，THE IPAM_System SHALL 生成扫描报告并标识未注册的在线 IP
-6. THE IPAM_System SHALL 将扫描结果持久化存储并支持历史扫描记录查询
+1. WHEN 用户启动 Ping 扫描时，THE IPAM_System SHALL 允许用户选择要扫描的网段（支持同时选择多个网段）
+2. THE IPAM_System SHALL 并发执行 Ping 操作以提高扫描效率，可配置并发数（避免占用过多网络资源），支持设置扫描超时时间
+3. WHEN 扫描进行时，THE IPAM_System SHALL 实时更新扫描进度和结果（已扫描数量、在线数量、离线数量），支持暂停、终止扫描
+4. THE IPAM_System SHALL 记录每个 IP 地址的响应状态（在线/离线/超时）、响应时间、MAC 地址（若可获取），在线 IP 自动关联系统内已注册设备
+5. WHEN 扫描完成时，THE IPAM_System SHALL 生成扫描报告并标识未注册的在线 IP（系统内无对应设备记录），支持导出扫描报告（Excel/PDF）
+6. THE IPAM_System SHALL 将扫描结果持久化存储并支持历史扫描记录查询，支持对比两次扫描结果，显示新增在线 IP、消失在线 IP、状态变更 IP
+7. THE IPAM_System SHALL 支持定时扫描配置，可设置扫描周期（每天/每周/每月）、扫描时间，扫描完成后自动推送扫描报告至指定通知渠道
+8. THE IPAM_System SHALL 对未注册的在线 IP 触发告警，提醒管理员排查是否为非法接入设备
 
 ### 需求 6：操作日志记录
 
-**用户故事：** 作为审计人员，我希望系统能够记录所有关键操作，以便追踪变更历史和问题排查。
+**用户故事：** 作为审计人员，我希望系统能够记录所有关键操作，支持日志分级、全文搜索、导出与不可篡改，以便精准追踪变更历史、排查问题，满足审计合规要求。
 
 #### 验收标准
 
-1. WHEN 用户执行 IP 分配操作时，THE IPAM_System SHALL 记录操作人、操作时间、IP 地址和关联设备
-2. WHEN 用户执行 IP 回收操作时，THE IPAM_System SHALL 记录操作人、操作时间和 IP 地址
-3. WHEN 用户创建、编辑或删除设备时，THE IPAM_System SHALL 记录完整的操作详情
-4. WHEN 用户创建、编辑或删除网段时，THE IPAM_System SHALL 记录网段信息和操作类型
-5. THE IPAM_System SHALL 支持按操作人、操作类型、时间范围筛选日志
-6. THE IPAM_System SHALL 保证日志记录的不可篡改性
+1. WHEN 用户执行 IP 分配操作时，THE IPAM_System SHALL 记录操作人、操作时间、IP 地址、关联设备、操作类型、操作详情（分配原因、有效期等）
+2. WHEN 用户执行 IP 回收操作时，THE IPAM_System SHALL 记录操作人、操作时间、IP 地址、回收原因、操作详情
+3. WHEN 用户创建、编辑或删除设备时，THE IPAM_System SHALL 记录完整的操作详情，包括操作前后的设备信息差异
+4. WHEN 用户创建、编辑或删除网段时，THE IPAM_System SHALL 记录网段信息、操作类型、操作前后的网段差异
+5. THE IPAM_System SHALL 支持按操作人、操作类型、时间范围、操作对象（IP/设备/网段）筛选日志，支持日志全文搜索（关键词匹配操作详情）
+6. THE IPAM_System SHALL 保证日志记录的不可篡改性，日志一旦生成无法修改、删除，支持日志哈希校验（用于审计验证）
+7. THE IPAM_System SHALL 对日志进行分级管理（普通操作/敏感操作/高危操作），敏感操作（如删除网段、批量回收 IP）标记高亮，便于快速定位
+8. THE IPAM_System SHALL 支持日志导出功能，可导出筛选后的日志（Excel/PDF 格式），导出文件包含日志所有字段，支持添加导出人、导出时间水印
 
 ### 需求 7：数据可视化展示
 
-**用户故事：** 作为管理员，我希望通过图表直观地了解网络资源使用情况，以便做出合理的资源规划决策。
+**用户故事：** 作为管理员，我希望通过图表直观地了解网络资源使用情况，支持通过低代码拖拽设计器自定义可视化仪表盘、交互拓扑图，适配移动端查看，以便做出合理的资源规划决策，随时随地掌握资源状态，无需开发人员即可创建个性化数据看板。
 
 #### 验收标准
 
-1. THE IPAM_System SHALL 显示所有网段的使用率柱状图或饼图
-2. THE IPAM_System SHALL 显示 IP 地址状态分布图（空闲/已用/保留）
-3. THE IPAM_System SHALL 显示设备数量统计和增长趋势图
-4. THE IPAM_System SHALL 在仪表板上显示关键指标（总 IP 数、已用 IP 数、设备总数）
-5. WHEN 用户访问仪表板时，THE IPAM_System SHALL 实时计算并更新统计数据
-6. THE IPAM_System SHALL 支持按时间范围筛选统计数据
+1. THE IPAM_System SHALL 显示所有网段的使用率柱状图或饼图，支持按网段分组筛选，点击图表可查看对应网段的详细 IP 使用情况
+2. THE IPAM_System SHALL 显示 IP 地址状态分布图（空闲/已用/保留/临时），支持时间范围筛选
+3. THE IPAM_System SHALL 显示设备数量统计和增长趋势图，支持按设备类型、状态分类统计，展示月度/季度增长趋势
+4. THE IPAM_System SHALL 在可视化仪表盘上显示关键指标（总 IP 数、已用 IP 数、设备总数、告警数量、未注册在线 IP 数），指标支持点击跳转至详情页
+5. WHEN 用户访问可视化仪表盘时，THE IPAM_System SHALL 实时计算并更新统计数据，支持手动刷新数据
+6. THE IPAM_System SHALL 支持按时间范围筛选统计数据（今日/昨日/近7天/近30天/自定义时间）
+7. THE IPAM_System SHALL 支持自定义可视化仪表盘，用户可拖拽添加/删除图表组件，调整组件位置，保存个人仪表盘配置
+8. THE IPAM_System SHALL 提供交互式网络拓扑图，点击设备节点可查看设备详情、关联 IP、端口连接情况，支持拓扑图缩放、拖拽布局
+9. THE IPAM_System SHALL 支持移动端可视化仪表盘适配，确保在手机、平板等设备上可清晰查看关键指标和图表，操作便捷
+10. THE IPAM_System SHALL 支持仪表盘拖拽式设计器，提供图表组件面板（柱状图/折线图/饼图/仪表盘/数字卡片/表格/地图/拓扑图/热力图等），用户通过拖拽方式将组件放置到画布上，自由调整组件大小、位置和层级
+11. THE IPAM_System SHALL 仪表盘设计器支持组件数据源可视化绑定，用户通过下拉选择数据源（网段使用率/设备状态/告警统计/工单数据/自定义连接器数据源（需求 131 第 9 条）等），无需编写代码即可完成数据与图表的关联
+12. THE IPAM_System SHALL 仪表盘设计器支持组件样式可视化配置，包括配色方案、字体大小、边框样式、背景色、动画效果等，所有配置通过属性面板完成，实时预览效果
+13. THE IPAM_System SHALL 仪表盘设计器支持栅格布局和自由布局两种模式，栅格模式下组件自动对齐吸附，自由模式下组件可任意定位，支持组件锁定防止误操作
+14. THE IPAM_System SHALL 支持仪表盘模板市场，管理员可将设计好的仪表盘发布为模板供其他用户一键使用，支持模板分类（运维监控/资产管理/安全态势/领导汇报等）
+15. THE IPAM_System SHALL 仪表盘设计器支持撤销/重做操作（Ctrl+Z / Ctrl+Y），支持操作历史列表，可回退到任意历史步骤
+16. THE IPAM_System SHALL 仪表盘设计器支持设计模式与预览模式一键切换，预览模式下展示真实数据和刷新效果，设计模式下展示占位数据和编辑控件
+17. THE IPAM_System SHALL 仪表盘组件支持数据联动配置，用户可通过可视化界面配置组件间的联动关系（如点击饼图某扇区时，关联表格自动筛选对应数据），无需编写代码
+18. THE IPAM_System SHALL 仪表盘设计器支持全局筛选器组件，用户可拖拽添加全局筛选器（时间范围/部门/设备类型/网段等），一个筛选器可同时控制多个图表组件的数据范围，筛选器之间支持级联关系
+19. THE IPAM_System SHALL 仪表盘支持定时刷新策略配置，可为整个仪表盘或单个组件配置独立的刷新间隔（5 秒/10 秒/30 秒/1 分钟/5 分钟/自定义），实时数据组件和历史数据组件可使用不同刷新频率
+20. THE IPAM_System SHALL 仪表盘支持嵌入和分享，仪表盘可生成嵌入代码（iframe）供其他系统集成，支持生成只读分享链接（可设置访问密码和有效期），支持全屏投屏模式
 
 ### 需求 8：Excel 导入导出
 
-**用户故事：** 作为数据管理员，我希望能够批量导入和导出数据，以便快速迁移数据或进行离线分析。
+**用户故事：** 作为数据管理员，我希望能够批量导入和导出数据，支持部分导入、批量更新，自定义导入模板，以便快速迁移数据、批量维护数据或进行离线分析。
 
 #### 验收标准
 
-1. THE IPAM_System SHALL 提供 Excel 模板下载功能，包含必填字段说明
-2. WHEN 用户上传 Excel 文件时，THE IPAM_System SHALL 验证文件格式和数据完整性
-3. THE IPAM_System SHALL 在导入前执行数据校验（IP 格式、MAC 格式、必填字段）
-4. IF 导入数据存在错误，THEN THE IPAM_System SHALL 返回详细的错误报告并拒绝导入
-5. WHEN 用户导出数据时，THE IPAM_System SHALL 生成包含所有字段的 Excel 文件
-6. THE IPAM_System SHALL 支持导出筛选后的数据子集
+1. THE IPAM_System SHALL 提供 Excel 模板下载功能，包含必填字段说明、示例数据，支持自定义模板（选择需要导入的字段）
+2. WHEN 用户上传 Excel 文件时，THE IPAM_System SHALL 验证文件格式（.xlsx/.xls）和数据完整性，支持批量上传多个文件
+3. THE IPAM_System SHALL 在导入前执行数据校验（IP 格式、MAC 格式、必填字段、逻辑冲突），生成校验报告，明确提示错误数据及原因
+4. IF 导入数据存在错误，THEN THE IPAM_System SHALL 返回详细的错误报告并支持"部分导入"（正确数据导入，错误数据跳过），错误数据可导出修改后重新导入
+5. WHEN 用户导出数据时，THE IPAM_System SHALL 生成包含所有字段的 Excel 文件，支持自定义导出字段（选择需要导出的字段）
+6. THE IPAM_System SHALL 支持导出筛选后的数据子集，支持按 IP 状态、设备类型、网段等条件筛选后导出
+7. THE IPAM_System SHALL 支持通过 Excel 批量更新已有数据（如批量修改设备责任人、IP 标签），导入时可选择"新增""更新""新增+更新"三种模式
+8. THE IPAM_System SHALL 记录导入导出历史，包括操作人、操作时间、导入/导出数量、文件名称，支持下载历史导入/导出文件
 
 ### 需求 9：网段使用率告警
 
-**用户故事：** 作为网络管理员，我希望在网段使用率达到阈值时收到告警，以便及时扩容或调整资源分配。
+**用户故事：** 作为网络管理员，我希望在网段使用率达到阈值时收到告警，支持多级告警、告警升级与抑制，以便及时扩容或调整资源分配，避免告警泛滥。
 
 #### 验收标准
 
-1. THE IPAM_System SHALL 允许管理员为每个网段设置使用率告警阈值（百分比）
-2. WHEN 网段使用率达到或超过阈值时，THE IPAM_System SHALL 生成告警记录
-3. THE IPAM_System SHALL 在用户界面显示告警通知
-4. THE IPAM_System SHALL 记录告警历史，包括触发时间、网段信息和使用率
-5. WHEN 网段使用率降低到阈值以下时，THE IPAM_System SHALL 自动解除告警状态
+1. THE IPAM_System SHALL 允许管理员为每个网段设置使用率告警阈值（百分比），支持设置多级阈值（如 80% 警告、90% 严重），不同级别对应不同告警强度
+2. WHEN 网段使用率达到或超过阈值时，THE IPAM_System SHALL 生成告警记录，标记告警级别，关联网段详情、当前使用率、已用/可用 IP 数量
+3. THE IPAM_System SHALL 在用户界面显示告警通知（弹窗+告警中心），高亮显示严重级别告警，支持告警标记已读/未读
+4. THE IPAM_System SHALL 记录告警历史，包括触发时间、网段信息、使用率、告警级别、处理状态、处理人、处理时间，支持按告警级别、处理状态、时间范围筛选
+5. WHEN 网段使用率降低到阈值以下时，THE IPAM_System SHALL 自动解除告警状态，标记告警为"已恢复"，并推送恢复通知
 6. THE IPAM_System SHALL 支持查询和筛选历史告警记录
+7. THE IPAM_System SHALL 支持告警升级机制，若告警在指定时间内（如 1 小时）未处理，自动升级告警级别并推送至上级管理员
+8. THE IPAM_System SHALL 支持告警抑制规则，可设置同一网段的告警抑制时间（如 30 分钟内不重复推送同一类型告警），避免告警泛滥
+9. THE IPAM_System SHALL 支持告警处理备注，管理员处理告警时可填写处理内容（如"已扩容网段""已回收闲置 IP"），便于追溯
 
 ### 需求 10：用户认证与 JWT 鉴权
 
-**用户故事：** 作为系统用户，我希望通过安全的方式登录系统，以便保护我的账户和数据安全。
+**用户故事：** 作为系统用户，我希望通过安全的方式登录系统，支持 Token 精细化控制、登录异常提醒，以便保护我的账户和数据安全，避免非法访问。
 
 #### 验收标准
 
-1. WHEN 用户提交登录凭证时，THE IPAM_System SHALL 验证用户名和密码的正确性
-2. IF 凭证验证成功，THEN THE IPAM_System SHALL 生成 JWT_Token 并返回给客户端
-3. THE IPAM_System SHALL 在 JWT_Token 中包含用户 ID、角色和过期时间信息
-4. WHEN 用户访问受保护的 API 端点时，THE IPAM_System SHALL 验证 JWT_Token 的有效性
-5. IF JWT_Token 过期，THEN THE IPAM_System SHALL 拒绝请求并返回 401 未授权错误
-6. THE IPAM_System SHALL 提供 Token 刷新机制，允许用户在 Token 过期前获取新 Token
-7. WHEN 用户登出时，THE IPAM_System SHALL 使客户端的 JWT_Token 失效
+1. WHEN 用户提交登录凭证时，THE IPAM_System SHALL 验证用户名和密码的正确性，支持密码加密传输（HTTPS），验证失败时不泄露具体失败原因（仅提示"用户名或密码错误"）
+2. IF 凭证验证成功，THEN THE IPAM_System SHALL 生成 JWT_Token 并返回给客户端，Token 支持自定义有效期（管理员可配置全局默认有效期）
+3. THE IPAM_System SHALL 在 JWT_Token 中包含用户 ID、角色、权限范围、过期时间信息，支持 Token 携带租户标识（多租户场景）
+4. WHEN 用户访问受保护的 API 端点时，THE IPAM_System SHALL 验证 JWT_Token 的有效性（签名、有效期、权限范围），验证失败返回对应错误码
+5. IF JWT_Token 过期，THEN THE IPAM_System SHALL 拒绝请求并返回 401 未授权错误，支持 Token 自动刷新（需验证刷新凭证）
+6. THE IPAM_System SHALL 提供 Token 刷新机制，允许用户在 Token 过期前获取新 Token，刷新 Token 后原 Token 立即失效
+7. WHEN 用户登出时，THE IPAM_System SHALL 使客户端的 JWT_Token 失效，同时记录登出时间、登出 IP
+8. THE IPAM_System SHALL 支持 Token 精细化控制，管理员可手动吊销指定用户的 Token（如用户离职、账户异常时）
+9. THE IPAM_System SHALL 记录登录日志（登录时间、登录 IP、登录设备、登录状态），登录异常（如异地登录、多次失败）触发告警，推送至用户和管理员
 
 ### 需求 11：RBAC 基础权限控制
 
-**用户故事：** 作为系统管理员，我希望能够为不同用户分配不同的角色和权限，以便实现细粒度的访问控制。
+**用户故事：** 作为系统管理员，我希望能够为不同用户分配不同的角色和权限，支持自定义角色、细粒度权限控制与权限申请流程，以便实现细粒度的访问控制，贴合企业组织架构。
 
 #### 验收标准
 
-1. THE IPAM_System SHALL 支持三种预定义角色：Administrator、Regular_User、ReadOnly_User
-2. THE IPAM_System SHALL 允许 Administrator 执行所有操作（创建、读取、更新、删除）
+1. THE IPAM_System SHALL 支持三种预定义角色：Administrator、Regular_User、ReadOnly_User，角色权限不可修改，仅可调整用户所属角色
+2. THE IPAM_System SHALL 允许 Administrator 执行所有操作（创建、读取、更新、删除），包括角色管理、用户管理、系统配置等
 3. THE IPAM_System SHALL 允许 Regular_User 执行 IP 分配、回收、设备管理等日常操作
-4. THE IPAM_System SHALL 限制 Regular_User 不能创建或删除网段、不能管理用户
-5. THE IPAM_System SHALL 限制 ReadOnly_User 仅能查看数据，不能执行任何修改操作
-6. WHEN 用户尝试执行超出其权限的操作时，THE IPAM_System SHALL 返回 403 禁止访问错误
-7. THE IPAM_System SHALL 在操作日志中记录用户的角色信息
+4. THE IPAM_System SHALL 限制 Regular_User 不能创建或删除网段、不能管理用户，可配置 Regular_User 的操作范围（如仅能管理指定网段/租户的资源）
+5. THE IPAM_System SHALL 限制 ReadOnly_User 仅能查看数据，不能执行任何修改操作，可配置 ReadOnly_User 的查看范围（如仅能查看本部门资源）
+6. WHEN 用户尝试执行超出其权限的操作时，THE IPAM_System SHALL 返回 403 禁止访问错误，明确提示权限不足
+7. THE IPAM_System SHALL 在操作日志中记录用户的角色信息、操作权限范围，便于审计追溯
+8. THE IPAM_System SHALL 支持自定义角色创建，管理员可为自定义角色分配细粒度权限（如"仅允许分配 IP""仅允许查看设备"），支持角色继承
+9. THE IPAM_System SHALL 支持权限申请流程，普通用户可提交权限申请（如申请设备编辑权限），管理员审批通过后生效，记录申请、审批历史
 
 ### 需求 12：系统部署与配置
 
-**用户故事：** 作为运维人员，我希望系统能够通过 Docker 快速部署，以便简化安装和维护流程。
+**用户故事：** 作为运维人员，我希望系统能够通过 Docker、K8s 快速部署，支持版本平滑升级、部署监控与自动化初始化，以便简化安装和维护流程，降低运维成本。
 
 #### 验收标准
 
-1. THE IPAM_System SHALL 提供完整的 Docker Compose 配置文件
-2. THE IPAM_System SHALL 支持通过环境变量配置数据库连接、JWT 密钥等关键参数
-3. WHEN 运维人员执行 docker-compose up 命令时，THE IPAM_System SHALL 自动启动所有服务
-4. THE IPAM_System SHALL 在首次启动时自动初始化数据库表结构
-5. THE IPAM_System SHALL 在首次启动时创建默认管理员账户
-6. THE IPAM_System SHALL 提供健康检查端点，用于监控服务状态
-7. THE IPAM_System SHALL 支持在 Windows 10 和 Linux 环境中运行
+1. THE IPAM_System SHALL 提供完整的 Docker Compose 配置文件，同时支持 K8s 部署配置文件（yaml），适配不同部署场景
+2. THE IPAM_System SHALL 支持通过环境变量配置数据库连接、JWT 密钥、告警阈值、通知渠道等关键参数，支持配置文件挂载（便于修改配置无需重启容器）
+3. WHEN 运维人员执行 docker-compose up 或 kubectl apply 命令时，THE IPAM_System SHALL 自动启动所有服务（前端、后端、数据库），支持一键部署
+4. THE IPAM_System SHALL 在首次启动时自动初始化数据库表结构、默认管理员账户（可通过环境变量配置默认账户密码），初始化日志可追溯
+5. THE IPAM_System SHALL 提供健康检查端点（API 接口），用于监控服务状态（前端、后端、数据库），支持对接 Prometheus/Grafana 监控
+6. THE IPAM_System SHALL 支持在 Windows 10、Linux、Docker Desktop 等环境中运行，部署过程无依赖冲突（自动安装所需依赖）
+7. THE IPAM_System SHALL 支持版本平滑升级，升级过程不中断服务（支持滚动更新），自动备份升级前的数据，升级失败可回滚至历史版本
+8. THE IPAM_System SHALL 提供部署日志详细记录，包括部署时间、部署步骤、服务启动状态、错误信息，便于排查部署问题
 
 ### 需求 13：数据持久化与备份
 
-**用户故事：** 作为数据管理员，我希望系统数据能够可靠存储并支持备份恢复，以便防止数据丢失。
+**用户故事：** 作为数据管理员，我希望系统数据能够可靠存储并支持备份恢复，支持增量备份、加密存储与恢复测试，以便防止数据丢失，确保数据可追溯、可恢复。
 
 #### 验收标准
 
-1. THE IPAM_System SHALL 使用 MySQL 8.0 作为持久化存储引擎
-2. THE IPAM_System SHALL 使用事务确保数据操作的原子性
-3. WHEN 执行关键操作时，THE IPAM_System SHALL 在事务失败时自动回滚
-4. THE IPAM_System SHALL 支持数据库连接池以提高并发性能
-5. THE IPAM_System SHALL 在 Docker 容器中使用数据卷持久化数据库文件
-6. THE IPAM_System SHALL 提供数据库备份和恢复的操作指南
+1. THE IPAM_System SHALL 使用 MySQL 8.0 作为持久化存储引擎，支持数据库读写分离（可选配置），提升并发性能
+2. THE IPAM_System SHALL 使用事务确保数据操作的原子性，关键操作（如 IP 分配、设备删除）执行失败时自动回滚，不影响原有数据
+3. WHEN 执行关键操作时，THE IPAM_System SHALL 在事务失败时自动回滚，并记录错误日志，提示管理员排查
+4. THE IPAM_System SHALL 支持数据库连接池以提高并发性能，可配置连接池大小、超时时间
+5. THE IPAM_System SHALL 在 Docker 容器中使用数据卷持久化数据库文件，避免容器删除导致数据丢失，支持数据卷备份
+6. THE IPAM_System SHALL 提供数据库备份和恢复的操作指南，支持手动备份和定时自动备份（可配置备份周期、备份路径）
+7. THE IPAM_System SHALL 支持全量备份和增量备份（仅备份变更数据），增量备份可减少备份体积和备份时间
+8. THE IPAM_System SHALL 支持备份文件加密存储（密码加密），防止备份数据泄露，恢复时需验证密码
+9. THE IPAM_System SHALL 支持备份恢复测试，可模拟恢复过程（不影响生产数据），验证备份文件的可用性，记录测试结果
 
 ### 需求 14：API 接口设计
 
-**用户故事：** 作为前端开发者，我希望后端提供清晰、一致的 RESTful API，以便快速集成功能。
+**用户故事：** 作为前端开发者，我希望后端提供清晰、一致的 RESTful API，支持批量操作、版本控制与在线调试，以便快速集成功能，降低开发成本。
 
 #### 验收标准
 
-1. THE IPAM_System SHALL 遵循 RESTful API 设计规范
-2. THE IPAM_System SHALL 使用标准 HTTP 状态码表示操作结果（200、201、400、401、403、404、500）
-3. THE IPAM_System SHALL 返回统一格式的 JSON 响应（包含 code、message、data 字段）
-4. THE IPAM_System SHALL 提供 OpenAPI（Swagger）文档，描述所有 API 端点
-5. WHEN API 请求参数验证失败时，THE IPAM_System SHALL 返回详细的错误信息
-6. THE IPAM_System SHALL 支持跨域资源共享（CORS）以允许前端访问
+1. THE IPAM_System SHALL 遵循 RESTful API 设计规范，接口路径清晰（如 /api/v1/ip、/api/v1/device），支持 HTTP 方法语义（GET 查询、POST 创建、PUT 更新、DELETE 删除）
+2. THE IPAM_System SHALL 使用标准 HTTP 状态码表示操作结果（200、201、400、401、403、404、500），状态码含义统一、明确
+3. THE IPAM_System SHALL 返回统一格式的 JSON 响应（包含 code、message、data 字段），错误响应包含详细的错误描述和排查建议
+4. THE IPAM_System SHALL 提供 OpenAPI（Swagger）文档，描述所有 API 端点、参数说明、返回示例、错误码定义，支持在线查看和导出
+5. WHEN API 请求参数验证失败时，THE IPAM_System SHALL 返回详细的错误信息，明确提示错误参数和正确格式
+6. THE IPAM_System SHALL 支持跨域资源共享（CORS）以允许前端访问，可配置允许的跨域域名、请求方法
+7. THE IPAM_System SHALL 提供批量操作 API（如批量分配 IP、批量删除设备），减少 API 调用次数，提升集成效率
+8. THE IPAM_System SHALL 支持 API 版本控制（如 v1、v2），接口变更时不影响旧版本接口使用，平滑过渡
+9. THE IPAM_System SHALL 提供在线 API 调试工具，支持填写参数、发送请求、查看响应结果，便于开发者调试接口
 
 ### 需求 15：前端用户界面
 
-**用户故事：** 作为最终用户，我希望系统界面友好、响应迅速，以便高效完成工作任务。
+**用户故事：** 作为最终用户，我希望系统界面友好、响应迅速，支持自定义主题、快捷键操作与内嵌帮助中心，支持低代码拖拽式页面配置，以便高效完成工作任务，降低学习成本，无需开发人员介入即可自定义工作界面。
 
 #### 验收标准
 
-1. THE IPAM_System SHALL 使用 Vue 3 和 Element Plus 构建响应式用户界面
-2. THE IPAM_System SHALL 在所有主要操作上提供即时反馈（加载动画、成功/错误提示）
-3. THE IPAM_System SHALL 支持表格数据的分页、排序和筛选
-4. THE IPAM_System SHALL 在表单提交前进行客户端验证
-5. WHEN 网络请求失败时，THE IPAM_System SHALL 显示友好的错误提示
-6. THE IPAM_System SHALL 支持深色和浅色主题切换
-7. THE IPAM_System SHALL 在移动设备上提供可用的响应式布局
+1. THE IPAM_System SHALL 使用 Vue 3 和 Element Plus 构建响应式用户界面，界面布局清晰、操作便捷，支持自定义界面布局（如调整侧边栏宽度、隐藏不必要的组件）
+2. THE IPAM_System SHALL 在所有主要操作上提供即时反馈（加载动画、成功/错误提示），操作失败时提示明确的失败原因和解决方法
+3. THE IPAM_System SHALL 支持表格数据的分页、排序和筛选，支持表格列自定义（显示/隐藏列）、表格导出（Excel/PDF）
+4. THE IPAM_System SHALL 在表单提交前进行客户端验证，验证失败时实时提示错误信息，避免无效提交
+5. WHEN 网络请求失败时，THE IPAM_System SHALL 显示友好的错误提示，支持重试操作，同时记录错误日志
+6. THE IPAM_System SHALL 支持深色和浅色主题切换，支持自定义主题颜色（如企业品牌色），保存用户主题偏好
+7. THE IPAM_System SHALL 在移动设备上提供可用的响应式布局，关键操作（如 IP 分配、告警查看）在移动端可正常完成
+8. THE IPAM_System SHALL 支持快捷键操作（如 Ctrl+F 搜索、Ctrl+S 保存），提升操作效率
+9. THE IPAM_System SHALL 支持低代码拖拽式页面布局配置，管理员可通过可视化布局编辑器拖拽调整系统各页面的组件排列、显示/隐藏模块、调整模块大小和位置，保存为自定义布局方案
+10. THE IPAM_System SHALL 低代码布局编辑器提供组件库面板，包含通用组件（表格/表单/图表/卡片/标签页/按钮组/搜索栏/统计面板等），用户拖拽组件到页面画布即可完成页面搭建，无需编写前端代码
+11. THE IPAM_System SHALL 支持布局方案按角色/部门分配，不同角色看到不同的页面布局（如运维人员看到告警优先的布局，资产管理员看到资产优先的布局），支持布局方案的导入导出和分享
+12. THE IPAM_System SHALL 支持前端组件的属性可视化配置，选中任意组件后右侧属性面板可配置数据源、显示字段、筛选条件、排序规则、刷新频率等，所有配置实时预览生效
+13. THE IPAM_System SHALL 低代码布局编辑器支持撤销/重做操作（Ctrl+Z / Ctrl+Y），支持设计模式与预览模式一键切换，预览模式下展示真实数据效果
+14. THE IPAM_System SHALL 支持统一设计器框架，所有拖拽设计器（页面布局/仪表盘/表单/流程/报表/大屏/PPT）共享一致的交互规范（拖拽手势、属性面板位置、快捷键、撤销重做），降低用户学习成本。每个设计器均内置帮助向导、案例参考和"从模板开始"快速入口（需求 129）
+15. THE IPAM_System SHALL 低代码布局编辑器支持多端适配预览，设计时可一键切换 PC 端（1920px）、平板端（768px）、手机端（375px）三种视图预览，各端布局可独立调整
+16. THE IPAM_System SHALL 支持页面间导航和跳转可视化配置，管理员可通过属性面板为按钮/链接/图表配置跳转目标（系统内页面/外部 URL/弹窗页面），支持参数传递（如点击设备列表某行跳转到设备详情页并传递设备 ID）
+17. THE IPAM_System SHALL 支持全局变量和页面参数管理，管理员可定义全局变量（当前用户/当前部门/当前租户等）和页面参数，组件可通过变量绑定实现动态数据展示（如表格自动筛选当前用户所属部门的数据）
 
 ### 需求 16：性能与可扩展性
 
@@ -262,3 +359,2404 @@
 5. THE IPAM_System SHALL 在传输敏感数据时使用 HTTPS 加密
 6. THE IPAM_System SHALL 在 JWT_Token 中使用强加密算法（HS256 或 RS256）
 7. WHEN 检测到可疑活动时，THE IPAM_System SHALL 记录安全日志并可选地锁定账户
+
+
+### 需求 19：第三方网络设备集成（核心主流功能）
+
+**用户故事：** 作为网络管理员，我希望系统能直接对接华为交换机、深信服上网行为管理设备等主流网络设备，实现设备信息同步、配置备份与状态监控，无需手动录入，贴合实际运维场景。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持对接华为交换机（CE 系列）、深信服上网行为管理设备、通用路由器/AP 等主流网络设备，提供标准化设备接入协议（SSH/Telnet/SNMP）
+2. WHEN 用户添加网络设备时，THE IPAM_System SHALL 自动拉取设备的主机名、IP 地址、MAC 地址、接口列表、固件版本等核心信息
+3. THE IPAM_System SHALL 支持设备配置文件自动备份，备份记录可追溯并支持一键恢复
+4. THE IPAM_System SHALL 支持网络设备配置定期自动备份（可配置备份周期：每天/每周/自定义），默认保留最近 10 天的配置变动记录，超期自动清理（保留天数可配置）
+5. THE IPAM_System SHALL 支持配置版本对比，可选择任意两个备份版本进行差异对比（Diff 视图），高亮显示变更内容，便于排查配置变更导致的故障
+6. WHEN 设备配置发生变更时，THE IPAM_System SHALL 自动检测并记录变更内容、变更时间，触发配置变更告警推送至管理员
+7. WHEN 设备 IP 地址发生变更时，THE IPAM_System SHALL 自动同步至系统并更新关联关系，同时发送告警通知
+8. THE IPAM_System SHALL 支持通过 SNMP 协议监控设备接口状态、端口流量、在线设备数等关键指标，并在可视化仪表盘展示
+9. WHEN 设备出现端口 UP/DOWN、设备离线等异常时，THE IPAM_System SHALL 生成实时告警并推送至管理员
+10. THE IPAM_System SHALL 支持通过 SNMP/ARP 表采集交换机端口连接的终端信息，可视化展示每个端口下连接的终端设备 IP 地址、MAC 地址、设备名称（若已注册），支持按端口、IP、MAC 搜索筛选
+11. THE IPAM_System SHALL 支持端口流量分析，可视化展示每个端口的入站/出站流量趋势图（实时/历史），支持按时间范围查看流量数据
+12. THE IPAM_System SHALL 支持端口带宽使用率告警，可为端口设置带宽使用率阈值（百分比），WHEN 端口带宽使用率超过阈值时，自动生成告警并推送至管理员
+
+### 需求 20：DHCP/DNS 联动管理（企业级 IPAM 核心功能）
+
+**用户故事：** 作为网络运维人员，我希望系统能与企业 DHCP/DNS 服务器联动，实现 IP 分配、域名解析与 DHCP 租约的统一管理，避免手动配置导致的不一致问题。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持对接 ISC DHCP、微软 DHCP、深信服 DHCP 等主流 DHCP 服务器，提供可视化的 DHCP 配置管理界面
+2. WHEN 管理员分配 IP 地址时，THE IPAM_System SHALL 自动向 DHCP 服务器下发租约配置（静态 IP 绑定），并同步租约状态
+3. THE IPAM_System SHALL 支持 DNS 域名与 IP 地址的自动映射，分配 IP 时可一键创建/更新 A/AAAA 记录，同步至 DNS 服务器（Bind、PowerDNS 等）
+4. WHEN 回收 IP 地址时，THE IPAM_System SHALL 自动删除 DHCP 租约与 DNS 解析记录，保证资源一致性
+5. THE IPAM_System SHALL 展示 DHCP 租约列表、DNS 解析记录列表，支持按 IP/域名/租约状态筛选与搜索
+6. THE IPAM_System SHALL 记录 DHCP/DNS 配置变更操作日志，支持版本回滚
+
+### 需求 21：智能 IP 自动分配与预留（自动化主流功能）
+
+**用户故事：** 作为普通用户，我希望系统能根据网段使用率、设备类型自动分配 IP 地址，同时支持按业务场景预留 IP 段，提升 IP 分配效率与资源利用率。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持智能自动分配 IP 功能，用户仅需选择网段与设备类型，系统自动筛选可用 IP 并完成分配
+2. THE IPAM_System SHALL 支持按业务部门、设备用途（服务器/终端/物联网）创建 IP 预留段，预留 IP 不参与自动分配
+3. WHEN 网段使用率低于 Usage_Threshold 时，THE IPAM_System SHALL 推荐最优 IP 分配策略（如连续 IP 段分配）
+4. THE IPAM_System SHALL 支持批量 IP 分配，可一次性为多台设备分配同网段连续 IP
+5. THE IPAM_System SHALL 记录智能分配的策略与历史记录，支持管理员回溯与调整
+6. WHEN 预留段使用率达到阈值时，THE IPAM_System SHALL 自动提醒管理员扩容或调整预留策略
+7. THE IPAM_System SHALL 支持 IP 预留模板管理，管理员可创建预留模板（定义预留网段范围、用途、有效期），批量创建符合业务规范的预留 IP 段
+
+### 需求 22：多租户与组织隔离（企业级主流功能）
+
+**用户故事：** 作为企业 IT 管理员，我希望系统支持多租户/多部门隔离，不同部门仅能查看与管理本部门的 IP 资源与设备，实现数据安全与权限精细化控制。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持多租户架构，每个租户拥有独立的网段、IP 资源、设备资产与权限范围
+2. THE IPAM_System SHALL 允许管理员为租户分配专属网段，租户仅能操作自身网段内的资源
+3. THE IPAM_System SHALL 支持租户管理员角色，可管理本租户的普通用户与资源，跨租户资源访问默认禁止
+4. WHEN 超级管理员查看全局数据时，THE IPAM_System SHALL 支持按租户维度汇总统计资源使用情况
+5. THE IPAM_System SHALL 在操作日志中记录租户标识，实现跨租户操作可追溯
+6. THE IPAM_System SHALL 支持租户级别的数据备份与导出，独立于其他租户数据
+
+
+### 需求 23：高级合规审计与自定义报表（合规主流功能）
+
+**用户故事：** 作为审计人员，我希望系统能生成符合企业合规要求的自定义审计报表，支持通过低代码拖拽式报表设计器按需创建报表，按行业规范（如等保 2.0）筛选数据，满足审计与合规检查需求，无需开发人员即可设计复杂报表。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持自定义报表生成，用户可按需选择字段（IP、设备、操作人、时间）、筛选条件与时间范围，导出 Excel/PDF 格式报表
+2. THE IPAM_System SHALL 内置等保 2.0 合规报表模板，包含 IP 资源台账、设备资产清单、操作审计记录等核心合规项
+3. THE IPAM_System SHALL 支持报表定时自动生成，并通过邮件推送至指定审计人员
+4. THE IPAM_System SHALL 记录报表生成历史，支持报表版本管理与追溯
+5. THE IPAM_System SHALL 对合规报表中的敏感数据（如设备责任人、IP 分配详情）进行权限控制，仅授权人员可查看
+6. THE IPAM_System SHALL 支持报表数据的离线加密存储，防止合规数据泄露
+7. THE IPAM_System SHALL 支持报表拖拽式设计器，用户通过可视化界面拖拽报表组件（表格/交叉表/分组表/图表/文本/分隔线等）到报表画布上，自由设计报表布局和样式
+8. THE IPAM_System SHALL 报表设计器支持数据源可视化配置，用户通过下拉选择数据表（含自定义连接器数据源（需求 131 第 9 条））、拖拽字段到行/列/值区域完成数据绑定，支持字段聚合（求和/计数/平均/最大/最小）、计算字段（公式编辑器）和条件格式（数值高亮/色阶/图标集）
+9. THE IPAM_System SHALL 报表设计器支持拖拽式筛选器配置，用户可拖拽添加筛选组件（下拉框/日期选择器/范围滑块/复选框组），配置筛选字段和联动关系，实现报表交互式筛选
+10. THE IPAM_System SHALL 支持报表模板库管理，设计好的报表可保存为模板，支持模板分类（合规审计/资源统计/运维分析/成本报表等）、模板分享、模板版本管理
+11. THE IPAM_System SHALL 报表设计器支持实时预览模式，设计过程中可一键切换到预览模式查看真实数据填充效果，大数据量报表支持分页预览和虚拟滚动
+12. THE IPAM_System SHALL 报表设计器支持撤销/重做操作（Ctrl+Z / Ctrl+Y），支持报表设计的版本快照，可回退到任意历史版本
+13. THE IPAM_System SHALL 报表设计器支持参数化查询，用户打开报表时可通过参数输入面板（日期范围/部门/设备类型等）动态筛选数据，参数可设置默认值和可选值列表
+14. THE IPAM_System SHALL 支持报表订阅和定时推送，用户可订阅感兴趣的报表，配置推送频率（每日/每周/每月）和推送渠道（邮件/企业微信/钉钉），系统按时自动生成报表并推送
+15. THE IPAM_System SHALL 支持报表嵌入和分享，报表可生成嵌入代码（iframe）供其他系统集成，支持生成分享链接（可设置访问密码和有效期），无需登录系统即可查看报表
+
+### 需求 24：CMDB/监控平台集成（IT 运维主流功能）
+
+**用户故事：** 作为 IT 运维人员，我希望系统能与企业 CMDB、Zabbix/Prometheus 等监控平台联动，实现 IP 资源、设备资产与监控数据的统一关联，提升运维效率。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持与 CMDB 系统（通用 CMDB、企业自研 CMDB）对接，同步设备资产的全生命周期信息（采购、部署、退役）
+2. THE IPAM_System SHALL 支持与 Zabbix、Prometheus 监控平台集成，将 IP/设备的监控告警直接推送至 IPAM 系统，关联至对应资源
+3. WHEN 监控平台触发设备/IP 告警时，THE IPAM_System SHALL 在资源详情页展示告警信息，并支持一键跳转至监控平台查看详情
+4. THE IPAM_System SHALL 支持将 CMDB 中的设备责任人、业务归属等信息同步至 IPAM，实现资源与业务的关联
+5. THE IPAM_System SHALL 提供标准化的 API 接口，支持与第三方运维系统的双向数据同步
+6. THE IPAM_System SHALL 记录集成平台的交互日志，用于排查数据同步异常问题
+
+### 需求 25：高级 API 与 Webhook 自动化（DevOps 主流功能）
+
+**用户故事：** 作为开发/运维人员，我希望系统提供更丰富的 RESTful API 与 Webhook 回调功能，支持与自研系统、自动化工具（Jenkins、Ansible）集成，实现 IPAM 全流程自动化。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 扩展 API 接口，支持租户管理、自定义字段操作、批量导入导出、设备集成等全业务场景的 API 调用
+2. THE IPAM_System SHALL 支持 Webhook 配置，用户可自定义触发事件（IP 分配/回收、设备上线、告警生成）与回调地址，事件发生时自动发送请求
+3. THE IPAM_System SHALL 支持 API 权限精细化控制，可按角色/租户分配 API 访问权限，生成独立的 API 密钥
+4. THE IPAM_System SHALL 对 API 请求进行频率限制与签名验证，防止恶意调用与数据泄露
+5. THE IPAM_System SHALL 提供完整的 API 文档（OpenAPI 3.0），包含参数说明、返回示例、错误码定义
+6. THE IPAM_System SHALL 记录 API 调用日志，支持按调用方、接口、时间筛选与统计
+
+### 需求 26：自定义字段与表单扩展（灵活性主流功能）
+
+**用户故事：** 作为系统管理员，我希望系统支持自定义字段与表单，通过低代码拖拽式表单设计器适配不同行业/业务场景的 IP 资源管理需求（如物联网设备、云资源等特殊资产），无需开发人员即可创建和修改业务表单。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持为网段、IP 地址、设备三大核心模型添加自定义字段，字段类型包括文本、数字、下拉框、日期、附件等
+2. THE IPAM_System SHALL 支持自定义字段的必填/可选配置，并在表单提交/导入时进行校验
+3. THE IPAM_System SHALL 允许管理员创建自定义表单模板，为不同租户/业务部门配置不同的字段展示规则
+4. THE IPAM_System SHALL 支持自定义字段的搜索与筛选，提升数据查询效率
+5. THE IPAM_System SHALL 记录自定义字段的变更历史，支持字段的启用/禁用与数据迁移
+6. THE IPAM_System SHALL 导出包含自定义字段的完整数据报表，保证数据完整性
+7. THE IPAM_System SHALL 支持表单拖拽式设计器，管理员通过可视化界面从组件面板拖拽字段组件（单行文本/多行文本/数字/下拉选择/单选/多选/日期/时间/附件上传/图片/签名/地理位置/关联数据/子表格等）到表单画布上，自由设计表单布局
+8. THE IPAM_System SHALL 表单设计器支持字段属性可视化配置，选中字段后右侧属性面板可配置：字段标签、占位提示、默认值、必填校验、格式校验（正则表达式可视化配置）、字段联动规则（如选择"服务器"类型时自动显示"机架位置"字段）、数据字典绑定
+9. THE IPAM_System SHALL 表单设计器支持布局组件拖拽，包括分组容器、标签页、分栏布局（1/2/3/4 列）、分割线、说明文字，实现复杂表单的结构化排版
+10. THE IPAM_System SHALL 表单设计器支持表单逻辑可视化编排，通过条件配置面板设置字段显隐规则、必填规则、计算规则、数据联动规则，无需编写代码
+11. THE IPAM_System SHALL 支持表单模板库管理，设计好的表单可保存为模板，支持模板分类（设备登记/IP 申请/资产入库/巡检记录等）、模板克隆、模板版本管理和跨租户分享
+12. THE IPAM_System SHALL 表单设计器支持实时预览模式，可一键切换到预览模式查看表单最终效果，支持 PC 端和移动端双视图预览，确保表单在不同终端上的显示效果
+13. THE IPAM_System SHALL 表单设计器支持撤销/重做操作（Ctrl+Z / Ctrl+Y），支持表单设计的自动保存（每 30 秒），防止设计过程中意外丢失
+14. THE IPAM_System SHALL 表单设计器支持数据校验规则引擎，除基础校验（必填/格式/长度）外，支持跨字段校验（如"结束日期必须大于开始日期"）、异步校验（如"IP 地址是否已被占用"实时查询后端）、自定义校验表达式（可视化表达式编辑器）
+15. THE IPAM_System SHALL 表单设计器支持事件钩子配置，管理员可为表单配置事件触发逻辑：表单加载时（自动填充默认值/拉取外部数据）、字段变更时（联动计算/触发校验/调用外部 API）、提交前（数据校验/确认弹窗）、提交后（触发自动化工作流（需求 131 第 10 条）/发送通知/跳转页面），所有逻辑通过可视化规则配置，无需编写代码
+16. THE IPAM_System SHALL 表单设计器支持外部数据源绑定，下拉框/关联数据等组件可绑定外部数据源（系统内 API 接口/自定义连接器（需求 131 第 9 条）/自定义 SQL 查询/外部 REST API），数据源可配置缓存策略和刷新频率
+17. THE IPAM_System SHALL 表单提交的数据支持聚合统计视图，管理员可为表单数据配置统计看板（提交量趋势/字段分布统计/数据透视表），无需单独创建报表
+
+
+### 需求 27：数据清洗与去重（数据治理主流功能）
+
+**用户故事：** 作为数据管理员，我希望系统能自动检测并修复 IPAM 数据中的冗余、冲突、错误信息，保证数据的准确性与一致性，解决手动维护导致的数据混乱问题。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持数据清洗任务，自动检测以下问题：重复 IP 分配、MAC 地址格式错误、网段与 IP 不匹配、设备信息缺失
+2. THE IPAM_System SHALL 提供数据清洗报告，清晰展示问题类型、数量、影响范围，并提供一键修复/手动修复选项
+3. THE IPAM_System SHALL 支持定时自动清洗，可配置清洗周期与触发条件（如每周凌晨自动执行）
+4. THE IPAM_System SHALL 记录数据清洗操作日志，包括清洗时间、处理结果、操作人，支持审计追溯
+5. THE IPAM_System SHALL 支持数据快照备份，清洗前自动备份数据，防止误操作导致的数据丢失
+6. THE IPAM_System SHALL 支持手动触发数据校验，实时检查数据完整性并返回结果
+
+### 需求 28：容量规划与趋势预测（资源管理主流功能）
+
+**用户故事：** 作为网络规划师，我希望系统能基于历史 IP 使用数据，预测未来资源需求与使用趋势，提前规划网段扩容，避免 IP 资源不足问题。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 基于历史数据生成 IP 资源使用率趋势图，支持按日/周/月/年维度查看趋势
+2. THE IPAM_System SHALL 提供容量预测功能，根据当前使用率与业务增长速率，预测未来 6/12/24 个月的 IP 资源耗尽时间
+3. THE IPAM_System SHALL 当预测的耗尽时间小于扩容预警阈值时，自动生成扩容建议与告警
+4. THE IPAM_System SHALL 支持模拟扩容操作，展示扩容后使用率变化趋势，辅助管理员决策
+5. THE IPAM_System SHALL 记录容量规划历史，包括预测模型、参数配置、结果，支持复盘与优化
+6. THE IPAM_System SHALL 结合业务部门的 IP 需求，生成分租户容量规划报告，精准匹配各部门资源需求
+
+### 需求 29：高可用与集群部署（运维稳定性主流功能）
+
+**用户故事：** 作为运维人员，我希望系统支持高可用集群部署，避免单节点故障导致服务中断，满足生产环境的稳定性要求。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持 Docker Compose 集群部署，通过负载均衡（Nginx）实现前端服务高可用，通过 MySQL 主从复制实现数据库高可用
+2. THE IPAM_System SHALL 支持主备节点自动切换，当主节点故障时，备节点自动接管服务，切换过程无感知
+3. THE IPAM_System SHALL 提供健康检查与自动修复机制，定期检测服务状态，异常时自动重启容器
+4. THE IPAM_System SHALL 支持集群环境的统一配置管理，环境变量同步至所有节点，避免配置不一致
+5. THE IPAM_System SHALL 记录集群节点的运行日志，包括节点状态、切换时间、异常信息，用于故障排查
+6. THE IPAM_System SHALL 提供集群部署的详细运维手册，包含节点扩容、缩容、故障转移操作步骤
+
+### 需求 30：LDAP 统一身份认证（企业身份管理主流功能）
+
+**用户故事：** 作为企业 IT 管理员，我希望系统能集成企业 LDAP/AD 统一身份认证，实现单点登录，避免多系统账号管理的繁琐与安全风险。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持与 LDAP（OpenLDAP）、微软 AD 等企业身份认证系统集成，实现单点登录（SSO）
+2. WHEN 用户通过 LDAP/AD 登录时，THE IPAM_System SHALL 自动同步用户信息（用户名、部门、角色）并创建系统账号
+3. THE IPAM_System SHALL 支持 LDAP 用户组与系统角色的映射配置，实现权限自动分配
+4. THE IPAM_System SHALL 支持 LDAP 与本地账号的混合认证模式，当 LDAP 服务不可用时自动降级为本地认证
+5. THE IPAM_System SHALL 支持定时同步 LDAP 用户目录，自动禁用已从 LDAP 中移除的用户账号
+6. THE IPAM_System SHALL 记录 LDAP 认证与同步操作日志，用于排查认证异常与审计追溯
+
+
+### 需求 31：机房管理（DCIM 基础功能）
+
+**用户故事：** 作为数据中心管理员，我希望能够管理机房信息，包括机房位置、面积、电力容量等，以便对物理基础设施进行统一管控。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持创建、编辑、删除机房记录，包含机房名称、地理位置、楼层、面积、额定电力容量等基本信息
+2. THE IPAM_System SHALL 支持机房的层级结构管理（站点 > 建筑 > 楼层 > 机房），实现物理位置的树形导航
+3. THE IPAM_System SHALL 在机房详情页汇总展示该机房下的机架总数、已用机架数、设备总数、总功耗等关键指标
+4. THE IPAM_System SHALL 支持为机房上传平面图，并在平面图上标注机架位置
+5. THE IPAM_System SHALL 支持按机房名称、位置、使用率进行搜索与筛选
+6. WHEN 机房内所有机架使用率超过告警阈值时，THE IPAM_System SHALL 生成机房容量告警
+
+### 需求 32：机架与机位管理（DCIM 核心功能）
+
+**用户故事：** 作为数据中心运维人员，我希望能够管理机架及其内部的设备安装位置（U 位），以便精确掌握每个机架的空间使用情况和设备分布。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持创建、编辑、删除机架记录，包含机架名称、所属机房、机架高度（U 数，如 42U）、额定功率、承重上限等信息
+2. THE IPAM_System SHALL 提供机架正视图/背视图的可视化展示，以 U 位为单位显示设备安装位置与空闲空间
+3. WHEN 用户将设备安装到机架时，THE IPAM_System SHALL 验证目标 U 位是否有足够的连续空闲空间（根据设备占用 U 数）
+4. IF 目标 U 位已被占用或空间不足，THEN THE IPAM_System SHALL 拒绝安装操作并提示冲突详情
+5. THE IPAM_System SHALL 计算并显示每个机架的空间使用率（已用 U 位 / 总 U 位）和功率使用率（实际功耗 / 额定功率）
+6. THE IPAM_System SHALL 支持设备在机架间的迁移操作，自动更新源机架和目标机架的空间与功率统计
+7. THE IPAM_System SHALL 支持按机架名称、所属机房、使用率范围进行搜索与筛选
+
+### 需求 33：机架设备上下架管理
+
+**用户故事：** 作为运维人员，我希望能够记录设备的上架和下架操作，追踪设备在机架中的完整生命周期，以便进行资产盘点和变更管理。
+
+#### 验收标准
+
+1. WHEN 用户执行设备上架操作时，THE IPAM_System SHALL 要求指定目标机架、起始 U 位、设备占用 U 数，并关联已有设备记录
+2. WHEN 用户执行设备下架操作时，THE IPAM_System SHALL 释放对应 U 位空间，并更新设备状态为"已下架"
+3. THE IPAM_System SHALL 记录每次上架/下架操作的完整信息（操作人、操作时间、机架、U 位、设备信息），纳入操作日志
+4. THE IPAM_System SHALL 支持设备的 PDU 电源端口关联，记录设备连接的电源端口信息
+5. THE IPAM_System SHALL 在设备详情页展示该设备的机架位置历史（曾安装在哪些机架的哪些 U 位）
+6. THE IPAM_System SHALL 支持批量上架操作，一次性为多台设备分配同一机架的连续 U 位
+
+### 需求 34：VLAN 管理
+
+**用户故事：** 作为网络管理员，我希望能够管理 VLAN 信息并将其与网段、设备端口关联，以便统一管控网络的逻辑隔离策略。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持创建、编辑、删除 VLAN 记录，包含 VLAN ID（1-4094）、VLAN 名称、描述、所属租户等信息
+2. THE IPAM_System SHALL 验证 VLAN ID 的唯一性（同一租户/站点内不允许重复）
+3. THE IPAM_System SHALL 支持 VLAN 与网段的关联，一个 VLAN 可关联多个网段，便于查看 VLAN 下的 IP 资源使用情况
+4. THE IPAM_System SHALL 支持 VLAN 与设备端口的关联，记录每个端口的 Access/Trunk 模式及所属 VLAN
+5. THE IPAM_System SHALL 支持 VLAN 组管理，将多个 VLAN 归类到逻辑分组中（如按业务线、按楼层）
+6. THE IPAM_System SHALL 支持按 VLAN ID、名称、关联网段进行搜索与筛选
+
+### 需求 35：网络拓扑与线缆管理
+
+**用户故事：** 作为网络工程师，我希望系统能自动发现网络层级拓扑，以树形/星形结构展示核心层→汇聚层→接入层的设备连接关系，故障设备和链路醒目标注，快速定位故障点和影响范围。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持记录设备端口间的物理连接关系（A 端设备端口 ↔ B 端设备端口），包含线缆类型（光纤/网线/DAC）、线缆编号、长度等信息
+2. WHEN 用户创建连接时，THE IPAM_System SHALL 验证两端端口是否已被其他连接占用，防止重复连接
+3. THE IPAM_System SHALL 支持基于 LLDP/CDP 协议自动发现设备间的连接关系，自动生成网络拓扑图，无需手动绘制
+4. THE IPAM_System SHALL 支持基于 NetFlow 流量分析的逻辑拓扑推导，对于无法开启 LLDP 的设备（如防火墙、负载均衡），通过流量路径自动推导逻辑连接关系
+4. THE IPAM_System SHALL 以层级结构展示网络拓扑（核心层 → 汇聚层 → 接入层 → 终端），支持树形布局、星形布局、自由布局切换
+5. THE IPAM_System SHALL 在拓扑图上以不同颜色/图标区分设备类型（核心交换机、汇聚交换机、接入交换机、路由器、防火墙、服务器、AP、终端等）
+6. THE IPAM_System SHALL 在拓扑图上实时标注设备和链路状态：正常（绿色）、告警（橙色闪烁）、故障/离线（红色闪烁并放大图标），故障设备/链路必须醒目突出，一眼可见
+7. WHEN 设备或链路发生故障时，THE IPAM_System SHALL 在拓扑图上自动高亮故障点，并以红色虚线标注受影响的下游设备范围（故障影响域分析）
+8. THE IPAM_System SHALL 支持点击拓扑图中的设备节点，弹出设备详情浮层（设备名称、IP、型号、CPU/内存使用率、端口状态、告警列表），浮层内提供快捷跳转链接，可一键跳转至该设备所在的机房平面图、机架可视化视图（自动定位到对应 U 位）、设备详情页
+9. THE IPAM_System SHALL 支持点击拓扑图中的连线，展示链路详情（两端设备端口、线缆类型、带宽利用率、流量趋势）
+10. THE IPAM_System SHALL 支持拓扑图缩放、拖拽布局、全屏展示，支持按站点/楼层/VLAN 筛选展示局部拓扑
+11. THE IPAM_System SHALL 支持拓扑图历史快照，可查看任意历史时间点的拓扑状态，对比拓扑变更
+12. THE IPAM_System SHALL 支持线缆的追踪查询，输入任一端口可查看完整的连接链路（端到端路径），路径在拓扑图上高亮显示
+13. THE IPAM_System SHALL 记录连接变更历史，支持审计追溯
+14. THE IPAM_System SHALL 支持拓扑图导出为图片（PNG/SVG）或 PDF，便于汇报和存档
+
+
+### 需求 36：统一消息通知中心
+
+**用户故事：** 作为系统管理员，我希望系统的各类告警和事件通知能够通过多种渠道（邮件、企业微信、钉钉）统一推送，以便相关人员及时响应。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持配置多种通知渠道：邮件（SMTP）、企业微信机器人、钉钉机器人，每种渠道可独立启用/禁用
+2. THE IPAM_System SHALL 支持通知规则配置，管理员可为不同事件类型（网段告警、设备异常、扫描完成、机架容量告警等）指定通知渠道和接收人
+3. WHEN 系统触发告警或关键事件时，THE IPAM_System SHALL 按照通知规则自动发送通知，通知内容包含事件类型、详情、时间和处理建议
+4. THE IPAM_System SHALL 记录所有通知的发送历史，包括发送时间、渠道、接收人、发送状态（成功/失败）
+5. THE IPAM_System SHALL 支持通知模板自定义，管理员可编辑不同事件类型的通知内容模板
+6. THE IPAM_System SHALL 提供通知渠道的连通性测试功能，配置完成后可发送测试消息验证
+
+
+### 需求 37：网络准入认证管理（NAC 核心功能）
+
+**用户故事：** 作为安全管理员，我希望对所有接入网络的终端进行身份认证，支持 802.1X/Portal/MAC/PPSK 多种认证方式，对接华为交换机和无线 AC，确保只有合法用户和设备才能接入网络。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 内置 RADIUS 服务，支持华为设备作为 RADIUS 客户端接入，可配置 NAS-ID、共享密钥、认证端口（1812）/计费端口（1813）
+2. THE IPAM_System SHALL 支持四种核心认证方式：802.1X 有线认证（EAP-TLS/EAP-PEAP/EAP-MSCHAPv2）、Web-Portal 无线认证、MAC 哑终端免密认证、无线 PPSK 私钥认证
+3. THE IPAM_System SHALL 支持按设备类型（PC/手机/IoT）、接入方式（有线/无线）、部门、时间窗口设置差异化认证策略
+4. WHEN 终端认证通过时，THE IPAM_System SHALL 通过 RADIUS 报文向华为设备动态下发绑定 VLAN、ACL 策略、带宽限速规则
+5. WHEN 连续认证失败或暴力猜密时，THE IPAM_System SHALL 自动冻结账号/拉黑 MAC，并推送告警至通知中心
+6. THE IPAM_System SHALL 支持华为认证模板批量下发，一键同步端口 802.1X 配置、SSID 绑定认证策略
+
+### 需求 38：终端安全合规检查与隔离修复
+
+**用户故事：** 作为安全管理员，我希望对接入终端进行安全体检，检查防病毒、补丁、防火墙等状态，非合规终端自动隔离至修复区，确保网络安全。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持自定义合规检查项：杀毒软件安装状态与病毒库更新、操作系统补丁级别、防火墙启用状态、终端管理软件安装状态
+2. THE IPAM_System SHALL 将终端分级：合规直放业务 VLAN、轻度不合规放行至受限 VLAN（仅允许访问修复资源）、严重不合规强制隔离至修复 VLAN
+3. THE IPAM_System SHALL 联动华为设备实现动态管控：交换机端口实时切 VLAN、无线 AP 踢下线并重定向修复页面
+4. THE IPAM_System SHALL 提供自适应 Portal 修复页面，隔离终端自动弹窗引导打补丁、更新病毒库、开启防护
+5. WHEN 终端修复完成复检合规时，THE IPAM_System SHALL 自动发起 RADIUS CoA 授权变更，无感知切回业务网络
+6. THE IPAM_System SHALL 支持定时对在线终端轮询复检（间隔可配置），合规状态异动立刻触发隔离并告警留痕
+
+### 需求 39：华为有线/无线设备深度纳管联动
+
+**用户故事：** 作为网络运维人员，我希望 IPAM 能全自动对接华为交换机、华为 AC/AP，自动同步端口、用户、在线终端，准入配置一键下发，无需登设备敲命令。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持 SSH/SNMP 自动发现华为 CE/S57/S67 交换机、华为 AirEngine AC 控制器，自动抓取型号、固件、端口清单、VLAN 配置
+2. THE IPAM_System SHALL 支持一键将华为设备注册为 RADIUS 客户端，自动填充认证/计费地址、密钥，无需手工 CLI 配置
+3. THE IPAM_System SHALL 实时采集华为侧在线日志：终端上下线、端口 UP/DOWN、认证成功/失败记录，全量同步进 IPAM 审计库
+4. WHEN IP/MAC 变更、终端挪端口时，THE IPAM_System SHALL 自动刷新准入授权，同步更新华为侧绑定策略
+5. THE IPAM_System SHALL 支持华为准入相关配置自动备份、版本快照、差异对比，配置出错可一键回滚
+6. THE IPAM_System SHALL 在拓扑图中标注华为设备准入状态、在线认证终端数量、异常隔离端口
+
+### 需求 40：访客网络准入管理
+
+**用户故事：** 作为行政人员，我希望为访客提供临时网络接入权限，支持扫码授权、有效期管控，无需 IT 人员手动配置，同时确保访客网络与内部网络隔离。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持访客账号自助申请，用户可通过企业微信/钉钉扫码创建临时账号，设置访问时长（1 小时/1 天/自定义）
+2. THE IPAM_System SHALL 对接华为 AC Portal 认证，访客连接指定 SSID 后自动跳转至认证页面，输入临时账号密码或扫码认证
+3. THE IPAM_System SHALL 为访客终端分配独立访客 VLAN，通过华为交换机 ACL 限制访问范围，仅允许访问互联网和指定公共资源
+4. WHEN 访客账号过期时，THE IPAM_System SHALL 自动通知华为设备断开连接，回收 IP 地址，确保网络安全
+5. THE IPAM_System SHALL 支持访客接入日志记录，包括访客姓名、单位、访问时间、接入设备、IP 地址，支持审计追溯
+6. THE IPAM_System SHALL 支持访客权限分级，为不同类型访客（客户/合作伙伴/临时员工）分配不同网络访问权限
+
+### 需求 41：哑终端白名单准入管理
+
+**用户故事：** 作为运维人员，我希望对打印机、摄像头、IP 电话等哑终端进行准入控制，支持 MAC 白名单认证，无需手动输入账号密码，确保网络接入安全。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持哑终端 MAC 地址白名单管理，管理员可批量导入 MAC 地址并关联设备类型、安装位置、所属 VLAN
+2. WHEN 哑终端接入华为交换机/AP 时，THE IPAM_System SHALL 自动匹配 MAC 白名单，通过华为设备 MAC 认证模块完成身份验证
+3. THE IPAM_System SHALL 支持哑终端静态 IP 绑定，自动为认证通过的哑终端分配固定 IP 地址，同步至 DHCP 服务器
+4. THE IPAM_System SHALL 为哑终端下发华为侧窄口径 ACL，仅开放业务必需端口，缩小攻击面
+5. WHEN 检测到 MAC 篡改、设备替换、私改 IP 时，THE IPAM_System SHALL 立刻拉黑端口、产生高危告警
+6. THE IPAM_System SHALL 支持哑终端全生命周期入网留痕，支持按点位/设备类型统计在线台账
+
+### 需求 42：异常行为实时封堵与持续风控
+
+**用户故事：** 作为安全管理员，我希望系统能识别私改 IP、私接路由、MAC 欺骗、端口扫描等违规行为，联动华为设备立刻断网封堵。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 实时识别高危行为：私改 IP、MAC 仿冒、私接小路由/交换机、异常端口扫描、ARP 欺骗
+2. WHEN 触发违规时，THE IPAM_System SHALL 联动华为执行处置：关闭交换机端口、拉黑 MAC、下发隔离 ACL、无线踢下线
+3. THE IPAM_System SHALL 支持告警升级：高危违规立刻推送企业微信/钉钉紧急通知，留存日志证据
+4. THE IPAM_System SHALL 支持临时解封、手动白名单豁免，所有解封操作留审计日志
+5. THE IPAM_System SHALL 生成全网违规接入周报/月报，统计私接、篡改、攻击类事件分布
+
+
+### 需求 43：准入全链路审计与等保合规报表
+
+**用户故事：** 作为审计人员，我希望准入认证、隔离、封堵、访客记录全部可审计、不可篡改，一键导出等保 2.0 合规报表。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 归集全量准入日志：认证记录、合规检测记录、VLAN 切换记录、端口封堵记录、访客上网记录
+2. THE IPAM_System SHALL 日志防篡改，支持哈希校验，禁止删除/篡改审计数据
+3. THE IPAM_System SHALL 内置等保 2.0 准入合规模板：终端入网台账、违规封堵清单、访客上网审计、账号认证报表
+4. THE IPAM_System SHALL 支持定时自动生成报表并邮件推送审计人员，支持 Excel/PDF 导出
+5. THE IPAM_System SHALL 准入数据统一汇入可视化仪表盘，展示全网认证通过率、终端合规率、违规事件 TOP 排行
+
+### 需求 44：企业微信认证源对接
+
+**用户故事：** 作为企业 IT 管理员，我希望将企业微信作为统一认证源，支持员工扫码免密入网、自动同步组织架构与权限，访客通过企业微信审批接入，与华为交换机/AC 无缝联动。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持企业微信作为核心认证源，内置 OAuth2.0 协议对接企业微信开放平台，配置 AgentId、Secret、CorpID 完成认证授权
+2. THE IPAM_System SHALL 支持两种企业微信认证模式：员工扫码免密（PC/手机终端接入自动弹出扫码页）和访客审批入网（员工通过企业微信审批后生成临时权限）
+3. THE IPAM_System SHALL 自动同步企业微信组织架构，支持部门与 IPAM 角色/权限组的映射，实现权限自动分配
+4. WHEN 员工通过企业微信认证时，THE IPAM_System SHALL 向华为设备动态下发匹配 VLAN、ACL 策略，并同步企业微信部门信息至 IPAM 设备资产模块
+5. THE IPAM_System SHALL 支持企业微信与本地账号混合认证，当企业微信服务不可用时自动降级为本地认证
+6. THE IPAM_System SHALL 支持企业微信认证日志全链路追溯，包含扫码时间、用户信息、认证结果、终端 MAC/IP，与审计模块无缝集成
+7. THE IPAM_System SHALL 支持企业微信认证策略精细化配置，按部门、用户组、终端类型、接入时段差异化控制接入权限
+8. THE IPAM_System SHALL 支持企业微信认证结果与合规检查联动，认证通过后自动执行终端安全体检，不合规则引导至修复区
+9. THE IPAM_System SHALL 支持企业微信认证与 IPAM 现有功能深度集成：IP 地址自动分配、设备资产自动注册、VLAN 动态绑定、操作审计留痕
+
+### 需求 45：工单协同与审批流
+
+**用户故事：** 作为普通员工，我希望通过工单系统提交 IP 申请/变更/回收请求，经多级审批后系统自动执行，实现 IP 资源管理的流程化与规范化。管理员可通过低代码拖拽式流程设计器自定义审批流程，无需开发人员介入。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持 IP 申请工单，员工可提交 IP 领用/变更/回收工单，填写申请原因、所需网段、设备信息等
+2. THE IPAM_System SHALL 支持多级审批流程（部门经理 → 网管 → 审计），审批节点可自定义配置，支持并行/串行审批
+3. WHEN 工单审批通过后，THE IPAM_System SHALL 自动执行 IP 分配、同步 DHCP/DNS 配置，工单自动完结归档
+4. THE IPAM_System SHALL 支持工单状态追踪（待审批/审批中/已通过/已驳回/已完成），申请人可实时查看工单进度
+5. THE IPAM_System SHALL 记录工单全生命周期日志，包括提交时间、审批人、审批意见、执行结果，支持审计追溯
+6. THE IPAM_System SHALL 支持工单模板自定义，管理员可为不同业务场景（新员工入职、设备上线、临时项目）创建工单模板
+7. THE IPAM_System SHALL 支持审批流程拖拽式可视化编排，管理员通过流程设计器从节点面板拖拽审批节点（审批人/会签/或签/条件分支/并行分支/子流程/定时器/通知节点等）到流程画布上，通过连线定义节点间的流转关系，实现审批流程的零代码配置。审批流程与自动化工作流引擎（需求 131 第 10 条）共享统一的流程设计器框架
+8. THE IPAM_System SHALL 流程设计器支持条件分支可视化配置，管理员通过表达式编辑器（下拉选择字段 + 选择运算符 + 填写值）配置分支条件（如"申请 IP 数量 > 10 走高级审批""申请部门 = 研发部走快速通道"），无需编写代码
+9. THE IPAM_System SHALL 流程设计器支持节点属性可视化配置，选中节点后右侧属性面板可配置：审批人（指定人/角色/部门负责人/发起人上级）、审批方式（单人/会签/或签）、超时策略（自动催办/自动通过/自动转审）、通知方式（邮件/企业微信/钉钉/站内信）
+10. THE IPAM_System SHALL 流程设计器支持流程版本管理，每次修改流程自动保存新版本，支持版本对比、版本回滚，已发起的工单按发起时的流程版本执行
+11. THE IPAM_System SHALL 支持流程模板库管理，设计好的审批流程可保存为模板，支持模板分类（IP 申请流/设备上架流/权限申请流/变更审批流等）、模板克隆和跨租户分享
+12. THE IPAM_System SHALL 流程设计器支持流程模拟测试，管理员可在设计器中模拟提交工单，系统按流程定义自动模拟审批流转路径，验证分支条件和节点配置是否正确，无需真实提交工单
+13. THE IPAM_System SHALL 流程设计器支持撤销/重做操作（Ctrl+Z / Ctrl+Y），支持流程设计的自动保存
+14. THE IPAM_System SHALL 流程设计器支持流程与表单的深度绑定，不同审批节点可配置展示不同的表单字段（如"网管审批"节点仅展示技术字段，"经理审批"节点展示全部字段），支持节点级别的字段可编辑/只读/隐藏配置
+15. THE IPAM_System SHALL 流程设计器支持流程效率统计分析，自动统计每个流程的平均处理时长、各节点平均耗时、超时率、驳回率，以图表形式展示流程瓶颈，辅助流程优化
+16. THE IPAM_System SHALL 流程设计器支持超时自动升级策略，管理员可为每个审批节点配置超时时间和升级规则（如"48 小时未审批自动升级至上级领导""72 小时未审批自动通过并记录"）
+
+### 需求 46：网络自动化配置下发
+
+**用户故事：** 作为网络运维人员，我希望 IPAM 能一键将 VLAN、MAC 绑定、ACL 策略、端口配置推送到华为/华三/锐捷等网络设备，减少手工 CLI 配置的错误和工作量。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持零配置上线（ZTP），交换机/AP 开机自动拉取配置、注册入库，无需手动添加设备
+2. THE IPAM_System SHALL 支持全自动配置下发，一键推送 VLAN、MAC 绑定、ACL 策略、端口配置到华为/华三/锐捷/深信服设备
+3. THE IPAM_System SHALL 支持闲置端口安全管控，自动检测并关闭全网闲置交换机端口，防私接设备，恶意端口一键拉黑
+4. THE IPAM_System SHALL 支持无线 AC 深度联动：SSID 与 VLAN 绑定、无线终端实时 IP/MAC 同步、漫游记录追溯、AP 点位拓扑
+5. THE IPAM_System SHALL 支持防火墙地址组联动，自动同步地址对象/地址池到防火墙，策略自动关联
+6. THE IPAM_System SHALL 记录所有配置下发操作日志，包括下发时间、目标设备、配置内容、执行结果，支持配置回滚
+
+
+### 需求 47：DCIM 机房深化管理（PDU 电控/温湿度/冷热通道）
+
+**用户故事：** 作为数据中心管理员，我希望系统能对接 PDU 精密电控、温湿度传感器，实现机柜能耗监测、温控告警和冷热通道规划，提升机房运维精细化水平。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持 PDU 端口远程通电/断电控制，实时监测电流/电压/功耗，支持机柜能耗计费和过载告警
+2. THE IPAM_System SHALL 支持对接温湿度传感器，实时采集机房温湿度数据，超阈值自动触发温控告警
+3. THE IPAM_System SHALL 支持冷/热通道规划可视化，在机房平面图上标注冷热通道布局，展示温度分布热力图
+4. THE IPAM_System SHALL 支持冗余架构标记，双电源、双网线冗余链路高亮显示，故障切换可视化提醒
+5. THE IPAM_System SHALL 支持物理安全联动，对接机房门禁日志、消防告警，纳入物理资产安全审计
+6. THE IPAM_System SHALL 生成机房能耗报表，按机柜/机房/时间维度统计功耗趋势，辅助节能优化决策
+
+### 需求 48：条码/RFID 资产盘点与备品备件管理
+
+**用户故事：** 作为运维人员，我希望通过二维码/RFID 标签实现设备快速上架盘点，同时管理备品备件库存，提升资产管理效率。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持为设备生成二维码/RFID 标签并打印，标签包含设备编号、名称、机架位置等关键信息
+2. THE IPAM_System SHALL 支持手机扫码上架/盘点，扫码后自动关联设备记录，更新盘点状态，支持离线扫码核验
+3. THE IPAM_System SHALL 支持备品备件库管理，闲置硬件入库、领用归还、库存告警，与机架设备双向联动
+4. THE IPAM_System SHALL 支持备件领用审批流程，领用需关联工单或设备维修记录，记录领用人、领用时间、归还状态
+5. THE IPAM_System SHALL 生成资产盘点报告，统计盘盈/盘亏/未盘设备，支持导出 Excel/PDF
+
+### 需求 49：虚拟化与云原生 IP 管理
+
+**用户故事：** 作为云运维人员，我希望系统能对接 VMware/KVM/K8s 及公有云平台，自动同步虚拟机/容器/云资源的 IP 信息，实现本地+云端 IP 统一管理。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持对接 VMware vCenter/KVM/Proxmox/深信服 HCI，自动同步虚拟机 IP、MAC、网卡信息，虚拟机生命周期自动纳管
+2. THE IPAM_System SHALL 支持 K8s 容器 IP 管理，纳管 Pod IP、ClusterIP、Service IP，与命名空间联动，容器 IP 自动生命周期同步
+3. THE IPAM_System SHALL 支持公有云联动（阿里云/腾讯云/华为云），双向同步 VPC、子网、弹性 IP 信息，实现本地+云端 IP 统一管理
+4. THE IPAM_System SHALL 支持超融合架构适配，国产超融合设备资产自动采集，无需手动录入
+5. THE IPAM_System SHALL 在可视化仪表盘中统一展示物理/虚拟/云端 IP 资源使用情况，支持按环境类型筛选
+
+### 需求 50：DNS/DHCP 深度增强
+
+**用户故事：** 作为网络运维人员，我希望系统的 DNS/DHCP 联动能力更深入，支持反向解析、终端指纹识别、私设 DHCP 检测等高级功能，满足企业级网络管理需求。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持 DNS 反向 PTR 解析记录管理，分配 IP 时可一键创建/更新反向解析记录
+2. THE IPAM_System SHALL 支持 DNSSEC 加密配置管理，保障 DNS 解析安全
+3. THE IPAM_System SHALL 支持域名过期告警，自动检测域名到期时间并提前通知管理员续期
+4. THE IPAM_System SHALL 支持 DHCP 终端指纹识别，自动分辨终端类型（Windows/安卓/摄像头/工控机），辅助设备分类管理
+5. THE IPAM_System SHALL 支持 DHCP 黑白名单管理，可配置允许/禁止获取 IP 的 MAC 地址列表
+6. THE IPAM_System SHALL 支持私设 DHCP 服务器检测，发现网络中非法 DHCP 服务器自动告警并提供封堵建议
+
+
+### 需求 51：公网 IP 专项管理
+
+**用户故事：** 作为网络管理员，我希望系统能独立管理公网 IP 地址池，关联带宽、备案号、运营商信息，满足政企专线和公网资源管理需求。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持公网 IP 地址池独立管理，区分内网/公网 IP 资源，公网 IP 可关联运营商、带宽、线路类型
+2. THE IPAM_System SHALL 支持公网 IP 与域名备案号绑定，自动核查备案过期、非法域名解析，备案到期提前告警
+3. THE IPAM_System SHALL 支持公网 IP 带宽使用率监控，展示带宽利用率趋势图，超阈值自动告警
+4. THE IPAM_System SHALL 生成公网 IP 资源台账报表，包含 IP、运营商、带宽、备案号、使用状态、责任人，支持导出
+
+### 需求 52：超网/聚合地址规划
+
+**用户故事：** 作为网络规划师，我希望系统支持超网聚合地址管理和路由汇总可视化，便于骨干网地址规划和大网段资源统筹。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持超网/聚合地址管理，可将多个子网汇总为超网，展示路由汇总关系
+2. THE IPAM_System SHALL 支持路由汇总可视化，以树形结构展示超网与子网的层级关系和使用率
+3. THE IPAM_System SHALL 支持精细化地址池分类：临时测试池、灾备隔离池、IoT 专属池独立隔离管理
+4. THE IPAM_System SHALL 支持地址池过期 IP 自动批量回收，可配置回收策略和通知规则
+
+### 需求 53：合规审计高阶能力（等保 2.0/信创）
+
+**用户故事：** 作为安全审计负责人，我希望系统具备特权操作录屏、漏洞联动、SIEM 日志对接等高阶合规能力，满足等保 2.0 三级测评要求。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持特权操作录屏，管理员高危操作（删除网段、批量回收、配置下发等）全程屏幕录像，录像不可篡改
+2. THE IPAM_System SHALL 支持对接漏洞扫描平台（绿盟/启明星辰等），IP 资产关联漏洞编号、修复进度、风险等级
+3. THE IPAM_System SHALL 支持涉密 IP 分级标记，内外网隔离台账管理，涉密资源访问需额外授权验证
+
+### 需求 54：SIEM 日志对接与态势感知
+
+**用户故事：** 作为安全运营人员，我希望系统日志能原生适配主流 SIEM 平台，实现日志标准化输出和安全态势感知大屏联动。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持日志标准化输出（Syslog/CEF/LEEF 格式），原生适配 ELK/Splunk/国产态势感知平台
+2. THE IPAM_System SHALL 支持日志实时推送至 SIEM 平台，可配置推送频率、日志类型筛选
+3. THE IPAM_System SHALL 支持安全态势感知大屏联动，将 IP 资产、准入事件、告警数据输出至统一安全大屏展示
+
+### 需求 55：国产信创适配
+
+**用户故事：** 作为政企 IT 管理员，我希望系统能适配国产化环境，支持国产数据库和国产操作系统部署，满足信创合规要求。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持国产化数据库适配（达梦/人大金仓），可通过配置切换数据库引擎
+2. THE IPAM_System SHALL 支持在麒麟/统信 UOS 操作系统上部署运行，部署过程无兼容性问题
+3. THE IPAM_System SHALL 支持国产化浏览器（奇安信/360 安全浏览器）正常访问前端界面
+
+### 需求 56：移动端原生应用
+
+**用户故事：** 作为运维人员，我希望通过微信小程序/钉钉原生应用完成扫码盘点、告警推送、手机审批等操作，提升移动办公效率。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持微信小程序/钉钉原生应用，提供扫码资产盘点、告警消息推送、工单审批等核心功能
+2. THE IPAM_System SHALL 支持移动端扫码快速查询设备信息、IP 状态、机架位置，无需登录 PC 端
+3. THE IPAM_System SHALL 支持移动端告警实时推送，点击告警可直接跳转至详情页处理
+4. THE IPAM_System SHALL 支持移动端工单审批，审批人可在手机上查看工单详情、填写审批意见、通过/驳回
+
+### 需求 57：高可用与大数据扩展增强
+
+**用户故事：** 作为系统架构师，我希望系统支持异地多活容灾和十万级 IP 资产管理，满足大型组网环境的性能和可靠性要求。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持异地多活容灾，不止本地主从，支持跨机房双活数据实时同步
+2. THE IPAM_System SHALL 支持十万级 IP 资产管理，采用分片存储、分布式查询优化，保障大数据量下的查询性能
+3. THE IPAM_System SHALL 支持智能扫描缓存，ARP/Ping 扫描结果长效缓存，减少重复扫描占用全网带宽
+4. THE IPAM_System SHALL 支持离线备份查阅，备份文件独立阅读器，无需登录系统即可查看资产台账
+
+### 需求 58：知识库与运维案例管理
+
+**用户故事：** 作为运维人员，我希望系统能将 IP/设备绑定故障案例、配置手册、运维记录，形成知识库，便于一键追溯排障历史和经验复用。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持知识库管理，可创建、编辑、分类运维知识文章，支持富文本编辑和附件上传
+2. THE IPAM_System SHALL 支持知识文章与 IP 地址、设备、网段的关联绑定，在资源详情页展示相关知识文章
+3. THE IPAM_System SHALL 支持知识库全文搜索，按关键词、标签、关联资源快速检索
+4. THE IPAM_System SHALL 支持故障案例模板，记录故障现象、排查过程、解决方案、关联设备/IP，便于经验复用
+
+
+### 需求 59：AI 智能分析引擎
+
+**用户故事：** 作为运维人员，我希望系统内嵌 AI 能力，能够对操作日志、告警事件、知识库进行智能分析，提供故障根因定位、趋势预测和运维建议，提升排障效率和决策质量。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 内嵌 AI 分析引擎，支持对接多种大语言模型后端，包括：OpenAI API（GPT-4/GPT-4o）、Azure OpenAI、Google Gemini、Anthropic Claude、百度文心一言、阿里通义千问、讯飞星火、DeepSeek、本地部署的开源 LLM（Ollama/vLLM/LM Studio），可通过配置页面切换模型后端、设置 API 地址/密钥/模型名称，支持同时配置多个模型并按场景自动选择
+2. THE IPAM_System SHALL 支持 AI 日志智能分析，用户可选择时间范围和日志类型，AI 自动归纳异常模式、高频操作、潜在风险，生成分析摘要
+3. THE IPAM_System SHALL 支持 AI 告警关联分析，当多条告警同时触发时，AI 自动识别告警间的关联关系，推断故障根因并给出排查建议
+4. THE IPAM_System SHALL 支持 AI 知识库问答，用户可用自然语言提问（如"上次 192.168.1.0 网段故障怎么处理的"），AI 基于知识库文章和历史日志返回精准答案
+5. THE IPAM_System SHALL 支持 AI 容量预测增强，结合历史 IP 使用数据和业务增长趋势，AI 生成更精准的扩容建议和时间节点预测
+6. THE IPAM_System SHALL 支持 AI 运维助手对话窗口，嵌入系统界面，运维人员可随时与 AI 对话，查询资源状态、获取配置建议、分析异常事件
+7. THE IPAM_System SHALL 支持 AI 分析结果的保存与分享，分析报告可导出 PDF 或关联至知识库文章，便于团队复用
+8. THE IPAM_System SHALL 记录所有 AI 交互日志，包括提问内容、分析结果、用户反馈（有用/无用），用于持续优化分析质量
+
+
+### 需求 60：系统配置中心与参数管理
+
+**用户故事：** 作为系统管理员，我希望通过统一的配置中心管理系统所有参数（扫描间隔、告警阈值、备份策略、AI 模型等），支持在线修改、即时生效、配置版本回滚，无需重启服务。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 提供统一的系统配置管理界面，分模块展示所有可配置参数（网络扫描、告警规则、备份策略、通知渠道、AI 模型、认证策略等）
+2. THE IPAM_System SHALL 支持配置在线修改即时生效，无需重启服务，修改前自动保存配置快照
+3. THE IPAM_System SHALL 支持配置版本管理，记录每次配置变更的操作人、变更时间、变更内容差异，支持一键回滚至历史版本
+4. THE IPAM_System SHALL 支持配置导入导出（JSON/YAML 格式），便于跨环境迁移配置（如测试环境配置导入生产环境）
+5. THE IPAM_System SHALL 对敏感配置项（数据库密码、API 密钥、RADIUS 共享密钥等）进行加密存储和脱敏展示
+
+### 需求 61：多语言与国际化支持
+
+**用户故事：** 作为跨国企业 IT 管理员，我希望系统支持中英文切换，界面文案、报表、通知内容均可按语言偏好展示，便于多语言团队协作使用。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持中文和英文两种界面语言，用户可在个人设置中切换语言偏好
+2. THE IPAM_System SHALL 支持报表、导出文件、通知内容按用户语言偏好自动适配
+3. THE IPAM_System SHALL 支持时区配置，日志时间、告警时间、报表时间按用户所在时区展示
+4. THE IPAM_System SHALL 采用国际化框架（i18n），便于后续扩展更多语言
+
+### 需求 62：定时任务调度中心
+
+**用户故事：** 作为运维人员，我希望系统提供统一的定时任务管理界面，集中查看和管理所有定时任务（扫描、备份、清洗、报表生成、LDAP 同步等），支持手动触发、暂停、调整执行计划。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 提供定时任务调度中心，统一展示所有定时任务的名称、执行周期、上次执行时间、下次执行时间、执行状态
+2. THE IPAM_System SHALL 支持对定时任务进行手动触发、暂停、恢复、修改执行周期操作
+3. THE IPAM_System SHALL 记录每次任务执行的详细日志，包括开始时间、结束时间、执行结果、错误信息，支持按任务类型和时间筛选
+4. THE IPAM_System SHALL 支持任务执行失败自动重试（可配置重试次数和间隔），连续失败触发告警通知管理员
+5. THE IPAM_System SHALL 支持任务依赖配置，可设置任务执行顺序（如备份完成后再执行数据清洗）
+
+### 需求 63：IP 地址地图可视化
+
+**用户故事：** 作为网络管理员，我希望在地图上直观展示各站点/机房的 IP 资源分布和使用情况，便于跨地域网络资源的全局掌控。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持在地图上标注各站点/机房的地理位置，展示每个站点的 IP 资源总量、使用率、设备数量等关键指标
+2. THE IPAM_System SHALL 支持地图缩放和点击交互，点击站点可展开查看该站点下的网段、机房、机架详情
+3. THE IPAM_System SHALL 支持站点间网络连接关系的可视化展示，以连线标注站点间的专线/VPN 链路
+4. THE IPAM_System SHALL 支持地图上的告警标注，有告警的站点以红色高亮显示，便于快速定位问题区域
+
+
+### 需求 64：IP 地址申请自助门户
+
+**用户故事：** 作为普通员工，我希望通过自助门户提交 IP 申请，无需联系网管，系统自动引导我选择网段、填写用途，审批通过后自动分配。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 提供面向普通员工的自助申请门户，界面简洁，引导式填写（选择部门 → 选择用途 → 选择网段 → 提交）
+2. THE IPAM_System SHALL 根据申请人部门和用途自动推荐可用网段，隐藏无权限的网段
+3. THE IPAM_System SHALL 支持申请进度实时查看、申请历史查询、已分配 IP 一键查看
+4. THE IPAM_System SHALL 支持自助回收，员工可主动归还不再使用的 IP，回收后自动释放资源
+
+### 需求 65：网络变更管理与变更窗口
+
+**用户故事：** 作为网络运维负责人，我希望所有网络变更（网段调整、VLAN 修改、设备配置下发）必须在审批通过的变更窗口内执行，防止非计划变更导致故障。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持变更窗口管理，管理员可创建变更窗口（定义允许变更的时间段、变更范围、变更负责人）
+2. WHEN 用户在变更窗口外执行高风险操作（删除网段、批量配置下发、VLAN 修改）时，THE IPAM_System SHALL 拦截操作并提示需在变更窗口内执行
+3. THE IPAM_System SHALL 支持变更计划管理，变更前需提交变更计划（变更内容、影响范围、回滚方案），审批通过后方可执行
+4. THE IPAM_System SHALL 记录变更执行全过程，包括变更前快照、变更操作、变更后验证结果，支持变更复盘
+
+### 需求 66：SLA 服务等级管理
+
+**用户故事：** 作为 IT 服务管理员，我希望系统能跟踪 IP 分配、工单处理、告警响应的 SLA 达标情况，生成 SLA 报表，确保服务质量。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持 SLA 规则配置，可为不同业务场景定义 SLA 指标（如 IP 分配响应时间 ≤ 2 小时、告警处理时间 ≤ 30 分钟）
+2. THE IPAM_System SHALL 实时跟踪 SLA 达标情况，即将超时的工单/告警自动升级提醒
+3. THE IPAM_System SHALL 生成 SLA 达标率报表，按月/季度统计各类服务的达标率、平均响应时间、超时次数
+4. WHEN SLA 超时时，THE IPAM_System SHALL 自动触发升级通知，推送至上级管理员
+
+### 需求 67：网段 IP 矩阵视图
+
+**用户故事：** 作为网络管理员，我希望以矩阵/网格视图直观展示网段内每个 IP 的使用状态，一目了然地看到哪些 IP 空闲、哪些已用、哪些保留。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 提供网段 IP 矩阵视图，以网格形式展示网段内所有 IP 地址，每个格子代表一个 IP，颜色区分状态（绿色空闲、红色已用、黄色保留、蓝色临时）
+2. THE IPAM_System SHALL 支持鼠标悬停显示 IP 详情（关联设备、责任人、分配时间），点击可跳转至 IP 详情页
+3. THE IPAM_System SHALL 支持在矩阵视图中直接执行快捷操作（分配、回收、标记保留），无需跳转页面
+4. THE IPAM_System SHALL 支持矩阵视图按子网自动分段展示，大网段（如 /16）按 /24 子网分页展示
+
+### 需求 68：设备端口面板可视化
+
+**用户故事：** 作为网络工程师，我希望以设备真实面板的形式展示交换机/路由器的端口布局，直观查看每个端口的状态、连接信息和流量。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 提供设备端口面板可视化，模拟设备真实面板布局展示所有端口位置
+2. THE IPAM_System SHALL 以颜色区分端口状态（绿色 UP、红色 DOWN、灰色未启用、橙色告警），实时刷新
+3. THE IPAM_System SHALL 支持点击端口查看详情（端口速率、VLAN、连接的对端设备/终端、流量数据）
+4. THE IPAM_System SHALL 支持在面板视图中直接执行端口操作（启用/禁用端口、修改 VLAN、查看流量图）
+
+### 需求 69：网络流量分析与 TOP N 统计
+
+**用户故事：** 作为网络管理员，我希望系统能采集全网流量数据，展示 TOP N 流量设备/端口/IP，识别异常流量，辅助带宽优化和安全排查。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持通过 SNMP/NetFlow/sFlow 采集网络设备流量数据，汇总全网流量统计
+2. THE IPAM_System SHALL 展示 TOP N 统计：流量最大的设备、端口、IP 地址、应用协议，支持按时间范围筛选
+3. THE IPAM_System SHALL 支持流量异常检测，当某 IP/端口流量突增超过基线阈值时自动告警
+4. THE IPAM_System SHALL 支持流量趋势图展示，按小时/天/周维度查看全网或单设备的流量变化趋势
+5. THE IPAM_System SHALL 生成流量分析报表，包含带宽利用率、峰值流量、异常流量事件，支持导出
+
+### 需求 70：IP 地址回收站与数据恢复
+
+**用户故事：** 作为数据管理员，我希望误删的 IP 分配记录、设备记录、网段记录能从回收站恢复，避免误操作导致数据丢失。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 提供数据回收站功能，删除的 IP 分配记录、设备记录、网段记录进入回收站而非直接删除
+2. THE IPAM_System SHALL 支持从回收站恢复数据，恢复后自动还原关联关系（IP 与设备、网段与 IP 等）
+3. THE IPAM_System SHALL 支持回收站数据保留期限配置（默认 30 天），超期自动永久删除
+4. THE IPAM_System SHALL 支持回收站数据批量清空（需管理员权限，二次确认），清空操作纳入审计日志
+
+### 需求 71：设备固件管理与升级
+
+**用户故事：** 作为网络运维人员，我希望系统能管理网络设备的固件版本，支持固件库存储、版本对比、批量升级推送，确保设备固件统一合规。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持固件库管理，可上传、存储、分类网络设备固件文件，记录固件版本号、适用设备型号、发布日期、变更说明
+2. THE IPAM_System SHALL 支持设备固件版本巡检，自动扫描全网设备当前固件版本，标识版本过旧或不一致的设备
+3. THE IPAM_System SHALL 支持固件批量升级推送，选择目标设备和固件版本后一键下发，升级过程实时展示进度
+4. THE IPAM_System SHALL 记录固件升级历史，包括升级时间、目标设备、升级前后版本、升级结果，升级失败支持自动回滚
+
+### 需求 72：网络合规基线检查
+
+**用户故事：** 作为安全管理员，我希望系统能定义网络设备的安全配置基线，定期自动检查设备配置是否符合基线要求，不合规项自动告警。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持安全配置基线模板管理，可定义设备类型对应的配置基线规则（如必须启用 SSH、禁用 Telnet、密码复杂度要求、SNMP 社区字符串不为 public）
+2. THE IPAM_System SHALL 支持定期自动基线检查，扫描全网设备配置与基线模板的偏差，生成合规检查报告
+3. THE IPAM_System SHALL 对不合规配置项标记风险等级（高/中/低），高风险项自动触发告警
+4. THE IPAM_System SHALL 支持一键修复不合规配置（需审批），自动向设备下发合规配置
+
+### 需求 73：IP 地址使用率热力图
+
+**用户故事：** 作为网络规划师，我希望以热力图形式展示全网各网段的 IP 使用率分布，快速识别资源紧张和资源浪费的区域。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 提供全网 IP 使用率热力图，以颜色深浅表示各网段的使用率（深红色高使用率、绿色低使用率）
+2. THE IPAM_System SHALL 支持热力图按站点/机房/业务组/租户维度分组展示
+3. THE IPAM_System SHALL 支持点击热力图区域跳转至对应网段详情，查看具体 IP 分配情况
+4. THE IPAM_System SHALL 支持热力图历史对比，选择两个时间点对比使用率变化趋势
+
+### 需求 74：批量操作中心
+
+**用户故事：** 作为运维人员，我希望系统提供统一的批量操作入口，支持批量分配 IP、批量回收、批量修改设备信息、批量上架等操作，提升大规模运维效率。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 提供批量操作中心，统一入口支持批量 IP 分配/回收、批量设备创建/修改/删除、批量上架/下架、批量标签修改
+2. THE IPAM_System SHALL 支持批量操作预览，执行前展示操作影响范围（涉及的 IP 数量、设备数量），需确认后方可执行
+3. THE IPAM_System SHALL 支持批量操作进度实时展示，可查看成功/失败/跳过的数量和详情
+4. THE IPAM_System SHALL 记录批量操作历史，包括操作类型、操作范围、执行结果、操作人，支持审计追溯
+5. THE IPAM_System SHALL 支持批量操作失败项的重试和导出，失败项可导出修改后重新导入执行
+
+### 需求 75：系统健康度监控面板
+
+**用户故事：** 作为系统管理员，我希望有一个专门的系统健康度监控面板，实时展示 IPAM 系统自身的运行状态、性能指标、服务可用性，及时发现系统异常。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 提供系统健康度监控面板，展示各服务组件（前端、后端、数据库、RADIUS、定时任务）的运行状态和响应时间
+2. THE IPAM_System SHALL 展示系统性能指标：CPU 使用率、内存使用率、磁盘空间、数据库连接数、API 请求量/响应时间
+3. THE IPAM_System SHALL 支持系统异常自动告警，当服务组件不可用、性能指标超阈值时自动推送告警
+4. THE IPAM_System SHALL 展示系统运行统计：在线用户数、今日 API 调用量、今日告警数、今日工单数等关键运营指标
+5. THE IPAM_System SHALL 支持系统健康度历史趋势查看，按小时/天/周维度展示各指标变化趋势
+
+
+### 需求 76：终端资产自动发现与纳管
+
+**用户故事：** 作为运维人员，我希望系统能自动发现网络中的所有终端设备（PC、笔记本、手机、平板等），自动采集终端信息并纳入资产管理，无需手动逐台录入。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持通过 ARP/SNMP/WMI/Agent 等方式自动发现网络中的终端设备，采集终端 IP、MAC、主机名、操作系统类型及版本
+2. THE IPAM_System SHALL 支持终端指纹识别，自动分辨终端类型（Windows PC/Mac/Linux/安卓手机/iOS/打印机/摄像头/工控设备），无需人工分类
+3. THE IPAM_System SHALL 支持新发现终端自动入库，创建终端资产记录并关联 IP 地址、接入端口、接入时间
+4. THE IPAM_System SHALL 支持终端发现策略配置，可设置发现范围（指定网段）、发现周期（实时/定时）、排除规则（忽略指定 IP/MAC）
+5. WHEN 发现未注册终端时，THE IPAM_System SHALL 自动标记为"待审核"状态并触发告警，管理员审核后纳入正式资产或加入黑名单
+
+### 需求 77：终端详情与画像管理
+
+**用户故事：** 作为 IT 管理员，我希望系统能为每台终端建立完整的设备画像，包含硬件信息、软件清单、网络连接、使用人等，实现终端资产的精细化管理。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 为每台终端建立详情页，展示：基本信息（主机名、IP、MAC、操作系统）、硬件信息（CPU、内存、磁盘）、网络信息（接入交换机端口、VLAN、网关）
+2. THE IPAM_System SHALL 支持终端软件清单采集，记录终端已安装的软件列表、版本号，支持按软件名称搜索全网安装情况
+3. THE IPAM_System SHALL 支持终端使用人绑定，关联企业微信/LDAP 用户信息，展示使用人姓名、部门、联系方式
+4. THE IPAM_System SHALL 支持终端标签管理，可为终端打标签（如"财务部""开发机""外包机"），支持按标签批量筛选
+5. THE IPAM_System SHALL 支持终端生命周期状态管理（在用/闲置/维修/报废），状态变更自动记录日志
+6. THE IPAM_System SHALL 支持终端关联信息一站式查看：关联的 IP 地址、接入的网络设备端口、所在机架位置、准入认证状态、合规检查结果
+
+### 需求 78：终端在线状态监控
+
+**用户故事：** 作为网络管理员，我希望实时掌握全网终端的在线/离线状态，快速定位长期离线或异常终端，辅助资产盘点和安全排查。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 实时监控终端在线状态（在线/离线/休眠），支持通过 Ping/ARP/SNMP 多种方式检测
+2. THE IPAM_System SHALL 展示全网终端在线统计：在线数量、离线数量、在线率，支持按部门/网段/终端类型分类统计
+3. THE IPAM_System SHALL 支持终端在线/离线历史记录查询，展示每台终端的上线时间、离线时间、在线时长趋势
+4. WHEN 终端连续离线超过配置天数（如 30 天）时，THE IPAM_System SHALL 自动标记为"疑似闲置"并触发告警，提醒管理员核实
+5. THE IPAM_System SHALL 支持终端在线状态变更实时推送，关键终端（如服务器、核心设备）离线立刻告警
+
+### 需求 79：终端安全策略管理
+
+**用户故事：** 作为安全管理员，我希望系统能集中管理终端安全策略，包括密码策略、USB 管控、软件黑白名单等，确保终端符合企业安全规范。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持终端安全策略模板管理，可定义多套策略模板（如办公终端策略、开发终端策略、访客终端策略），按部门/终端类型下发
+2. THE IPAM_System SHALL 支持密码策略检查：密码复杂度、密码过期时间、屏幕锁定超时，不合规终端标记告警
+3. THE IPAM_System SHALL 支持软件黑白名单管理，定义禁止安装的软件列表（如远程控制、翻墙工具）和必须安装的软件列表（如杀毒软件、EDR），违规终端自动告警
+4. THE IPAM_System SHALL 支持 USB 外设管控策略，可配置允许/禁止使用 USB 存储设备，违规使用触发告警
+5. THE IPAM_System SHALL 支持终端安全合规评分，根据各项安全策略的达标情况计算终端安全评分（0-100），低于阈值的终端标记为高风险
+
+### 需求 80：终端分组与策略批量下发
+
+**用户故事：** 作为 IT 管理员，我希望能按部门、终端类型、位置等维度对终端进行分组管理，对分组批量下发安全策略、网络策略，提升管理效率。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持终端动态分组，可按部门、终端类型、操作系统、网段、标签等条件自动分组，终端属性变更时自动调整分组
+2. THE IPAM_System SHALL 支持手动创建静态分组，管理员可手动将终端加入/移出分组
+3. THE IPAM_System SHALL 支持对分组批量下发安全策略（合规检查策略、软件黑白名单、USB 管控策略），分组内所有终端自动继承策略
+4. THE IPAM_System SHALL 支持对分组批量下发网络策略（VLAN 分配、ACL 规则、带宽限速），联动华为设备自动执行
+5. THE IPAM_System SHALL 支持分组统计面板，展示每个分组的终端数量、在线率、合规率、安全评分均值
+
+### 需求 81：终端操作记录与行为审计
+
+**用户故事：** 作为审计人员，我希望系统能记录终端的关键操作和网络行为，包括 IP 变更、软件安装卸载、外设使用等，满足终端层面的审计追溯需求。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 记录终端 IP 地址变更历史，包括变更时间、变更前后 IP、变更原因（DHCP 续约/手动修改/准入分配）
+2. THE IPAM_System SHALL 记录终端软件安装/卸载事件，包括软件名称、版本、操作时间，违规软件安装自动告警
+3. THE IPAM_System SHALL 记录终端外设使用事件（USB 插拔、打印操作），包括设备类型、使用时间、操作用户
+4. THE IPAM_System SHALL 记录终端网络行为摘要，包括访问的网段、流量统计、异常连接（如扫描行为、异常外联）
+5. THE IPAM_System SHALL 支持终端审计日志多维度筛选（按终端、用户、时间、事件类型），支持导出审计报告
+
+
+### 需求 82：数字化运维大屏展示
+
+**用户故事：** 作为企业领导/CIO，我希望系统提供一块专门的数字化大屏，以全屏沉浸式的方式展示全网 IT 资源核心指标、实时告警、安全态势，适合投屏到会议室/指挥中心大屏幕，直观掌握整体运维状况。管理员可通过低代码拖拽式大屏设计器自定义大屏布局和内容，无需开发人员即可创建专业级数据大屏。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 提供独立的数字化大屏页面（全屏模式，隐藏导航栏/侧边栏），支持 1920×1080 / 3840×2160 等主流大屏分辨率自适应
+2. THE IPAM_System SHALL 在大屏中央展示全网核心指标卡片：IP 资源总量/已用/空闲/使用率、设备总数/在线率、终端总数/合规率、机房数量/机架使用率、今日告警数/未处理数
+3. THE IPAM_System SHALL 在大屏展示全网 IP 使用率热力地图，按站点/机房地理位置分布展示，告警站点红色高亮闪烁
+4. THE IPAM_System SHALL 在大屏展示实时告警滚动列表，按时间倒序滚动展示最新告警（告警类型、级别、时间、关联资源），严重告警红色高亮
+5. THE IPAM_System SHALL 在大屏展示关键趋势图表：IP 使用率 7 天趋势、设备增长趋势、告警数量趋势、准入认证通过率趋势
+6. THE IPAM_System SHALL 在大屏展示网络拓扑概览图，核心设备节点实时标注状态（正常/告警/离线），连线标注链路健康度
+7. THE IPAM_System SHALL 在大屏展示安全态势模块：今日准入认证成功/失败数、终端合规率、违规事件 TOP5、访客在线数
+8. THE IPAM_System SHALL 在大屏展示机房环境模块：各机房温度/湿度实时数据、机柜功耗 TOP5、PDU 过载告警
+9. THE IPAM_System SHALL 支持大屏数据自动刷新（可配置刷新间隔，默认 30 秒），无需手动操作，适合 7×24 小时投屏展示
+10. THE IPAM_System SHALL 支持大屏布局自定义，管理员可拖拽调整模块位置、选择展示/隐藏的模块，保存多套大屏方案（如"领导汇报版""安全态势版""机房监控版"）
+11. THE IPAM_System SHALL 支持大屏主题切换（深色科技风/浅色商务风），支持自定义企业 LOGO 和标题文字
+12. THE IPAM_System SHALL 支持大屏数据钻取，点击任意指标卡片或图表区域可弹出详情浮层，无需跳转页面即可查看明细数据
+13. THE IPAM_System SHALL 在大屏展示数据采集态势模块：采集引擎运行状态、各协议采集任务成功率/失败率、采集设备覆盖率、Syslog 日志接收速率、NetFlow 流量吞吐量，采集异常设备红色高亮标注
+14. THE IPAM_System SHALL 在大屏展示全网流量态势模块：全网实时总带宽利用率、TOP5 流量设备/端口/IP、应用协议流量占比饼图、异常流量事件实时滚动
+15. THE IPAM_System SHALL 支持大屏无障碍模式：色盲友好配色方案（红绿色盲可区分告警级别）、关键告警语音播报（可配置开启/关闭）
+16. THE IPAM_System SHALL 支持大屏拖拽式设计器，管理员通过可视化设计界面从组件面板拖拽大屏组件（指标卡片/柱状图/折线图/饼图/地图/拓扑图/热力图/滚动列表/视频监控/倒计时/天气/时钟等）到大屏画布上，自由设计大屏布局
+17. THE IPAM_System SHALL 大屏设计器支持画布自由定位模式，组件可任意拖拽到画布任意位置，支持组件精确定位（X/Y 坐标输入）、等比缩放、对齐辅助线（左对齐/居中/等间距）、组件层级调整（置顶/置底）和组件组合/取消组合
+18. THE IPAM_System SHALL 大屏设计器支持组件数据源可视化绑定和刷新频率配置，选中组件后属性面板可配置数据接口（含自定义连接器数据源（需求 131 第 9 条））、数据映射、刷新间隔、动画效果（数字滚动/渐变/闪烁），所有配置实时预览
+19. THE IPAM_System SHALL 大屏设计器支持多分辨率适配预览，设计时可切换预览不同分辨率（1920×1080/2560×1440/3840×2160）的显示效果，支持等比缩放和自适应两种适配模式
+20. THE IPAM_System SHALL 支持大屏模板市场，设计好的大屏方案可发布为模板，支持模板分类（领导汇报/安全态势/机房监控/网络运维等）、模板预览、一键克隆使用
+21. THE IPAM_System SHALL 大屏设计器支持撤销/重做操作（Ctrl+Z / Ctrl+Y），支持设计模式与预览模式一键切换，预览模式下展示真实数据和动画效果
+22. THE IPAM_System SHALL 大屏设计器支持组件间数据联动配置，通过可视化界面配置组件间的交互关系（如点击地图某区域时，关联的告警列表和指标卡片自动切换到该区域数据）
+
+### 需求 83：多协议数据采集引擎
+
+**用户故事：** 作为系统架构师，我希望系统内置统一的数据采集引擎，支持 SNMP/SSH/Telnet/WMI/NetFlow/sFlow/Syslog/RADIUS 等主流协议，作为所有设备监控、终端发现、流量分析、日志采集的底层基础。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 内置统一数据采集引擎，支持以下采集协议：
+   - SNMP v1/v2c/v3：设备信息、端口状态、流量计数器、ARP 表、MAC 表、LLDP 邻居
+   - SSH/Telnet：设备配置采集、命令执行、配置备份
+   - WMI/WinRM：Windows 终端硬件信息、软件清单、服务状态
+   - NetFlow v5/v9/IPFIX：网络流量数据采集与分析
+   - sFlow：采样流量数据采集
+   - Syslog：设备日志实时接收与解析
+   - RADIUS Accounting：终端上下线事件、认证日志
+   - ICMP（Ping）：设备/终端存活检测
+   - ARP：IP-MAC 映射关系采集
+   - Modbus TCP/RTU：工控设备数据采集（PLC、传感器、仪表等）
+   - OPC UA/DA：工业自动化设备数据采集
+   - BACnet/IP：楼宇自控设备数据采集（空调、照明、门禁等）
+   - MQTT：物联网终端数据采集（IoT 传感器、智能设备）
+   - IPMI：服务器带外管理数据采集（温度、风扇、电源状态）
+2. THE IPAM_System SHALL 支持采集任务统一管理，可为每个采集协议配置采集目标、采集周期、超时时间、重试策略
+3. THE IPAM_System SHALL 支持采集凭证集中管理（SNMP 社区字符串/v3 用户名密码、SSH 账号密码/密钥、WMI 域账号等），凭证加密存储，支持凭证组按设备类型批量关联
+
+### 需求 84：SNMP 数据采集与 MIB 管理
+
+**用户故事：** 作为网络运维人员，我希望系统能通过 SNMP 协议采集网络设备的性能指标、端口状态、ARP/MAC 表等数据，支持自定义 MIB 和 OID，适配各厂商设备。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持 SNMP v1/v2c/v3 协议采集，v3 支持 AuthPriv 安全级别（MD5/SHA 认证 + DES/AES 加密）
+2. THE IPAM_System SHALL 内置主流厂商（华为/华三/锐捷/思科/深信服）的常用 MIB 库，开箱即用无需手动导入
+3. THE IPAM_System SHALL 支持自定义 MIB 文件导入，解析 MIB 树结构，管理员可按 OID 自定义采集指标
+4. THE IPAM_System SHALL 支持 SNMP Trap 接收，实时接收设备主动上报的告警事件（端口 UP/DOWN、设备重启、温度超限等），自动解析并关联至对应设备
+5. THE IPAM_System SHALL 支持 SNMP 批量巡检，可对全网设备批量采集指定 OID 数据，生成巡检报告
+6. THE IPAM_System SHALL 支持采集数据的时序存储，保留历史采集数据（可配置保留周期），支持历史趋势查询和对比
+
+### 需求 85：Syslog 日志采集与解析
+
+**用户故事：** 作为运维人员，我希望系统能集中接收网络设备的 Syslog 日志，自动解析日志内容，关联至对应设备和事件，实现设备日志的统一管理和分析。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 内置 Syslog 服务器（支持 UDP 514/TCP 514/TLS 加密），可接收全网设备的 Syslog 日志
+2. THE IPAM_System SHALL 支持 Syslog 日志自动解析，提取日志级别（Emergency-Debug）、设备标识、时间戳、日志内容，自动关联至 IPAM 中的设备记录
+3. THE IPAM_System SHALL 支持自定义日志解析规则（正则表达式/Grok 模式），适配不同厂商的日志格式
+4. THE IPAM_System SHALL 支持日志告警规则，可配置关键词匹配规则（如匹配"LINK-DOWN""AUTHENTICATION-FAILURE"），命中规则自动触发告警
+5. THE IPAM_System SHALL 支持日志全文搜索，按设备、时间范围、日志级别、关键词快速检索
+6. THE IPAM_System SHALL 支持日志存储策略配置，可设置日志保留周期（如 90 天）、存储空间上限，超期自动归档或清理
+
+### 需求 86：NetFlow/sFlow 流量数据采集
+
+**用户故事：** 作为网络管理员，我希望系统能接收网络设备导出的 NetFlow/sFlow 流量数据，分析全网流量分布、应用协议占比、异常流量，辅助带宽优化和安全排查。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 内置 NetFlow/IPFIX/sFlow 收集器，支持接收网络设备导出的流量数据
+2. THE IPAM_System SHALL 解析流量数据字段：源/目的 IP、源/目的端口、协议类型、字节数、包数、流持续时间
+3. THE IPAM_System SHALL 支持流量数据聚合分析：按源 IP/目的 IP/协议/端口维度汇总，展示 TOP N 流量排行
+4. THE IPAM_System SHALL 支持应用协议识别，基于端口号和 DPI 特征识别常见应用（HTTP/HTTPS/DNS/SSH/RDP/数据库等），展示应用流量占比
+5. THE IPAM_System SHALL 支持流量基线学习，自动建立正常流量基线，偏离基线的异常流量自动告警（如 DDoS、数据外泄、异常扫描）
+6. THE IPAM_System SHALL 支持流量数据时序存储和历史回溯，可查看任意时间段的流量详情
+
+### 需求 87：采集任务调度与健康监控
+
+**用户故事：** 作为运维人员，我希望系统能统一管理所有数据采集任务的调度、执行状态和健康度，及时发现采集失败或数据缺失问题。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 提供采集任务管理面板，统一展示所有采集任务（SNMP 轮询、Ping 扫描、Syslog 接收、NetFlow 采集等）的运行状态、上次执行时间、成功/失败率
+2. THE IPAM_System SHALL 支持采集任务健康度监控，当采集任务连续失败（如 SNMP 超时、SSH 连接拒绝）时自动告警，提示管理员排查
+3. THE IPAM_System SHALL 支持采集数据完整性检查，自动检测数据缺失（如某设备长时间无采集数据），标记为"数据断档"并告警
+4. THE IPAM_System SHALL 支持采集性能统计，展示采集引擎的吞吐量（每秒采集设备数/OID 数）、队列积压情况、资源占用（CPU/内存）
+5. THE IPAM_System SHALL 支持采集任务优先级配置，核心设备/关键指标的采集任务优先执行，避免因任务排队导致关键数据延迟
+
+
+### 需求 88：设备性能监控展示
+
+**用户故事：** 作为网络运维人员，我希望系统能以图表形式展示通过 SNMP 采集的设备性能指标（CPU、内存、端口流量、温度等），实时掌握设备健康状态，快速定位性能瓶颈。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 提供设备性能监控页面，展示每台设备的核心性能指标：CPU 使用率、内存使用率、端口带宽利用率、设备温度、风扇转速、电源状态
+2. THE IPAM_System SHALL 以时序折线图展示各指标的历史趋势，支持按 1 小时/1 天/7 天/30 天/自定义时间范围查看
+3. THE IPAM_System SHALL 支持多设备指标对比，可选择多台设备的同一指标在同一图表中叠加展示
+4. THE IPAM_System SHALL 支持性能指标告警阈值配置，超阈值自动变色告警（黄色警告/红色严重），关联通知中心推送
+5. THE IPAM_System SHALL 提供设备性能排行榜，展示 CPU/内存/带宽使用率 TOP N 设备，快速定位高负载设备
+6. THE IPAM_System SHALL 支持性能数据导出（CSV/Excel），便于离线分析和报表制作
+
+### 需求 89：Syslog 日志分析展示中心
+
+**用户故事：** 作为运维人员，我希望系统提供 Syslog 日志的集中查看、搜索、统计分析界面，能快速定位设备异常日志，掌握全网日志态势。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 提供 Syslog 日志查看页面，以时间线形式展示全网设备日志，支持实时滚动刷新（类似终端 tail -f 效果）
+2. THE IPAM_System SHALL 支持日志多维度筛选：按设备、日志级别（Emergency-Debug）、时间范围、关键词组合筛选
+3. THE IPAM_System SHALL 提供日志统计面板：各级别日志数量分布饼图、日志量时间趋势图、产生日志最多的 TOP10 设备
+4. THE IPAM_System SHALL 支持日志关联分析，点击某条日志可查看同一设备前后 5 分钟内的所有日志，辅助上下文排查
+5. THE IPAM_System SHALL 支持日志收藏和标注，运维人员可对重要日志添加备注标签，便于后续追溯
+6. THE IPAM_System SHALL 支持日志告警规则命中高亮，匹配告警规则的日志行红色高亮显示
+
+### 需求 90：网络流量分析展示中心
+
+**用户故事：** 作为网络管理员，我希望系统提供 NetFlow/sFlow 流量数据的可视化分析界面，直观展示全网流量分布、应用占比、异常流量，辅助带宽优化和安全排查。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 提供全网流量总览页面：实时总带宽、入站/出站流量趋势图、各站点/网段流量占比
+2. THE IPAM_System SHALL 提供流量 TOP N 排行：TOP 源 IP、TOP 目的 IP、TOP 端口、TOP 应用协议、TOP 会话，支持按时间范围筛选
+3. THE IPAM_System SHALL 提供应用协议流量分析：以桑基图/饼图展示各应用协议（HTTP/HTTPS/DNS/SSH/RDP/数据库/视频流等）的流量占比和趋势
+4. THE IPAM_System SHALL 提供单设备/单端口流量详情页，展示该设备/端口的入站出站流量趋势、TOP 会话、协议分布
+5. THE IPAM_System SHALL 提供异常流量事件列表，展示所有偏离基线的异常流量事件（时间、源/目的 IP、异常类型、流量峰值），支持一键跳转至详情
+6. THE IPAM_System SHALL 支持流量数据对比分析，可选择两个时间段对比流量变化，识别流量增长/下降趋势
+
+### 需求 91：工控/物联网设备数据展示
+
+**用户故事：** 作为工控/物联网运维人员，我希望系统能展示通过 Modbus/OPC/BACnet/MQTT/IPMI 采集的工控设备和物联网终端数据，实时监控设备运行状态。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 提供工控设备监控页面，展示通过 Modbus TCP/RTU 采集的 PLC、传感器、仪表数据（温度、压力、电流、开关量等），以仪表盘/数值卡片形式展示
+2. THE IPAM_System SHALL 提供物联网终端监控页面，展示通过 MQTT 采集的 IoT 设备数据（传感器读数、设备状态、电池电量等），支持按设备类型/位置分组展示
+3. THE IPAM_System SHALL 提供楼宇自控监控页面，展示通过 BACnet/IP 采集的空调、照明、门禁等设备状态和参数
+4. THE IPAM_System SHALL 提供服务器硬件监控页面，展示通过 IPMI 采集的服务器温度、风扇转速、电源状态、硬盘健康度
+5. THE IPAM_System SHALL 支持工控/物联网数据的时序趋势图展示，支持历史数据回溯和对比
+6. THE IPAM_System SHALL 支持工控/物联网设备告警阈值配置，数据超阈值自动告警（如温度过高、压力异常、设备离线）
+7. THE IPAM_System SHALL 支持工控/物联网设备与 IP 地址、网段、机架位置的关联展示，在设备详情页一站式查看所有采集数据
+
+### 需求 92：全网软件资产展示
+
+**用户故事：** 作为 IT 资产管理员，我希望系统能展示全网终端的软件安装情况，统计各软件的安装数量、版本分布，识别违规软件和未授权软件。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 提供全网软件资产总览页面，展示软件总数、安装终端数 TOP N 软件排行、软件分类统计（办公/开发/安全/系统/其他）
+2. THE IPAM_System SHALL 支持按软件名称搜索，查看该软件安装在哪些终端上、各版本分布情况
+3. THE IPAM_System SHALL 支持软件合规检查展示，标记黑名单软件（已安装的违规软件）和缺失的白名单软件（应装未装），展示违规终端列表
+4. THE IPAM_System SHALL 支持软件版本一致性检查，标识同一软件存在多个版本的终端，辅助版本统一管理
+5. THE IPAM_System SHALL 支持软件变更记录展示，展示全网软件安装/卸载/升级事件时间线，支持按时间范围和终端筛选
+
+### 需求 93：采集数据统一检索与关联查询
+
+**用户故事：** 作为运维人员，我希望系统提供跨协议、跨数据源的统一检索入口，输入一个 IP/MAC/设备名就能查到所有相关的采集数据（性能、日志、流量、配置、终端信息），实现一站式排障。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 提供全局统一搜索框，输入 IP 地址/MAC 地址/设备名称/主机名，自动聚合展示该对象的所有采集数据
+2. THE IPAM_System SHALL 在搜索结果页以标签页形式分类展示：基本信息、性能指标、Syslog 日志、流量数据、配置备份、准入记录、终端详情、告警历史
+3. THE IPAM_System SHALL 支持时间线视图，将某个 IP/设备的所有事件（告警、配置变更、上下线、日志异常、流量异常）按时间轴排列，辅助故障时间线回溯
+4. THE IPAM_System SHALL 支持关联跳转，从任意数据页面可一键跳转至关联数据（如从告警跳转至对应设备的 Syslog 日志、从流量异常跳转至对应 IP 的终端详情）
+5. THE IPAM_System SHALL 支持搜索历史记录和常用搜索收藏，提升重复查询效率
+
+
+### 需求 94：智能预警与趋势预测引擎
+
+**用户故事：** 作为运维负责人，我希望系统不仅能在异常发生时报警，更能提前预警——基于历史数据趋势预测即将发生的问题（资源耗尽、设备故障、性能瓶颈等），给我足够的时间提前处置，变被动救火为主动防御。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持 IP 资源耗尽预警，基于历史使用率增长趋势，预测各网段 IP 资源耗尽时间，当预测耗尽时间小于配置阈值（如 30/60/90 天）时自动触发预警
+2. THE IPAM_System SHALL 支持设备性能趋势预警，当设备 CPU/内存/磁盘使用率呈持续上升趋势且预测将在指定天数内达到阈值时，提前触发预警（而非等到超阈值才报警）
+3. THE IPAM_System SHALL 支持端口带宽趋势预警，基于历史流量数据预测端口带宽即将饱和的时间点，提前通知管理员扩容或优化
+4. THE IPAM_System SHALL 支持机架空间/功率趋势预警，基于设备上架速率预测机架空间和功率耗尽时间，提前规划扩容
+5. THE IPAM_System SHALL 支持设备故障预警，基于设备日志异常频率、性能指标波动、历史故障模式，AI 预测设备可能即将故障，提前告知运维人员关注
+6. THE IPAM_System SHALL 支持证书/域名/保修到期预警，自动检测 SSL 证书到期时间、域名备案到期时间、设备保修到期时间，提前 30/15/7 天分级预警
+7. THE IPAM_System SHALL 支持 DHCP 地址池耗尽预警，基于租约分配速率预测地址池耗尽时间，提前通知管理员扩容
+8. THE IPAM_System SHALL 支持预警与告警的分级展示，预警（黄色，预测性）和告警（红色，已发生）在告警中心分开展示，预警可一键转为工单处理
+9. THE IPAM_System SHALL 支持预警准确率统计，记录每条预警是否最终转化为真实告警，持续优化预测模型准确率
+10. THE IPAM_System SHALL 在数字化大屏中展示预警态势模块：当前活跃预警数量、预警类型分布、预警趋势图、即将到期资源倒计时排行
+
+
+### 需求 95：服务器监控与管理
+
+**用户故事：** 作为 IT 管理员，我希望系统能统一监控和管理所有服务器（物理机/虚拟机/云主机），采集 CPU、内存、磁盘、进程、服务状态等指标，及时发现服务器异常。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持服务器资产管理，记录服务器型号、序列号、CPU/内存/磁盘配置、操作系统、所在机架位置、责任人、业务归属
+2. THE IPAM_System SHALL 支持通过 SNMP/WMI/SSH/Agent 采集服务器性能指标：CPU 使用率、内存使用率、磁盘使用率/IO、网卡流量、系统负载
+3. THE IPAM_System SHALL 支持服务器进程监控，展示 TOP N 进程（按 CPU/内存排序），关键进程异常退出自动告警
+4. THE IPAM_System SHALL 支持服务器服务状态监控，可配置需监控的服务列表（如 MySQL、Nginx、Tomcat），服务停止自动告警并可配置自动重启
+5. THE IPAM_System SHALL 支持服务器磁盘空间预警，磁盘使用率超阈值或预测即将满盘时提前告警
+6. THE IPAM_System SHALL 支持服务器批量巡检，一键采集全网服务器的健康状态，生成巡检报告（CPU/内存/磁盘/服务状态汇总）
+7. THE IPAM_System SHALL 在服务器详情页一站式展示：硬件配置、性能趋势、进程列表、服务状态、关联 IP、机架位置、告警历史
+
+### 需求 96：桌面运维与远程协助
+
+**用户故事：** 作为桌面运维人员，我希望系统能集中管理员工桌面终端的运维需求，支持远程协助、软件分发、补丁推送，减少现场跑腿。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持远程桌面连接入口，运维人员可从终端详情页一键发起远程协助（集成 RDP/VNC/Web 远程桌面），无需记忆 IP 地址
+2. THE IPAM_System SHALL 支持软件远程分发，可选择目标终端或终端分组，批量推送软件安装包，展示安装进度和结果
+3. THE IPAM_System SHALL 支持系统补丁远程推送，采集终端缺失补丁列表，批量推送补丁并监控安装状态
+4. THE IPAM_System SHALL 支持远程命令执行，运维人员可对目标终端远程执行脚本/命令（需审批授权），执行结果实时返回
+5. THE IPAM_System SHALL 支持桌面运维工单联动，员工提交的桌面故障工单自动关联终端信息，运维人员可从工单直接发起远程协助
+6. THE IPAM_System SHALL 记录所有远程操作日志，包括操作人、目标终端、操作类型、操作时间、操作内容，支持审计追溯
+
+### 需求 97：弱电系统集成管理
+
+**用户故事：** 作为弱电系统管理员，我希望系统能统一管理弱电子系统（视频监控、门禁、广播、楼宇自控等）的设备资产和 IP 资源，与网络管理联动，实现弱电设备的统一纳管。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持弱电设备分类管理，内置弱电设备类型模板：视频监控（摄像头/NVR/DVR）、门禁（控制器/读卡器）、广播（功放/音柱/话筒）、楼宇自控（空调控制器/照明控制器）、停车场（道闸/车位检测器）
+2. THE IPAM_System SHALL 支持弱电设备与 IP 地址的关联管理，每台弱电设备可绑定 IP、MAC、接入交换机端口、所在位置（楼层/区域/点位）
+3. THE IPAM_System SHALL 支持视频监控点位管理，在平面图上标注摄像头位置、朝向、覆盖范围，展示摄像头在线/离线状态
+4. THE IPAM_System SHALL 支持门禁系统联动，展示门禁控制器在线状态、关联 IP，门禁设备离线自动告警
+5. THE IPAM_System SHALL 支持弱电设备巡检，定期 Ping 检测弱电设备在线状态，离线设备自动告警并生成巡检报告
+6. THE IPAM_System SHALL 支持弱电设备台账导出，按设备类型/位置/状态生成弱电资产清单报表
+
+### 需求 98：打印机与共享设备管理
+
+**用户故事：** 作为 IT 管理员，我希望系统能统一管理全公司的打印机、扫描仪等共享设备，监控设备状态、耗材余量，及时安排维护。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持打印机资产管理，记录打印机型号、序列号、IP 地址、MAC 地址、安装位置、责任部门、共享名称
+2. THE IPAM_System SHALL 支持通过 SNMP 采集打印机状态：在线/离线、打印队列、耗材余量（墨粉/硒鼓/纸张）、累计打印页数
+3. THE IPAM_System SHALL 支持打印机耗材预警，当墨粉/硒鼓余量低于阈值时自动告警，提醒采购更换
+4. THE IPAM_System SHALL 支持打印机故障告警，设备离线、卡纸、缺纸等异常自动推送通知
+5. THE IPAM_System SHALL 支持打印机使用统计，按部门/打印机统计打印量，生成月度打印量报表，辅助成本管控
+
+### 需求 99：IT 资产全生命周期管理
+
+**用户故事：** 作为 IT 资产管理员，我希望系统能管理所有 IT 资产（服务器、网络设备、终端、弱电设备）的全生命周期，从采购入库到报废退役，每个环节都有记录可追溯。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持 IT 资产全生命周期状态管理：采购中 → 入库 → 在用 → 维修 → 闲置 → 报废，状态流转需审批（可配置）
+2. THE IPAM_System SHALL 支持资产采购管理，记录采购订单号、供应商、采购日期、采购价格、保修期限，关联资产记录
+3. THE IPAM_System SHALL 支持资产领用/归还管理，记录领用人、领用部门、领用时间、归还时间，领用需关联工单审批
+4. THE IPAM_System SHALL 支持资产维修管理，记录维修原因、维修供应商、维修费用、维修时间、维修结果
+5. THE IPAM_System SHALL 支持资产报废管理，报废需审批，记录报废原因、报废时间、残值处理方式
+6. THE IPAM_System SHALL 支持资产折旧计算，按直线法/加速折旧法自动计算资产当前净值，生成资产折旧报表
+7. THE IPAM_System SHALL 支持资产合同管理，关联采购合同、维保合同、租赁合同，合同到期自动提醒续签
+
+### 需求 100：IT 运维值班与排班管理
+
+**用户故事：** 作为 IT 运维负责人，我希望系统能管理运维团队的值班排班，告警自动推送给当班人员，确保 7×24 小时有人响应。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持运维值班排班管理，可创建排班计划（按日/周/月），指定每个时段的值班人员和备班人员
+2. THE IPAM_System SHALL 支持告警与值班联动，系统告警自动推送给当前值班人员（而非所有管理员），值班人员未响应时自动升级至备班人员
+3. THE IPAM_System SHALL 支持值班交接记录，交班时可填写当班期间的告警处理情况、待跟进事项、注意事项，接班人确认签收
+4. THE IPAM_System SHALL 支持值班日历视图，展示每天的值班人员安排，支持临时换班（需审批）
+5. THE IPAM_System SHALL 支持值班统计报表，统计每人值班天数、告警响应次数、平均响应时间，辅助绩效考核
+
+
+### 需求 101：全模块自动关联与联动导航
+
+**用户故事：** 作为 IT 管理员，我希望系统所有模块的数据都自动关联，从任意一个对象（IP、设备、终端、网段、机房、机架、VLAN、告警、工单）出发，都能一键跳转到所有关联对象的详情页，实现全链路贯通，不用在各模块之间来回切换查找。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 建立全局关联模型，所有核心对象之间自动建立关联关系：
+   - IP 地址 ↔ 设备/终端、网段、VLAN、DHCP 租约、DNS 记录、准入认证记录、告警、工单
+   - 设备 ↔ IP 地址、机房、机架（U 位）、端口连接、配置备份、性能指标、Syslog 日志、固件版本、告警
+   - 终端 ↔ IP 地址、使用人、接入端口、准入状态、合规评分、软件清单、安全策略、操作记录
+   - 网段 ↔ IP 地址列表、VLAN、租户、使用率告警、容量预测
+   - 机房 ↔ 机架列表、设备列表、温湿度数据、功耗数据、平面图
+   - 机架 ↔ 设备列表（U 位视图）、PDU、功率统计、所属机房
+   - VLAN ↔ 网段、设备端口、准入策略
+   - 告警 ↔ 触发源（设备/IP/终端/网段/机架）、处理工单、关联日志
+   - 工单 ↔ 申请人、关联 IP/设备/终端、审批记录、执行结果
+2. THE IPAM_System SHALL 在每个对象的详情页自动展示所有关联对象列表，每个关联对象可一键点击跳转至其详情页
+3. THE IPAM_System SHALL 支持关联关系可视化，在任意对象详情页提供"关联图谱"视图，以节点连线图展示该对象与所有关联对象的关系网络，点击节点可跳转
+4. THE IPAM_System SHALL 支持反向关联查询，从任意关联对象都能反向追溯到源对象（如从告警跳转到设备，从设备跳转到机架，从机架跳转到机房）
+5. THE IPAM_System SHALL 支持关联数据联动更新，当某个对象状态变更时（如设备下架），自动更新所有关联对象的状态（释放 IP、更新机架 U 位、更新拓扑图）
+6. THE IPAM_System SHALL 在全局搜索结果中展示对象的关联摘要（如搜索一个 IP，同时展示关联的设备名称、使用人、所在机架、VLAN、告警状态），无需逐个点击查看
+7. THE IPAM_System SHALL 支持从拓扑图、机架视图、IP 矩阵视图、大屏等任意可视化页面点击对象后，均可跳转至对应的详情页，详情页内再跳转至任意关联模块
+8. THE IPAM_System SHALL 支持关联关系的批量操作联动，如批量下架设备时自动释放关联 IP、更新机架、解除端口连接、更新拓扑图，一次操作全链路生效
+
+
+### 需求 102：证书认证与 PKI 管理
+
+**用户故事：** 作为安全管理员，我希望系统能管理企业 PKI 证书体系，支持 802.1X EAP-TLS 证书认证，自动签发/续签/吊销终端证书，替代传统账号密码认证，提升准入安全等级。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 内置轻量级 CA 证书服务（或对接企业 CA），支持为终端自动签发 802.1X 客户端证书
+2. THE IPAM_System SHALL 支持证书生命周期管理：签发、续签、吊销、过期提醒，证书即将过期提前 30/15/7 天分级预警
+3. THE IPAM_System SHALL 支持证书与终端/用户绑定，一台终端一张证书，证书被盗用或终端更换时自动吊销旧证书
+4. THE IPAM_System SHALL 支持 CRL/OCSP 证书吊销列表发布，华为设备实时校验证书有效性，吊销证书的终端立刻拒绝入网
+5. THE IPAM_System SHALL 支持证书批量签发和分发，新员工入职/新设备上线时批量生成证书并推送至终端
+6. THE IPAM_System SHALL 记录所有证书操作日志（签发、续签、吊销、使用），支持审计追溯
+
+### 需求 103：多因素认证（MFA）
+
+**用户故事：** 作为安全管理员，我希望对高安全区域的网络接入实施多因素认证，除账号密码外还需短信验证码/动态令牌/生物识别，防止凭证泄露导致的非法接入。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持多因素认证（MFA），在 802.1X/Portal 认证基础上叠加第二因素验证
+2. THE IPAM_System SHALL 支持以下第二因素方式：短信验证码、企业微信/钉钉推送确认、TOTP 动态令牌（Google Authenticator/Microsoft Authenticator）、硬件令牌（如 YubiKey）
+3. THE IPAM_System SHALL 支持按安全区域差异化配置 MFA 策略：核心机房网络强制 MFA、办公网络可选 MFA、访客网络免 MFA
+4. THE IPAM_System SHALL 支持 MFA 免密记忆，同一终端在指定天数内（可配置）免重复验证第二因素
+5. THE IPAM_System SHALL 记录 MFA 认证日志，包括认证时间、用户、终端、认证因素类型、认证结果
+
+### 需求 104：认证策略引擎与规则编排
+
+**用户故事：** 作为网络安全管理员，我希望系统提供灵活的认证策略引擎，支持按多维度条件组合编排认证规则，不同场景自动匹配不同认证方式和授权策略。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 提供可视化认证策略编排引擎，支持以拖拽方式创建认证规则链（IF-THEN-ELSE 逻辑）
+2. THE IPAM_System SHALL 支持以下条件维度组合：终端类型、操作系统、MAC 厂商前缀、接入方式（有线/无线）、接入位置（SSID/交换机端口/VLAN）、时间段、用户部门、用户角色、终端合规状态
+3. THE IPAM_System SHALL 支持以下动作输出：选择认证方式（802.1X/Portal/MAC/PPSK/免认证）、分配 VLAN、下发 ACL、设置带宽限速、要求 MFA、拒绝接入、隔离至修复区
+4. THE IPAM_System SHALL 支持策略优先级排序，多条策略匹配时按优先级执行第一条命中的策略
+5. THE IPAM_System SHALL 支持策略模拟测试，输入终端属性模拟匹配过程，验证策略是否符合预期，避免策略上线后出错
+6. THE IPAM_System SHALL 支持策略版本管理，策略变更自动保存历史版本，可一键回滚至任意历史版本
+
+### 需求 105：认证日志分析与用户行为画像
+
+**用户故事：** 作为安全运营人员，我希望系统能对全网认证日志进行深度分析，建立用户/终端的网络行为画像，识别异常认证行为（如异常时间登录、频繁切换终端、异地接入）。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 提供认证日志分析面板：认证成功率趋势、认证方式分布、认证失败原因 TOP N、认证耗时分布
+2. THE IPAM_System SHALL 为每个用户建立网络行为画像：常用终端列表、常用接入位置、常用接入时间段、历史认证记录
+3. THE IPAM_System SHALL 支持异常认证行为检测：非常用时间段认证、非常用终端认证、非常用位置认证、短时间内多次认证失败、同一账号多终端同时在线
+4. WHEN 检测到异常认证行为时，THE IPAM_System SHALL 自动触发告警，可配置处置动作（仅告警/要求 MFA 二次验证/拒绝接入/锁定账号）
+5. THE IPAM_System SHALL 支持认证行为基线学习，自动建立每个用户/终端的正常行为基线，偏离基线的行为标记为异常
+6. THE IPAM_System SHALL 在数字化大屏展示认证态势：实时在线用户数、认证成功率、异常认证事件滚动、用户接入地理分布
+
+### 需求 106：无线网络认证增强
+
+**用户故事：** 作为无线网络管理员，我希望系统能精细化管理无线网络认证，支持多 SSID 差异化认证、无线漫游无感知切换、无线终端定位。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持多 SSID 差异化认证策略：员工 SSID（802.1X）、访客 SSID（Portal 扫码）、IoT SSID（PPSK/MAC）、会议室 SSID（临时密码），每个 SSID 独立配置认证方式和授权策略
+2. THE IPAM_System SHALL 支持无线漫游无感知认证，终端在 AP 间漫游时无需重新认证，认证状态自动同步至新 AP
+3. THE IPAM_System SHALL 支持无线终端定位，基于终端连接的 AP 信息估算终端所在楼层/区域，在平面图上标注终端位置
+4. THE IPAM_System SHALL 支持无线信号质量监控，展示每个 AP 的在线终端数、信道利用率、信号强度分布，信号质量差的 AP 自动告警
+5. THE IPAM_System SHALL 支持无线黑名单管理，可将违规终端 MAC 加入无线黑名单，禁止连接任何 SSID
+6. THE IPAM_System SHALL 支持临时无线密码管理，可为会议室/培训室生成限时无线密码，到期自动失效
+
+
+### 需求 107：用户网络行为全景查询
+
+**用户故事：** 作为 IT 管理员，我希望搜索某个员工姓名或工号，就能看到他所有终端的流量记录、应用使用情况、上网行为、认证历史、IP 分配记录，实现"以人为中心"的全景网络行为追溯。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持按员工姓名/工号/部门搜索，自动关联该用户绑定的所有终端（PC、手机、平板），展示用户网络行为全景页
+2. THE IPAM_System SHALL 在用户全景页展示流量概览：该用户所有终端的总流量（上行/下行）、流量趋势图（按小时/天/周）、流量排名（在部门/全公司中的排名）
+3. THE IPAM_System SHALL 在用户全景页展示应用使用详情：该用户访问的应用协议分布（办公/视频/社交/游戏/下载等）、TOP N 应用流量排行、各应用使用时长统计
+4. THE IPAM_System SHALL 在用户全景页展示上网时间分析：每日上网时段分布热力图、工作时间与非工作时间流量对比、异常时段上网标记
+5. THE IPAM_System SHALL 在用户全景页展示认证历史：所有认证记录（时间、终端、接入方式、认证结果）、异常认证事件高亮
+6. THE IPAM_System SHALL 在用户全景页展示 IP 使用历史：该用户所有终端的 IP 分配/回收/变更记录时间线
+7. THE IPAM_System SHALL 在用户全景页展示安全合规状态：各终端的合规评分、违规事件（违规软件、USB 使用、私改 IP 等）
+8. THE IPAM_System SHALL 支持用户行为对比，可选择两个用户对比流量、应用使用、上网时段等行为差异
+9. THE IPAM_System SHALL 支持用户行为报告导出（PDF），包含流量统计、应用使用、认证记录、安全合规等完整信息，可用于 HR 或审计场景
+10. THE IPAM_System SHALL 支持按部门维度汇总展示：部门总流量、部门 TOP N 用户、部门应用使用分布，辅助部门网络资源管控
+11. THE IPAM_System SHALL 在用户全景页展示实时接入位置：当前连接的交换机/AP 名称、端口号、VLAN、机房/楼层/区域，有线终端精确到交换机端口，无线终端精确到 AP 并在平面图上标注位置
+12. THE IPAM_System SHALL 支持用户历史位置轨迹回溯，记录该用户每次接入的设备端口/AP 变更历史（时间、接入设备、端口、位置），以时间线形式展示移动轨迹
+13. THE IPAM_System SHALL 支持从用户全景页一键跳转至接入交换机的端口面板视图（高亮当前端口）、所在机架视图（高亮设备 U 位）、机房平面图（高亮设备位置）
+
+
+### 需求 108：IT 服务目录与自助服务台
+
+**用户故事：** 作为普通员工，我希望有一个统一的 IT 自助服务入口，能看到所有可申请的 IT 服务（IP 申请、设备领用、权限开通、故障报修、密码重置等），像点菜一样提交需求，不用打电话找 IT。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 提供 IT 服务目录页面，分类展示所有可申请的 IT 服务（网络服务、设备服务、账号服务、桌面服务、弱电服务），每项服务包含说明、预计处理时间、所需审批
+2. THE IPAM_System SHALL 支持员工一键提交服务请求，系统自动生成工单并路由至对应处理人
+3. THE IPAM_System SHALL 支持常见问题自助解决（FAQ），内嵌 AI 问答，员工描述问题后 AI 自动推荐解决方案，无法自助解决再转人工工单
+4. THE IPAM_System SHALL 支持服务请求满意度评价，工单完结后员工可评分（1-5 星）并填写反馈，统计各服务的满意度趋势
+
+### 需求 109：IT 成本分析与计费
+
+**用户故事：** 作为 IT 负责人，我希望系统能统计各部门的 IT 资源使用成本（IP 资源、带宽、机架空间、设备折旧、打印量等），生成部门 IT 成本分摊报表，辅助预算管理。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持 IT 资源成本配置，可为 IP 地址、带宽、机架 U 位、PDU 功耗、打印页数等资源设置单价
+2. THE IPAM_System SHALL 按部门/租户自动统计资源使用量，计算各部门的 IT 资源使用成本
+3. THE IPAM_System SHALL 生成部门 IT 成本分摊报表（月度/季度/年度），展示各部门的资源使用量、费用明细、费用趋势，支持导出 Excel/PDF
+4. THE IPAM_System SHALL 支持成本预算管理，可为各部门设置 IT 预算额度，使用量接近预算时自动预警
+5. THE IPAM_System SHALL 在可视化仪表盘展示全公司 IT 成本概览：总成本、各部门占比、成本趋势、TOP N 成本部门
+
+### 需求 110：网络质量监测（拨测）
+
+**用户故事：** 作为网络管理员，我希望系统能主动拨测关键业务链路的网络质量（延迟、丢包、抖动），而不是等用户投诉才发现网络慢。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持网络拨测任务配置，可创建 ICMP Ping/TCP 端口/HTTP URL/DNS 解析等拨测任务，设置拨测目标、拨测频率、超时阈值
+2. THE IPAM_System SHALL 实时展示拨测结果：延迟、丢包率、抖动、HTTP 响应时间，以时序图展示历史趋势
+3. WHEN 拨测指标超过阈值时（如延迟 > 100ms、丢包率 > 5%），THE IPAM_System SHALL 自动触发网络质量告警
+4. THE IPAM_System SHALL 支持多节点拨测，从不同站点/网段同时拨测同一目标，对比各节点的网络质量差异，定位瓶颈链路
+5. THE IPAM_System SHALL 生成网络质量报表，按链路/时间维度统计可用性、平均延迟、丢包率，支持 SLA 达标率计算
+
+### 需求 111：IP 地址冲突自动修复
+
+**用户故事：** 作为网络管理员，我希望系统检测到 IP 冲突后不仅告警，还能自动修复——联动交换机隔离冲突终端，或自动为冲突终端重新分配 IP，减少人工介入。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持 IP 冲突自动修复策略配置：仅告警、告警+隔离冲突终端、告警+自动重新分配 IP，可按网段差异化配置
+2. WHEN 选择"隔离冲突终端"策略时，THE IPAM_System SHALL 联动华为交换机将冲突终端所在端口切换至隔离 VLAN，并推送通知
+3. WHEN 选择"自动重新分配 IP"策略时，THE IPAM_System SHALL 为冲突终端自动分配新的空闲 IP，同步更新 DHCP 租约
+4. THE IPAM_System SHALL 记录冲突修复全过程（检测时间、冲突双方 IP/MAC、修复方式、修复结果），支持审计追溯
+
+### 需求 112：网络设备巡检与健康评分
+
+**用户故事：** 作为网络运维人员，我希望系统能定期自动巡检全网设备，生成设备健康评分和巡检报告，提前发现潜在风险，不用逐台登录设备检查。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持自动巡检任务，定期采集全网设备的 CPU/内存/温度/端口状态/固件版本/配置合规性/日志异常等指标
+2. THE IPAM_System SHALL 为每台设备计算健康评分（0-100），综合性能指标、配置合规、告警频率、固件版本等维度加权计算
+3. THE IPAM_System SHALL 生成巡检报告，按设备类型/站点分组展示：健康评分分布、高风险设备列表、不合规配置项、固件待升级设备、异常日志摘要
+4. THE IPAM_System SHALL 支持巡检报告自动推送（邮件/企业微信），可配置推送周期（每日/每周）
+5. THE IPAM_System SHALL 支持巡检历史对比，展示设备健康评分的变化趋势，评分持续下降的设备自动预警
+
+### 需求 113：灾备切换与应急预案管理
+
+**用户故事：** 作为 IT 负责人，我希望系统能管理网络灾备切换预案，灾难发生时一键执行预案（切换备用链路、启用灾备网段、通知相关人员），缩短故障恢复时间。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持应急预案管理，可创建预案（预案名称、触发条件、执行步骤、负责人、关联资源），预案支持版本管理
+2. THE IPAM_System SHALL 支持预案中定义自动化执行步骤：切换备用 VLAN、启用灾备网段、下发应急 ACL、通知值班人员、切换 DNS 解析
+3. THE IPAM_System SHALL 支持预案一键执行，执行过程实时展示每个步骤的状态（成功/失败/跳过），失败步骤可手动重试或跳过
+4. THE IPAM_System SHALL 支持预案演练模式，模拟执行预案但不实际生效，验证预案可行性，记录演练结果
+5. THE IPAM_System SHALL 记录预案执行历史，包括触发原因、执行时间、每步执行结果、恢复时间，支持复盘分析
+
+### 需求 114：运维周报/月报自动生成
+
+**用户故事：** 作为 IT 负责人，我希望系统每周/每月自动生成运维报告，汇总 IP 资源使用、设备健康、告警处理、工单统计、安全态势等核心数据，不用手动整理汇报材料。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持运维报告模板配置，可选择报告包含的模块：IP 资源概览、设备健康评分、告警统计、工单统计、准入态势、流量分析、安全合规、SLA 达标率
+2. THE IPAM_System SHALL 支持定时自动生成运维周报/月报（可配置生成时间），自动推送至指定人员（邮件/企业微信）
+3. THE IPAM_System SHALL 在报告中自动对比上期数据，标注环比变化（如 IP 使用率环比+5%、告警数量环比-10%），趋势向好标绿、趋势恶化标红
+4. THE IPAM_System SHALL 支持报告在线预览和导出（PDF/Word），报告排版美观，可自定义企业 LOGO 和标题
+5. THE IPAM_System SHALL 记录报告生成历史，支持查看和下载历史报告
+
+
+### 需求 115：统一报表中心与全模块报表覆盖
+
+**用户故事：** 作为 IT 管理员，我希望系统每个功能模块都有详细的报表输出，所有报表集中在统一报表中心管理，支持时间对比、环比分析、定时生成和多格式导出，确保每一项管理数据都有据可查、有表可看。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 提供统一报表中心页面，按模块分类展示所有可用报表，支持按报表名称/模块/标签搜索
+2. THE IPAM_System SHALL 为以下每个模块提供独立的详细报表，每份报表均支持按时间范围筛选（今日/本周/本月/本季度/本年/自定义）、同比对比（与去年同期）、环比对比（与上一周期），趋势向好标绿、趋势恶化标红：
+   - IP 资源报表：各网段 IP 总量/已用/空闲/保留/临时数量及使用率、新增分配数、回收数、使用率变化趋势、TOP N 高使用率网段
+   - 设备资产报表：设备总数、新增/退役数量、按类型/厂商/状态分布、保修即将到期设备清单、设备增长趋势
+   - 终端管理报表：终端总数、在线率、新增/离线/闲置终端数、按类型/部门/操作系统分布、合规率趋势、违规终端清单
+   - 机房机架报表：各机房机架使用率、U 位使用率、功率使用率、温湿度统计、新增上架/下架设备数、容量趋势
+   - VLAN 报表：VLAN 总数、各 VLAN 关联网段数/端口数、VLAN 使用率分布
+   - 网络拓扑报表：设备总数/在线率、链路总数/故障链路数、拓扑变更记录汇总
+   - 告警报表：告警总数、按级别/类型/模块分布、已处理/未处理/已恢复数量、平均处理时间、告警趋势、TOP N 告警源
+   - 预警报表：预警总数、按类型分布、预警转化为真实告警的比例、预警准确率趋势
+   - 准入认证报表：认证总次数、成功率/失败率、按认证方式分布、按部门分布、异常认证事件清单、访客接入统计
+   - 终端合规报表：合规率、各检查项达标率、不合规终端清单及不合规项明细、合规率趋势
+   - 流量分析报表：全网总流量、按站点/网段/设备分布、TOP N 流量 IP/应用、异常流量事件汇总、带宽利用率趋势
+   - 数据采集报表：各协议采集任务成功率、采集设备覆盖率、数据断档事件、采集引擎性能统计
+   - 工单统计报表：工单总数、按类型/状态/部门分布、平均处理时间、SLA 达标率、工单趋势
+   - 操作审计报表：操作总数、按操作类型/操作人/模块分布、高危操作清单、操作频率趋势
+   - 用户行为报表：按部门统计流量/应用使用/上网时段、TOP N 流量用户、异常行为事件汇总
+   - 服务器监控报表：服务器总数/在线率、CPU/内存/磁盘平均使用率、高负载服务器清单、服务异常事件
+   - 弱电系统报表：弱电设备总数/在线率、按类型分布、离线设备清单、巡检结果汇总
+   - 打印机报表：打印机总数/在线率、各打印机打印量统计、耗材余量预警清单、按部门打印量排行
+   - 备品备件报表：备件库存总量、领用/归还统计、库存不足预警清单、备件周转率
+   - 资产全生命周期报表：资产总值、折旧统计、按状态（在用/闲置/维修/报废）分布、保修到期清单、合同到期清单
+   - 值班统计报表：各人值班天数、告警响应次数、平均响应时间、交接记录汇总
+   - IT 成本报表：总成本、按部门分摊明细、按资源类型分布、成本趋势、预算使用率
+   - 网络质量报表：各拨测链路可用性、平均延迟、丢包率、SLA 达标率、质量趋势
+   - 设备巡检报表：巡检覆盖率、健康评分分布、高风险设备清单、不合规配置项汇总
+   - 灾备演练报表：演练次数、演练结果（成功/失败）、平均恢复时间、预案覆盖率
+   - 安全态势报表：违规事件总数、按类型分布、封堵处置统计、安全评分趋势
+3. THE IPAM_System SHALL 每份报表均支持以下功能：
+   - 时间对比：选择两个时间段并排对比所有指标，自动计算差值和变化百分比
+   - 图表+表格双视图：关键指标以图表展示趋势，明细数据以表格展示，图表和表格联动筛选
+   - 多格式导出：支持导出 Excel（含原始数据）、PDF（排版美观，含图表）、Word 格式
+   - 导出水印：导出文件自动添加导出人、导出时间、"内部资料"水印
+4. THE IPAM_System SHALL 支持报表定时自动生成，可为每份报表配置生成周期（每日/每周/每月/每季度），自动推送至指定人员（邮件/企业微信/钉钉）
+5. THE IPAM_System SHALL 支持自定义报表，管理员可自由选择数据源、字段、筛选条件、图表类型，组合生成个性化报表并保存为模板
+6. THE IPAM_System SHALL 记录报表生成历史，支持查看和下载历史报表，历史报表保留周期可配置
+7. THE IPAM_System SHALL 支持报表权限控制，不同角色/租户仅能查看和导出其权限范围内的报表数据
+
+
+### 需求 116：IT 资产台账与分类体系
+
+**用户故事：** 作为 IT 资产管理员，我希望系统能建立完整的 IT 资产分类体系和台账，覆盖所有 IT 资产类型（不仅是网络设备），每类资产有专属字段模板，实现资产数据的标准化管理。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持多级资产分类体系（大类 → 中类 → 小类），内置常用分类模板：
+   - 网络设备：交换机、路由器、防火墙、无线 AP、无线 AC、负载均衡
+   - 服务器：物理服务器、虚拟机、云主机、小型机
+   - 终端设备：台式机、笔记本、一体机、瘦客户端
+   - 移动设备：手机、平板、移动热点
+   - 外设：显示器、键鼠、耳机、摄像头、U 盘/移动硬盘
+   - 打印设备：打印机、复印机、扫描仪、一体机
+   - 弱电设备：摄像头、NVR、门禁控制器、广播设备、传感器
+   - 机房设施：UPS、空调、PDU、配线架、光纤跳线
+   - 软件资产：操作系统许可、办公软件许可、专业软件许可、云服务订阅
+   - 耗材：硒鼓、墨盒、纸张、网线、光纤跳线、标签纸
+2. THE IPAM_System SHALL 支持自定义资产分类，管理员可新增/编辑/删除分类，每个分类可定义专属字段模板（如服务器需要 CPU/内存/磁盘字段，打印机需要打印速度/耗材型号字段）
+3. THE IPAM_System SHALL 为每项资产自动生成唯一资产编号（编号规则可自定义，如"IT-NET-SW-2026-0001"），支持条码/二维码关联
+4. THE IPAM_System SHALL 支持资产台账总览页面，展示各分类资产数量、总价值、状态分布，支持按分类/部门/位置/状态多维度筛选
+
+### 需求 117：资产入库与验收管理
+
+**用户故事：** 作为 IT 采购人员，我希望新采购的设备到货后能在系统中完成入库验收，记录验收信息，自动关联采购订单，确保账实一致。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持资产入库登记，填写资产基本信息（名称、型号、序列号、供应商、采购价格），可批量入库（Excel 导入或扫码入库）
+2. THE IPAM_System SHALL 支持入库验收流程，验收人核对实物与采购清单是否一致，填写验收结果（合格/不合格/部分合格），不合格项记录原因
+3. THE IPAM_System SHALL 支持关联采购订单，入库资产自动关联采购订单号、供应商、合同编号，实现采购-入库-资产的全链路追溯
+4. THE IPAM_System SHALL 支持入库自动生成资产编号和二维码标签，可批量打印标签
+5. THE IPAM_System SHALL 入库完成后资产状态自动变为"库存"，等待领用分配
+
+### 需求 118：资产领用/调拨/借用管理
+
+**用户故事：** 作为 IT 管理员，我希望系统能管理资产的领用、部门间调拨、临时借用等流转操作，每次流转都有审批和记录，确保资产去向清晰。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持资产领用申请，员工提交领用申请（选择资产类型/具体资产、填写用途），经审批后系统自动更新资产状态为"在用"并绑定使用人
+2. THE IPAM_System SHALL 支持资产调拨，管理员可将资产从 A 部门调拨至 B 部门，调拨需审批，自动更新资产归属部门和使用人
+3. THE IPAM_System SHALL 支持资产借用管理，借用需设置归还日期，到期前自动提醒归还，逾期未归还自动升级通知至管理员
+4. THE IPAM_System SHALL 支持资产归还登记，归还时检查资产状态（完好/损坏），损坏资产自动转入维修流程
+5. THE IPAM_System SHALL 记录资产每次流转的完整信息（操作类型、操作人、时间、来源/目标部门、来源/目标使用人），形成资产流转链
+
+### 需求 119：资产维修与报废管理
+
+**用户故事：** 作为 IT 管理员，我希望系统能管理资产的维修和报废流程，记录维修历史和费用，报废资产有审批和处置记录，满足财务审计要求。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持资产报修申请，使用人提交报修工单（描述故障现象），系统自动关联资产记录
+2. THE IPAM_System SHALL 支持维修过程管理：派单给维修人员/外部供应商、记录维修方案、维修费用、更换配件、维修结果（修复/无法修复）
+3. THE IPAM_System SHALL 支持维修历史查询，每台资产可查看所有维修记录，统计累计维修费用，维修费用超过资产残值时自动建议报废
+4. THE IPAM_System SHALL 支持资产报废申请，需多级审批（IT 主管 → 财务 → 总经理），审批通过后资产状态变为"已报废"
+5. THE IPAM_System SHALL 支持报废资产处置记录，记录处置方式（回收/拍卖/销毁/捐赠）、处置收入、处置时间、经办人
+6. THE IPAM_System SHALL 支持报废资产数据清除确认，涉及存储设备（硬盘/U 盘/服务器）的报废需确认数据已安全擦除
+
+### 需求 120：软件资产与许可证管理
+
+**用户故事：** 作为 IT 管理员，我希望系统能管理企业所有软件许可证，跟踪许可证数量、使用情况、到期时间，避免超量使用导致的合规风险和许可证浪费。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持软件许可证台账管理，记录软件名称、版本、许可类型（永久/订阅/OEM/批量授权）、许可数量、采购日期、到期日期、供应商、合同编号、许可证密钥
+2. THE IPAM_System SHALL 自动统计每款软件的实际安装数量（基于终端软件清单采集），与许可数量对比，超量使用自动告警
+3. THE IPAM_System SHALL 支持许可证到期预警，提前 90/60/30/7 天分级提醒续费
+4. THE IPAM_System SHALL 支持许可证使用率分析，展示各软件的许可使用率（已用/总量），使用率过低的许可建议回收或降级
+5. THE IPAM_System SHALL 支持许可证分配管理，可将许可分配至指定部门/用户，超出分配额度的安装自动告警
+6. THE IPAM_System SHALL 生成软件资产合规报表，包含许可总数、使用数、超量数、到期清单、费用统计，满足软件审计要求
+
+### 需求 121：资产盘点增强（定期盘点/抽盘/联网盘点）
+
+**用户故事：** 作为 IT 资产管理员，我希望系统支持多种盘点方式（全面盘点/抽样盘点/联网自动盘点），盘点结果自动与台账对比，生成盘盈盘亏报告。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持创建盘点任务，选择盘点范围（全公司/指定部门/指定分类/指定位置）、盘点方式（全面盘点/抽样盘点）、盘点负责人、截止日期
+2. THE IPAM_System SHALL 支持扫码盘点（手机扫描资产二维码）和手工盘点（勾选确认），盘点数据实时同步至系统
+3. THE IPAM_System SHALL 支持联网自动盘点，对于有 IP 地址的资产（服务器、网络设备、终端），通过网络探测自动确认资产在线状态，无需人工逐台扫码
+4. THE IPAM_System SHALL 盘点完成后自动与台账对比，生成盘点差异报告：盘盈（实物有但台账无）、盘亏（台账有但实物无）、信息不符（实物信息与台账不一致）
+5. THE IPAM_System SHALL 支持盘点差异处理流程，盘盈资产可一键入库，盘亏资产可标记为丢失/待查，信息不符可一键更新台账
+6. THE IPAM_System SHALL 支持定期盘点计划，可配置盘点周期（每月/每季度/每年），到期自动创建盘点任务并通知负责人
+7. THE IPAM_System SHALL 记录盘点历史，支持查看历史盘点报告和盘点差异趋势
+
+### 需求 122：资产合同与供应商管理
+
+**用户故事：** 作为 IT 采购管理员，我希望系统能管理所有 IT 相关合同（采购合同、维保合同、租赁合同、软件订阅合同）和供应商信息，合同到期自动提醒，供应商评价可追溯。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持合同管理，记录合同编号、合同类型（采购/维保/租赁/订阅）、供应商、合同金额、签订日期、生效日期、到期日期、合同附件（PDF 上传）
+2. THE IPAM_System SHALL 支持合同与资产关联，一份合同可关联多项资产，在资产详情页展示关联合同信息
+3. THE IPAM_System SHALL 支持合同到期预警，提前 90/60/30/7 天分级提醒续签，逾期未续签的合同标红高亮
+4. THE IPAM_System SHALL 支持供应商管理，记录供应商名称、联系人、联系方式、服务范围、合作历史
+5. THE IPAM_System SHALL 支持供应商评价，每次采购/维修/服务完成后可对供应商评分（质量/响应速度/价格），生成供应商评价排行
+6. THE IPAM_System SHALL 生成合同统计报表，展示合同总数/总金额、即将到期合同清单、各供应商合同金额占比
+
+
+### 需求 123：资产月度对比报表与资产看板
+
+**用户故事：** 作为 IT 管理员，领导要求我每月输出资产情况对比报告，清晰展示本月与上月的资产变动（新增、报废、调拨、维修），包含明细表和图表，能直接给领导看。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 提供资产月度对比报表，自动对比选定两个月份的资产数据，展示以下核心指标的变化：
+   - 资产总数及环比变化（+/-数量和百分比）
+   - 资产总价值及环比变化
+   - 按分类（网络设备/服务器/终端/弱电/外设/软件等）的数量对比柱状图
+   - 按状态（在用/库存/闲置/维修/报废）的数量对比饼图
+   - 按部门的资产持有量对比
+2. THE IPAM_System SHALL 在对比报表中展示本月资产变动明细清单：
+   - 新增入库清单：资产编号、名称、型号、分类、采购价格、入库日期、供应商
+   - 报废清单：资产编号、名称、型号、原使用人、报废原因、报废日期、残值
+   - 领用/归还清单：资产编号、名称、领用人/归还人、部门、日期
+   - 调拨清单：资产编号、名称、调出部门→调入部门、日期
+   - 维修清单：资产编号、名称、故障描述、维修费用、维修状态
+3. THE IPAM_System SHALL 在对比报表中以图表形式展示：
+   - 资产数量月度趋势折线图（近 12 个月）
+   - 本月新增 vs 报废数量对比柱状图
+   - 资产分类占比环形图（本月 vs 上月并排）
+   - 各部门资产持有量排行条形图
+   - 资产价值变动瀑布图（期初价值 + 新增 - 报废折旧 = 期末价值）
+4. THE IPAM_System SHALL 支持报表一键导出为 PDF（排版美观，图表+明细表完整呈现，适合直接给领导看）和 Excel（含原始数据，便于二次分析）
+5. THE IPAM_System SHALL 支持资产看板页面，以卡片+图表形式实时展示：资产总数、本月新增数、本月报废数、闲置资产数、即将过保资产数、维修中资产数，每个卡片点击可跳转至明细
+6. THE IPAM_System SHALL 支持资产对比报表定时自动生成（每月 1 日自动生成上月报表），自动推送至指定人员
+
+### 需求 124：交换机配置对比与变更审计
+
+**用户故事：** 作为网络运维人员，我希望系统能对比任意两个时间点的交换机配置，逐行高亮显示差异，快速定位配置变更内容，排查因配置修改导致的网络故障。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持交换机配置版本列表展示，按时间倒序展示每次备份的配置版本（版本号、备份时间、备份方式（自动/手动）、文件大小、变更摘要）
+2. THE IPAM_System SHALL 支持选择任意两个配置版本进行逐行对比（Diff 视图），以左右分栏或上下分栏展示，新增行标绿、删除行标红、修改行标黄，支持行号定位
+3. THE IPAM_System SHALL 支持配置变更摘要自动生成，AI 自动分析两个版本的差异，生成变更摘要（如"新增 VLAN 100""修改端口 GE0/0/1 的 ACL 规则""删除静态路由 10.0.0.0/8"）
+4. THE IPAM_System SHALL 支持配置变更告警联动，当配置对比发现高风险变更（如删除 ACL、修改 RADIUS 配置、关闭端口安全）时，自动触发告警
+5. THE IPAM_System SHALL 支持配置回滚，选择历史版本后一键回滚至该版本，回滚前自动备份当前配置，回滚操作需审批确认
+6. THE IPAM_System SHALL 支持批量配置对比，选择多台交换机同时对比当前配置与基线模板的差异，生成全网配置合规检查报告
+7. THE IPAM_System SHALL 支持配置变更时间线，以时间轴形式展示某台交换机的所有配置变更历史，每个节点标注变更时间、变更摘要、操作人（若可追溯），点击节点可查看该版本的完整配置或与前一版本的 Diff
+
+
+### 需求 125：终端 Agent 部署与管理
+
+**用户故事：** 作为 IT 管理员，我希望系统提供自研的轻量级终端 Agent，部署到每台员工电脑上全面采集数据，同时也支持对接第三方系统（见需求 127）。两套数据在系统内自动对比，互相补充验证，确保终端数据的完整性和准确性。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 提供轻量级终端 Agent 客户端（支持 Windows 7/10/11、macOS、Linux），安装包小于 20MB，运行时 CPU 占用 < 1%、内存占用 < 50MB，不影响用户正常使用
+2. THE IPAM_System SHALL 支持 Agent 批量部署方式：域控 GPO 推送、SCCM/Intune 分发、共享目录静默安装脚本、手动安装包下载，覆盖有域和无域环境
+3. THE IPAM_System SHALL Agent 自动采集以下数据并定时上报（采集周期可配置，默认每 4 小时）：
+   - 软件清单：已安装软件名称、版本号、安装日期、安装路径、发布者、安装来源（MSI/EXE/应用商店）
+   - 硬件信息：CPU 型号/核数、内存容量、磁盘型号/容量/使用率、显卡、网卡 MAC
+   - 系统信息：操作系统版本、补丁级别、主机名、域/工作组、登录用户
+   - 安全状态：杀毒软件安装及更新状态、防火墙状态、屏幕锁定策略、USB 使用记录
+   - 进程列表：当前运行进程名称、CPU/内存占用
+4. THE IPAM_System SHALL 提供 Agent 管理面板，展示全网 Agent 部署覆盖率、在线/离线 Agent 数量、Agent 版本分布，未安装 Agent 的终端自动标记并告警
+5. THE IPAM_System SHALL 支持 Agent 远程升级，新版本发布后可批量推送升级，升级过程静默执行不打扰用户
+6. THE IPAM_System SHALL 支持无 Agent 采集降级方案，对于无法安装 Agent 的终端（如 Linux 服务器、特殊设备），通过 WMI/SSH/SNMP 远程采集基础信息
+
+### 需求 126：软件安装审计与非法软件检测
+
+**用户故事：** 作为 IT 管理员，领导要求我统计全公司每台电脑安装了哪些软件，有没有非法软件（盗版、翻墙、远程控制、游戏等），输出清晰的审计报告。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 提供全网软件安装统计页面，展示：
+   - 软件总数（去重后的独立软件数量）
+   - 每款软件的安装终端数量排行（TOP N）
+   - 按软件分类统计（办公/开发/安全/系统工具/浏览器/通讯/娱乐/其他）
+   - 按部门统计软件安装数量分布
+2. THE IPAM_System SHALL 内置非法/违规软件库（可自定义维护），包含以下分类：
+   - 翻墙工具：VPN 代理类（如 Clash、V2Ray、Shadowsocks、蓝灯等）
+   - 远程控制：未授权的远程工具（如 TeamViewer 个人版、向日葵、AnyDesk 等）
+   - 游戏软件：Steam、Epic、各类游戏客户端
+   - P2P 下载：迅雷、BitTorrent 等
+   - 破解工具：注册机、激活工具、Crack 类软件
+   - 其他违规：管理员自定义添加的违规软件
+3. THE IPAM_System SHALL 自动扫描全网终端软件清单，与非法软件库比对，发现违规软件立刻标记并告警，展示违规终端列表（终端名称、使用人、部门、违规软件名称、安装时间）
+4. THE IPAM_System SHALL 支持软件安装变更监控，当终端新安装或卸载软件时实时上报，新安装的违规软件立刻告警推送至管理员
+5. THE IPAM_System SHALL 支持按人搜索软件清单，输入员工姓名/工号，展示该员工所有终端的完整软件安装列表，违规软件红色高亮
+6. THE IPAM_System SHALL 生成软件审计报告（可按全公司/部门/个人维度），包含：
+   - 软件安装总览（总数、分类占比图）
+   - 违规软件清单（终端、使用人、软件名称、安装时间）
+   - 许可证合规情况（已用/授权数量对比，超量使用标红）
+   - 软件变更记录（本月新增安装/卸载的软件统计）
+   - 与上月对比：新增违规数、违规率变化趋势
+   - 支持导出 PDF/Excel，PDF 版排版清晰适合直接给领导
+
+
+### 需求 127：第三方运维系统数据集成平台
+
+**用户故事：** 作为 IT 管理员，我公司已经部署了 OCS 资产管理、深信服 EDR、桌管软件、堡垒机等多套系统，我希望 IPAM 能通过 API 对接这些已有系统，直接拉取终端信息、软件清单、安全状态等数据，不用重复采集，实现数据统一汇聚。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 提供统一的第三方系统集成平台，支持通过 REST API/数据库直连/文件导入等方式对接外部系统，内置以下常用系统的对接适配器：
+   - 资产管理类：OCS Inventory、GLPI、Snipe-IT、蓝鲸 CMDB、优维 CMDB
+   - 终端安全类：深信服 EDR/aES、奇安信天擎、360 终端安全、卡巴斯基、赛门铁克
+   - 桌面管理类：Microsoft SCCM/Intune、Ivanti、ManageEngine、联软 UniAccess
+   - 堡垒机类：齐治堡垒机、JumpServer、行云管家
+   - 监控平台类：Zabbix、Prometheus、Nagios、SolarWinds、华为 iMaster NCE
+   - 工单系统类：ServiceNow、Jira Service Management、蓝鲸 ITSM
+   - 漏洞扫描类：绿盟 RSAS、启明星辰天镜、Nessus、OpenVAS
+2. THE IPAM_System SHALL 支持对接配置管理，每个对接适配器可配置：API 地址、认证方式（API Key/OAuth/Basic Auth）、同步周期、同步范围、字段映射规则
+3. THE IPAM_System SHALL 支持数据字段映射，管理员可配置外部系统字段与 IPAM 字段的对应关系（如 OCS 的"TAG"映射为 IPAM 的"资产编号"），支持自定义转换规则
+4. THE IPAM_System SHALL 支持双向数据同步，不仅从外部系统拉取数据，也可将 IPAM 数据推送至外部系统（如将 IP 分配结果推送至 CMDB）
+5. THE IPAM_System SHALL 支持数据去重与冲突处理，当多个外部系统提供同一终端的数据时，按优先级规则合并（可配置哪个系统的数据优先）
+6. THE IPAM_System SHALL 提供集成状态监控面板，展示每个对接系统的连接状态、上次同步时间、同步成功/失败数量、数据覆盖率
+7. THE IPAM_System SHALL 记录所有集成同步日志，包括同步时间、数据量、新增/更新/冲突记录数、错误详情，支持排查同步异常
+
+### 需求 128：自定义 API 对接与数据适配器开发
+
+**用户故事：** 作为 IT 管理员，我公司有一些自研系统或小众软件没有内置适配器，我希望系统支持自定义 API 对接，让我自己配置接口地址和字段映射，不用等开发团队写代码。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持自定义 API 适配器，管理员可通过界面配置：API 地址、请求方法（GET/POST）、请求头、认证参数、请求体模板、响应解析规则（JSONPath/XPath）
+2. THE IPAM_System SHALL 支持自定义适配器的可视化字段映射，拖拽方式将 API 响应字段映射至 IPAM 数据模型字段
+3. THE IPAM_System SHALL 支持适配器测试功能，配置完成后可发送测试请求，预览返回数据和映射结果，确认无误后再启用正式同步
+4. THE IPAM_System SHALL 支持 Webhook 接收模式，外部系统主动推送数据至 IPAM 的 Webhook 端点，IPAM 自动解析并入库
+5. THE IPAM_System SHALL 支持适配器模板分享，管理员创建的自定义适配器可导出为模板（JSON 格式），分享给其他用户或社区复用
+
+
+### 需求 129：系统操作引导与新手教程
+
+**用户故事：** 作为新入职的 IT 运维人员，我希望系统内嵌操作引导和新手教程，第一次使用时能快速上手，不用翻厚厚的文档。作为低代码平台的使用者，我希望每个设计器和功能模块都有案例参考和模板可以直接使用。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持首次登录引导向导，分步引导用户完成基础配置（添加网段、添加设备、配置告警、配置通知渠道），每一步提供"跳过"和"稍后提醒"选项
+2. THE IPAM_System SHALL 在每个功能页面提供"?"帮助按钮，点击弹出该功能的操作说明和常见问题
+3. THE IPAM_System SHALL 内嵌交互式操作教程，以高亮+气泡提示方式引导用户完成关键操作流程
+4. THE IPAM_System SHALL 提供内置帮助中心，包含功能说明、操作手册、视频教程、常见问题 FAQ，支持全文搜索
+5. THE IPAM_System SHALL 每个功能模块首次进入时自动弹出该模块的快速入门向导（3-5 步），以动画演示 + 文字说明方式介绍核心操作，用户可选择"不再提示"
+6. THE IPAM_System SHALL 每个低代码设计器（表单/流程/报表/仪表盘/大屏/PPT）首次打开时提供"从模板开始"和"从空白开始"两个入口，"从模板开始"展示预置的行业案例模板列表（含预览图和使用说明），用户可一键克隆模板后修改
+7. THE IPAM_System SHALL 每个设计器内置"案例参考"侧边栏，展示该设计器的典型使用案例（如表单设计器展示"IP 申请表单""设备入库表单""巡检记录表单"等案例），每个案例包含：案例截图、使用场景说明、设计要点提示，用户可一键导入案例到当前设计
+8. THE IPAM_System SHALL 每个设计器提供"操作提示"模式（可开启/关闭），开启后鼠标悬停在设计器的任意按钮/面板/组件上时，自动显示该元素的功能说明和操作提示
+9. THE IPAM_System SHALL 提供"学习路径"功能，根据用户角色（管理员/运维人员/安全管理员/资产管理员）推荐个性化的学习路径，按难度递进排列学习任务（如"第 1 步：创建你的第一个网段""第 2 步：配置告警规则""第 3 步：设计你的第一个仪表盘"），完成任务后标记进度
+10. THE IPAM_System SHALL 提供"AI 操作助手"（与需求 59 集成），用户在任意页面可通过快捷键（如 Ctrl+/）唤出 AI 助手，用自然语言描述想做的事（如"帮我创建一个 IP 申请审批流程"），AI 自动引导用户到对应的设计器并提供操作建议
+11. THE IPAM_System SHALL 内置"最佳实践案例库"，按行业（制造业/金融/教育/医疗/互联网）和场景（IP 管理/资产管理/安全管理/机房管理）分类，每个案例包含：业务背景、配置方案、效果展示、可一键导入的模板包（含表单+流程+报表+仪表盘的完整配置）
+12. THE IPAM_System SHALL 支持帮助内容的管理员自定义，管理员可为企业特有的业务流程编写自定义帮助文档和操作教程，发布到帮助中心供所有用户查看
+
+### 需求 130：数据源对比与差异分析
+
+**用户故事：** 作为 IT 管理员，我希望系统能自动对比自研 Agent 采集的数据和第三方系统（OCS/EDR 等）拉取的数据，发现差异自动标记，确保数据准确性。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持多数据源对比，自动将 Agent 采集的终端数据与第三方系统同步的数据逐字段对比（软件清单、硬件信息、安全状态等）
+2. THE IPAM_System SHALL 对比结果分类展示：一致（两边数据相同）、差异（两边数据不同，标黄高亮差异字段）、仅 Agent 有（第三方系统缺失）、仅第三方有（Agent 未采集到）
+3. THE IPAM_System SHALL 支持差异处理：管理员可选择以哪个数据源为准，一键更新台账数据
+4. THE IPAM_System SHALL 支持定期自动对比（可配置周期），差异数量超阈值自动告警
+5. THE IPAM_System SHALL 生成数据源对比报告，展示各数据源覆盖率、一致率、差异项统计，支持导出
+
+### 需求 131：系统插件与扩展市场
+
+**用户故事：** 作为系统管理员，我希望系统支持插件化扩展和低代码模块创建，未来有新需求时可以通过安装插件或低代码设计器快速扩展功能，不用改核心代码，不用等开发排期。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 采用插件化架构，核心功能与扩展功能解耦，支持通过安装/卸载插件扩展系统能力
+2. THE IPAM_System SHALL 提供插件管理页面，展示已安装插件列表（名称、版本、状态、描述），支持启用/禁用/卸载插件
+3. THE IPAM_System SHALL 提供插件开发 SDK 和文档，第三方开发者可按规范开发自定义插件（如新增设备类型适配器、新增报表模板、新增采集协议）
+4. THE IPAM_System SHALL 支持插件热加载，安装/卸载插件无需重启系统
+5. THE IPAM_System SHALL 提供标准模块接入规范，新功能模块按规范声明以下注册信息后即可自动集成到系统中：菜单注册（侧边栏/顶部导航位置）、路由注册（页面 URL 路径）、权限注册（功能权限点自动纳入角色权限树）、数据模型注册（自定义字段自动可用）、搜索注册（模块数据自动纳入全局搜索）、API 注册（接口自动纳入 API 网关和文档）
+6. THE IPAM_System SHALL 支持通过低代码方式创建新业务模块，管理员可通过可视化界面定义模块名称、数据模型（拖拽字段）、列表页（拖拽配置表格列和筛选条件）、详情页（拖拽配置表单布局）、审批流程（拖拽配置流程节点），系统自动生成完整的 CRUD 功能页面，无需编写代码
+7. THE IPAM_System SHALL 支持插件/模块的依赖管理，安装插件时自动检查依赖关系（如"流量分析插件"依赖"数据采集引擎"），缺少依赖时提示并支持一键安装依赖
+8. THE IPAM_System SHALL 支持插件市场（可选在线/离线模式），展示可用插件列表（分类/评分/下载量/兼容版本），支持一键安装、自动更新
+9. THE IPAM_System SHALL 支持自定义连接器，管理员可通过可视化界面配置外部系统对接（REST API/数据库直连/LDAP/SMTP/企业微信/钉钉/飞书等），配置认证方式（API Key/OAuth2/Basic Auth）、请求参数映射、响应数据映射，连接器可被表单、流程、报表等设计器直接引用
+10. THE IPAM_System SHALL 支持自动化工作流引擎（区别于审批流），管理员可通过可视化界面配置事件驱动的自动化流程：
+    - 触发器：数据变更触发（如"IP 状态变为已用时"）、定时触发（Cron 表达式可视化配置）、Webhook 触发（外部系统回调）、告警触发、工单状态变更触发
+    - 条件判断：可视化条件分支（字段比较/逻辑组合/正则匹配）
+    - 执行动作：发送通知（邮件/企业微信/钉钉/站内信）、调用 API（内部/外部）、更新数据（修改字段值/变更状态）、创建工单、触发扫描、执行脚本、调用 AI 分析
+    - 支持多步骤串联、并行执行、错误处理（重试/跳过/告警）
+11. THE IPAM_System SHALL 支持数据模型关联关系可视化配置，管理员可通过 ER 图式界面查看和配置数据模型间的关联关系（一对一/一对多/多对多），关联关系自动生效于表单（关联数据组件）、报表（跨表查询）、搜索（关联搜索）
+
+
+### 需求 132：管理员层级管理与功能级权限自定义
+
+**用户故事：** 作为超级管理员，我希望能创建多级管理员（如网络管理员、资产管理员、安全管理员、机房管理员），每个管理员可以逐个功能模块勾选授权，精确控制谁能看什么、谁能操作什么，避免权限过大或越权操作。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持管理员层级结构：超级管理员 → 一级管理员 → 二级管理员 → 普通用户，上级管理员可创建和管理下级管理员，下级管理员的权限不可超过上级
+2. THE IPAM_System SHALL 在创建/编辑管理员时，以功能树形式展示系统所有功能模块（IP 管理、设备管理、终端管理、机房管理、准入管理、告警管理、报表管理、系统配置等），每个模块可独立勾选授权，支持全选/全不选/按模块批量勾选
+3. THE IPAM_System SHALL 每个功能模块的权限细分为：查看、新增、编辑、删除、导出、审批，管理员可逐项勾选（如资产管理员只有查看+新增+编辑权限，没有删除和审批权限）
+4. THE IPAM_System SHALL 支持数据范围授权，管理员可限定只能管理指定范围的数据（如网络管理员 A 只能管理 A 栋的网段和设备，机房管理员 B 只能管理 B 机房的机架）
+5. THE IPAM_System SHALL 支持权限模板，可将一组权限配置保存为模板（如"网络运维权限模板""资产管理权限模板"），新增管理员时一键套用模板，无需逐项勾选
+6. THE IPAM_System SHALL 支持权限变更审计，记录每次管理员权限的创建、修改、删除操作（操作人、变更时间、变更前后权限差异），支持审计追溯
+7. THE IPAM_System SHALL 在管理员列表页展示每个管理员的权限摘要（已授权模块数/总模块数），点击可查看完整权限明细
+8. THE IPAM_System SHALL 支持权限生效时间配置，可为管理员设置权限有效期（如临时授权 7 天），到期自动回收权限
+9. THE IPAM_System SHALL 支持从 AD/LDAP 导入管理员，可选择 AD 用户组（如"IT-网络组""IT-资产组""IT-安全组"）自动映射为系统管理员，AD 用户组与权限模板绑定，组内成员自动继承对应权限
+10. THE IPAM_System SHALL 支持 AD 组织架构与管理员层级自动同步，AD 中的上下级关系自动映射为系统中的管理员层级关系，人员变动（入职/离职/调岗）自动同步更新权限
+11. THE IPAM_System SHALL 支持 AD 管理员与本地管理员混合管理，AD 导入的管理员可在系统内额外调整权限（在 AD 组权限基础上增减），本地创建的管理员不受 AD 影响
+
+
+### 需求 133：网络故障快速诊断工具箱（网络工程师视角）
+
+**用户故事：** 作为网络工程师，我希望系统内置常用的网络诊断工具，不用登录交换机或开 CMD 窗口，直接在系统里 Ping、Traceroute、端口探测、抓包分析，快速定位网络故障。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 内置 Web 版网络诊断工具箱，包含：Ping（支持指定源 IP/包大小/次数）、Traceroute（支持 ICMP/UDP/TCP 模式）、端口探测（TCP 端口连通性测试）、DNS 查询（正向/反向解析）、Whois 查询
+2. THE IPAM_System SHALL 支持从指定网络设备发起诊断（如从某台交换机 Ping 目标 IP），而非仅从 IPAM 服务器发起，便于定位中间链路问题
+3. THE IPAM_System SHALL 支持网络路径分析，输入源 IP 和目的 IP，自动分析数据包经过的设备和端口路径（基于拓扑数据和路由表），在拓扑图上高亮显示路径
+4. THE IPAM_System SHALL 支持诊断结果保存和分享，诊断结果可保存为记录并关联至工单或知识库，便于团队协作排障
+5. THE IPAM_System SHALL 支持批量连通性测试，一键测试多个目标 IP/端口的连通性，生成连通性矩阵报告
+
+### 需求 134：网络变更影响预评估（网络工程师视角）
+
+**用户故事：** 作为网络工程师，我在修改 VLAN、ACL、路由或下架设备前，希望系统能自动评估这次变更会影响哪些 IP、设备、终端和业务，避免变更导致意外故障。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持变更影响预评估，在执行以下操作前自动分析影响范围：删除/修改网段、修改 VLAN 配置、下发 ACL、设备下架、端口关闭
+2. THE IPAM_System SHALL 展示影响评估报告：受影响的 IP 地址数量及列表、受影响的设备/终端列表、受影响的用户列表（关联使用人）、受影响的业务系统
+3. THE IPAM_System SHALL 在影响评估报告中标注风险等级（高/中/低），高风险变更需额外审批确认后方可执行
+4. THE IPAM_System SHALL 支持变更模拟（Dry Run），模拟执行变更但不实际生效，验证变更结果是否符合预期
+
+### 需求 135：Helpdesk 工单处理工作台（Helpdesk 工程师视角）
+
+**用户故事：** 作为 Helpdesk 工程师，我每天要处理大量员工的 IT 问题（网络不通、打印机故障、软件安装、账号问题等），我希望有一个专属的工作台，集中展示待处理工单，一键查看用户终端信息，快速处理问题。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 提供 Helpdesk 专属工作台页面，展示：我的待处理工单列表（按优先级/SLA 剩余时间排序）、今日已处理数、平均处理时间、SLA 达标率
+2. THE IPAM_System SHALL 在工单详情页自动关联报障员工的终端信息（IP、MAC、在线状态、接入位置、安全合规状态、软件清单），无需 Helpdesk 手动查询
+3. THE IPAM_System SHALL 支持工单快捷操作：一键远程连接报障终端、一键 Ping 测试终端连通性、一键查看终端接入的交换机端口状态、一键重启终端网络服务
+4. THE IPAM_System SHALL 支持工单知识库推荐，根据工单描述自动匹配知识库中的相似案例和解决方案，辅助 Helpdesk 快速处理
+5. THE IPAM_System SHALL 支持工单转派和协作，Helpdesk 可将工单转派给网络工程师或其他专业人员，转派时可添加备注和已排查信息
+6. THE IPAM_System SHALL 支持常见问题快速处理模板（如"网络不通排查模板""打印机故障排查模板"），Helpdesk 按模板步骤逐步排查并记录结果
+
+### 需求 136：员工 IT 自助查询门户（普通用户视角）
+
+**用户故事：** 作为普通员工，我希望能自助查看我的 IT 资产信息（我领用了哪些设备、我的 IP 是什么、我的电脑装了哪些软件），不用每次都问 IT 部门。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 提供员工自助查询门户（登录后自动识别身份），展示"我的 IT 资产"：我领用的设备列表（电脑、显示器、手机等）、设备型号、资产编号、领用日期
+2. THE IPAM_System SHALL 展示"我的网络信息"：我的终端当前 IP 地址、MAC 地址、接入的网络（有线/无线 SSID）、VLAN、网络连通状态
+3. THE IPAM_System SHALL 展示"我的软件清单"：我的电脑已安装的软件列表，违规软件标红提示并给出处理建议
+4. THE IPAM_System SHALL 展示"我的工单"：我提交的所有工单列表及当前状态，可查看处理进度和处理结果
+5. THE IPAM_System SHALL 支持员工自助报障，描述问题后系统自动分类（网络问题/设备问题/软件问题/账号问题）并生成工单
+6. THE IPAM_System SHALL 支持员工自助申请：IP 申请、设备领用申请、软件安装申请、权限申请，提交后自动进入审批流程
+
+### 需求 137：网络故障自助排查引导（普通用户视角）
+
+**用户故事：** 作为普通员工，网络不通时我希望系统能引导我自助排查（检查网线、重启网卡、检查 IP 配置等），简单问题自己解决，不用等 IT 来处理。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 在员工自助门户提供"网络不通？点这里"入口，启动交互式自助排查向导
+2. THE IPAM_System SHALL 自助排查向导分步引导：检查网线是否插好 → 检查网络图标状态 → 尝试重启网卡 → 检查 IP 配置是否正确 → Ping 网关测试，每步提供图文指引
+3. THE IPAM_System SHALL 在自助排查过程中，后台自动检测该员工终端的网络状态（在线/离线、IP 是否正常、接入端口是否 UP），辅助判断故障原因
+4. THE IPAM_System SHALL 自助排查无法解决时，一键生成故障工单，自动附带已排查步骤和系统检测结果，Helpdesk 接单后无需重复排查
+
+### 需求 138：员工满意度与 IT 服务评价（普通用户视角）
+
+**用户故事：** 作为普通员工，我希望每次 IT 服务完成后能给出评价，让 IT 部门知道哪里做得好、哪里需要改进。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 在工单完结后自动推送满意度评价（企业微信/钉钉/邮件），员工可评分（1-5 星）并填写文字反馈
+2. THE IPAM_System SHALL 支持评价维度细分：响应速度、解决质量、服务态度，每个维度独立评分
+3. THE IPAM_System SHALL 生成 IT 服务满意度报表：整体满意度趋势、各维度评分分布、各 Helpdesk 工程师的个人评分排行、低分工单清单及反馈内容
+4. THE IPAM_System SHALL 支持低分工单自动触发回访流程，IT 主管收到低分通知后安排回访改进
+
+### 需求 139：网络工程师值班日志与交接看板（网络工程师视角）
+
+**用户故事：** 作为网络工程师，我希望值班交接时有一个清晰的看板，展示当班期间的所有网络事件、告警处理情况、待跟进事项，交接不遗漏。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 提供值班交接看板，自动汇总当班时段内的：新增告警数/已处理数/未处理数、网络变更记录、设备上下线事件、准入异常事件、工单处理情况
+2. THE IPAM_System SHALL 支持值班日志编写，值班工程师可记录当班期间的重要事件、处理过程、待跟进事项，支持富文本和截图
+3. THE IPAM_System SHALL 支持交接确认流程，交班人提交值班日志后，接班人查看并确认签收，未确认的交接自动提醒
+4. THE IPAM_System SHALL 支持值班日志历史查询，按日期/值班人筛选，便于回溯历史值班情况
+
+
+### 需求 140：网络工程师配置脚本库与模板管理
+
+**用户故事：** 作为网络工程师，我经常需要对交换机执行重复性配置（创建 VLAN、配置端口、设置 ACL 等），我希望系统提供配置脚本模板库，选择模板填入参数就能生成配置脚本，一键下发到设备，不用每次手敲命令。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 提供配置脚本模板库，内置华为/华三/锐捷/思科常用配置模板（创建 VLAN、端口配置、ACL 规则、SNMP 配置、NTP 配置、Syslog 配置、802.1X 配置等）
+2. THE IPAM_System SHALL 支持模板参数化，模板中的变量（如 VLAN ID、端口号、IP 地址）以占位符标记，使用时填入实际参数自动生成完整配置脚本
+3. THE IPAM_System SHALL 支持自定义脚本模板，网络工程师可创建、编辑、分类自己的配置模板，支持模板版本管理
+4. THE IPAM_System SHALL 支持脚本预览和语法检查，生成的配置脚本可预览，系统自动检查常见语法错误（如缺少 commit、接口名称格式错误）
+5. THE IPAM_System SHALL 支持脚本批量下发，选择多台目标设备后一键执行配置脚本，实时展示每台设备的执行进度和结果（成功/失败/超时）
+6. THE IPAM_System SHALL 记录所有脚本执行历史（执行人、目标设备、脚本内容、执行时间、执行结果），支持审计追溯
+
+### 需求 141：网络工程师个人工作台与收藏夹
+
+**用户故事：** 作为网络工程师，我每天需要频繁查看特定的设备、网段、告警，我希望有一个个人工作台，可以收藏常用的设备、网段、报表、诊断工具，快速访问。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 提供个人工作台页面，展示：我关注的设备列表（收藏的设备实时状态）、我关注的网段（使用率实时数据）、我的待处理告警、我的待处理工单、最近访问记录
+2. THE IPAM_System SHALL 支持收藏功能，任意设备、网段、IP、机架、报表、拓扑视图均可一键收藏至个人收藏夹，收藏夹支持分组管理
+3. THE IPAM_System SHALL 支持个人快捷入口配置，用户可自定义工作台上的快捷操作按钮（如"Ping 扫描核心网段""查看机房 A 机架""打开流量分析"）
+4. THE IPAM_System SHALL 支持个人告警订阅，用户可选择只接收特定设备/网段/模块的告警通知，过滤掉不相关的告警噪音
+
+### 需求 142：Helpdesk 常见问题处理剧本（Runbook）
+
+**用户故事：** 作为 Helpdesk 工程师，很多问题的处理步骤是固定的（如网络不通排查、打印机故障处理、VPN 连接失败等），我希望系统提供标准化的处理剧本，按步骤引导我排查，每步可自动执行检测，新人也能快速上手。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持 Runbook（处理剧本）管理，管理员可创建标准化排障剧本，每个剧本包含多个步骤，每步定义：步骤描述、操作指引、自动检测动作（可选）、预期结果、下一步分支逻辑
+2. THE IPAM_System SHALL 内置常见 IT 问题的 Runbook 模板：
+   - 网络不通排查：检查终端在线状态 → 检查接入端口状态 → Ping 网关 → 检查 VLAN 配置 → 检查 ACL 规则
+   - 打印机故障：检查打印机在线状态 → 检查打印队列 → 检查耗材余量 → 远程重启打印服务
+   - VPN 连接失败：检查用户账号状态 → 检查认证日志 → 检查 VPN 网关状态 → 检查客户端版本
+   - 电脑运行慢：检查 CPU/内存使用率 → 检查磁盘空间 → 检查高占用进程 → 检查是否有违规软件
+   - 无法上网：检查准入认证状态 → 检查 DHCP 租约 → 检查 DNS 解析 → 检查防火墙策略
+3. THE IPAM_System SHALL 支持 Runbook 步骤中嵌入自动检测动作，执行到该步骤时系统自动执行检测（如自动 Ping 目标 IP、自动查询端口状态、自动查询认证日志），检测结果自动填入
+4. THE IPAM_System SHALL 支持 Runbook 分支逻辑，根据检测结果自动跳转到不同的下一步（如 Ping 通则跳到步骤 5，Ping 不通则跳到步骤 3）
+5. THE IPAM_System SHALL 记录 Runbook 执行过程，每步的执行时间、检测结果、处理备注自动保存，执行完成后生成排障报告，可关联至工单
+
+### 需求 143：Helpdesk 工单智能分派与负载均衡
+
+**用户故事：** 作为 Helpdesk 主管，我希望系统能根据工单类型、Helpdesk 工程师的技能和当前工单量，自动智能分派工单，避免有人忙死有人闲着。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持 Helpdesk 工程师技能标签管理，每个工程师可标注擅长领域（网络/打印机/桌面/账号/服务器等）
+2. THE IPAM_System SHALL 支持工单智能分派规则：按工单类型匹配工程师技能标签、按当前待处理工单数量负载均衡、按工程师值班状态过滤
+3. THE IPAM_System SHALL 支持分派规则优先级：VIP 用户（如高管/财务）的工单优先分派给高级工程师，普通工单按负载均衡分派
+4. THE IPAM_System SHALL 支持工单超时自动重派，工单在指定时间内未被接单，自动转派给其他可用工程师
+5. THE IPAM_System SHALL 提供 Helpdesk 团队工作量看板，展示每个工程师的待处理数、今日已处理数、平均处理时间、满意度评分
+
+### 需求 144：员工设备报修与进度追踪（普通用户视角）
+
+**用户故事：** 作为普通员工，我的电脑/打印机/显示器坏了，我希望能在系统里提交报修，上传故障照片，实时追踪维修进度，维修完成后收到通知。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持员工自助报修，选择故障设备（自动列出我领用的设备）、描述故障现象、上传故障照片/视频（最多 5 张），提交后自动生成维修工单
+2. THE IPAM_System SHALL 支持维修进度实时追踪，员工可查看工单当前状态（已提交/已接单/维修中/等待配件/已完成）、处理人、预计完成时间
+3. THE IPAM_System SHALL 在维修状态变更时自动推送通知（企业微信/钉钉/短信），员工无需反复查询
+4. THE IPAM_System SHALL 维修完成后推送取机/验收通知，员工确认验收后工单关闭，可评价维修服务质量
+5. THE IPAM_System SHALL 支持员工查看自己设备的历史维修记录，了解设备健康状况
+
+### 需求 145：员工网络测速与体验反馈（普通用户视角）
+
+**用户故事：** 作为普通员工，我觉得网速慢但不知道是不是真的慢，我希望能在系统里一键测速，看到实际网速数据，如果确实慢可以一键反馈给 IT。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 在员工自助门户提供一键网络测速功能，测试当前终端到内网核心/互联网的带宽（上行/下行）、延迟、丢包率
+2. THE IPAM_System SHALL 展示测速结果并与该网段的正常基线对比，明确告知"网速正常"或"网速低于正常水平"
+3. THE IPAM_System SHALL 支持测速结果一键反馈，员工点击"网速慢，反馈给 IT"后自动生成工单，工单自动附带测速数据、终端信息、接入位置
+4. THE IPAM_System SHALL 记录员工测速历史，IT 管理员可查看全网员工测速数据分布，识别网速投诉集中的区域/网段
+
+### 需求 146：网络工程师 CLI 终端与多设备会话管理
+
+**用户故事：** 作为网络工程师，我经常需要同时登录多台交换机执行命令，我希望系统内置 Web 终端，支持多标签页同时连接多台设备，不用开一堆 SecureCRT 窗口。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 内置 Web SSH/Telnet 终端，从设备详情页一键打开终端连接，自动填充设备 IP 和登录凭证（从凭证库读取），无需手动输入
+2. THE IPAM_System SHALL 支持多标签页会话管理，可同时打开多台设备的终端会话，标签页显示设备名称，支持快速切换
+3. THE IPAM_System SHALL 支持命令批量执行，在多台设备上同时执行相同命令，结果分设备展示对比
+4. THE IPAM_System SHALL 支持终端会话录屏，所有 CLI 操作自动录制（可配置是否启用），录屏文件关联至设备操作日志，满足审计要求
+5. THE IPAM_System SHALL 支持命令历史记录和命令收藏，常用命令可收藏为快捷命令，一键执行
+
+
+### 需求 147：业务服务映射与全链路影响分析
+
+**用户故事：** 作为 IT 管理员，我希望系统能建立"业务应用 → 服务器 → IP → 交换机 → 机柜 → PDU → 电路"的全链路拓扑，任何变更前自动进行冲击波分析，告诉我这次变更会影响哪些业务系统和哪些高管负责的业务。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持业务服务目录管理，可创建业务应用记录（如 ERP、OA、邮件系统），关联该业务依赖的服务器、IP 地址、数据库、中间件
+2. THE IPAM_System SHALL 支持全链路依赖关系建模：业务应用 → 服务器/虚拟机 → IP 地址 → 交换机端口 → 交换机 → 机柜 → PDU 端口 → 电路/UPS，每层关系可自动发现或手动维护
+3. THE IPAM_System SHALL 支持全链路影响分析（Impact Analysis），在执行变更前（删除设备、关闭端口、下架机柜、断电 PDU 等）自动沿依赖链路向上追溯，展示受影响的业务应用列表、业务负责人、影响用户数
+4. THE IPAM_System SHALL 支持反向根因分析（Root Cause Analysis），当业务应用出现故障时，自动沿依赖链路向下追溯，定位可能的故障根因（如交换机端口 DOWN、PDU 过载、服务器宕机）
+5. THE IPAM_System SHALL 在拓扑图中支持业务视图，以业务应用为中心展示其完整的基础设施依赖链路，故障节点红色高亮
+
+### 需求 148：数据生命周期管理与冷热分离
+
+**用户故事：** 作为系统架构师，我希望系统能自动管理海量时序数据（流量、性能、日志）的生命周期，实时数据保持高精度，历史数据自动降采样归档，避免数据库被撑爆。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持数据降采样策略配置：实时数据（1 秒精度）保留 7 天，近期数据（5 分钟聚合）保留 30 天，历史数据（1 小时聚合）保留 1 年，长期数据（1 天聚合）保留 5 年
+2. THE IPAM_System SHALL 支持冷数据自动归档，超过保留期的明细数据自动归档至对象存储（S3/MinIO/本地归档目录），归档数据可按需回调查询
+3. THE IPAM_System SHALL 支持数据存储空间监控，展示各类数据（日志/流量/性能/配置备份）的存储占用量和增长趋势，空间不足时自动预警
+4. THE IPAM_System SHALL 支持数据保留策略按模块差异化配置（如 Syslog 保留 90 天、NetFlow 保留 30 天、配置备份保留 1 年）
+5. THE IPAM_System SHALL 归档操作不影响系统性能，降采样和归档任务在低峰期自动执行
+
+### 需求 149：被动指纹识别与设备深度画像
+
+**用户故事：** 作为网络工程师，我希望系统不仅通过 MAC 厂商识别设备类型，还能通过 TCP/IP 栈指纹（TTL、窗口大小、TCP 选项）、DHCP 指纹、HTTP User-Agent 等被动方式精确识别设备型号和操作系统版本。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持被动指纹识别引擎，通过以下方式自动识别终端/设备类型，无需安装 Agent：
+   - TCP/IP 栈指纹：分析 TTL、TCP 窗口大小、TCP 选项组合，识别操作系统类型和版本
+   - DHCP 指纹：分析 DHCP 请求中的 Option 55/60 参数列表，识别设备厂商和型号
+   - HTTP User-Agent：从流量中提取 User-Agent 字符串，识别浏览器和操作系统
+   - MAC OUI：基于 MAC 地址前 3 字节识别设备厂商
+   - mDNS/SSDP：通过设备广播的服务发现协议识别设备类型（如打印机、摄像头、智能电视）
+2. THE IPAM_System SHALL 内置设备指纹库（覆盖主流厂商和设备型号），支持指纹库在线更新和自定义指纹规则添加
+3. THE IPAM_System SHALL 将识别结果自动填充至设备/终端画像，标注识别置信度（高/中/低），低置信度的标记待人工确认
+4. THE IPAM_System SHALL 支持未知指纹告警，发现无法识别的设备指纹时自动告警，可能为新型设备或伪装设备
+
+### 需求 150：分布式事务补偿与任务编排引擎
+
+**用户故事：** 作为系统架构师，我希望系统在执行跨系统操作（IP 分配 + DHCP 下发 + DNS 创建 + 防火墙策略）时，如果某一步失败，能自动回滚已完成的步骤，保证数据一致性，不会出现"IP 已分配但 DHCP 没下发"的半成品状态。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 内置任务编排引擎（Orchestrator），将跨系统操作封装为事务流程，每个步骤定义：执行动作、成功条件、失败回滚动作、超时时间、重试策略
+2. THE IPAM_System SHALL 支持事务状态机管理，每个事务有明确的状态（待执行/执行中/部分完成/已回滚/已完成/已失败），状态流转清晰可追溯
+3. WHEN 事务中某一步执行失败时，THE IPAM_System SHALL 自动按逆序执行回滚动作（如 DNS 创建失败则回滚 DHCP 租约和 IP 分配），回滚完成后标记事务为"已回滚"
+4. THE IPAM_System SHALL 支持事务断点续执，如果系统中途重启或断电，重启后自动检测未完成的事务，继续执行或回滚
+5. THE IPAM_System SHALL 记录事务执行全过程日志（每步的开始时间、结束时间、执行结果、回滚详情），支持审计追溯
+
+### 需求 151：API 网关与熔断降级机制
+
+**用户故事：** 作为系统架构师，我希望系统的 API 层具备流控、熔断和降级能力，防止第三方系统疯狂调用刷爆系统，或下游系统故障导致线程阻塞拖垮整个平台。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持 API 速率限制（Rate Limiting），可按 API 密钥/用户/IP 地址/接口维度配置请求频率上限（如每分钟 100 次），超限返回 429 状态码
+2. THE IPAM_System SHALL 支持熔断机制（Circuit Breaker），当下游系统（如华为交换机 SSH、DHCP 服务器）连续失败超过阈值时，自动熔断该通道，快速返回错误而非阻塞等待，熔断后定期探测恢复
+3. THE IPAM_System SHALL 支持降级策略，当核心依赖不可用时（如 DHCP 服务器宕机），IP 分配操作可降级为"仅本地分配，DHCP 同步待恢复后补偿执行"
+4. THE IPAM_System SHALL 暴露系统内部指标至 Prometheus（队列长度、任务积压数、线程池使用率、GC 时间、数据库连接池使用率），支持运维人员监控系统自身健康
+5. THE IPAM_System SHALL 支持 API 调用链追踪（Tracing），每个 API 请求生成唯一 TraceID，贯穿所有内部调用和外部系统交互，便于排查性能瓶颈和故障链路
+
+### 需求 152：智能搜索与自然语言查询
+
+**用户故事：** 作为运维人员，我希望系统的搜索框能理解我的意图，输入 IP 自动识别为 IP 查询，输入人名自动查人，甚至支持自然语言搜索如"查找上周五下架的服务器"或"所有未安装杀毒软件的财务部电脑"。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持智能搜索意图识别，自动判断输入内容类型：IP 地址 → IP 详情、MAC 地址 → 设备详情、人名/工号 → 用户全景、设备名 → 设备详情、网段 CIDR → 网段详情
+2. THE IPAM_System SHALL 支持搜索建议与模糊匹配，输入过程中实时展示匹配建议（类似 Google 搜索建议），输入不存在的 IP 时提示"附近的可用 IP"或"是否要创建"
+3. THE IPAM_System SHALL 支持自然语言搜索（基于 AI 引擎），用户可输入中文自然语言查询，如：
+   - "查找上周五下架的服务器"
+   - "所有未安装杀毒软件的财务部电脑"
+   - "最近 7 天告警最多的交换机"
+   - "机房 A 中使用率超过 80% 的机架"
+4. THE IPAM_System SHALL 支持搜索结果按相关度排序，最匹配的结果置顶，支持按对象类型（IP/设备/终端/网段/工单）分类筛选
+
+### 需求 153：操作快照与任意时间点回滚
+
+**用户故事：** 作为 IT 管理员，我希望系统不仅有回收站（针对删除），还能对任意操作生成快照，误修改配置后可以回滚到"昨天下午 3 点"的状态。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持系统状态快照，可手动创建快照（如重大变更前）或自动创建快照（每日凌晨自动快照）
+2. THE IPAM_System SHALL 快照记录所有核心数据的完整状态：IP 分配表、设备信息、网段配置、VLAN 配置、准入策略、自定义字段值
+3. THE IPAM_System SHALL 支持快照对比，选择两个快照对比所有数据差异，逐条展示新增/修改/删除的记录
+4. THE IPAM_System SHALL 支持快照回滚，选择历史快照后可将系统数据回滚至该时间点状态（需超级管理员权限，二次确认），回滚前自动创建当前状态快照作为备份
+5. THE IPAM_System SHALL 支持选择性回滚，可仅回滚某个模块的数据（如仅回滚 VLAN 配置），而非全量回滚
+
+### 需求 154：特权账号管理与凭证保险库
+
+**用户故事：** 作为安全管理员，我希望系统作为网络设备凭证的集中保险库，自动定期轮换设备密码，运维人员需要时申请临时权限获取凭证，用完即焚，全程录像。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 作为凭证保险库（Vault），集中加密存储所有网络设备的登录凭证（SSH 密码/密钥、Enable 密码、SNMP 社区字符串、Web 管理密码）
+2. THE IPAM_System SHALL 支持自动密码轮换（Password Rotation），可配置轮换周期（如每 90 天），系统自动登录设备修改密码并更新保险库中的凭证
+3. THE IPAM_System SHALL 支持临时凭证申请，运维人员需要登录设备时提交申请（指定设备、用途、时长），审批通过后获取临时凭证，到期自动失效
+4. THE IPAM_System SHALL 支持凭证使用全程录像，运维人员使用临时凭证登录设备的 CLI 会话自动录屏，录像文件不可篡改，关联至审计日志
+5. THE IPAM_System SHALL 支持凭证泄露检测，当检测到凭证在非授权渠道使用（如非 IPAM 系统发起的 SSH 登录）时自动告警并可配置自动轮换密码
+
+### 需求 155：未知资产发现与暗物质探测
+
+**用户故事：** 作为网络安全管理员，我希望系统能像雷达一样主动发现网络中的"暗物质"——那些不回应 Ping、不在台账中、但确实在网络中活动的未知设备。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持多维度未知资产发现：
+   - 通过 NetFlow 发现"只发流量不回应 Ping"的隐藏设备
+   - 通过 ARP 表发现交换机背后私接的 Hub/小交换机（同一端口出现多个 MAC）
+   - 通过 DNS 日志发现异常外联域名（C&C 通信、挖矿域名）的终端
+   - 通过 DHCP 日志发现未授权的 DHCP 请求
+   - 通过无线探针发现未关联 AP 的 Rogue AP（非法热点）
+2. THE IPAM_System SHALL 将发现的未知资产自动标记为"待确认"，展示发现方式、发现时间、关联的网络证据（流量记录/ARP 条目/DNS 查询）
+3. THE IPAM_System SHALL 支持未知资产处置流程：确认合法（纳入台账）、确认非法（联动交换机封堵端口）、持续观察（加入监控列表）
+4. THE IPAM_System SHALL 生成未知资产发现报告，按发现方式/网段/时间统计，展示全网"暗物质"分布态势
+
+## 非功能性需求与架构设计规范
+
+### 需求 156：数据一致性模型
+
+**用户故事：** 作为系统架构师，我希望系统在所有跨模块、跨系统操作中保证数据一致性，不会出现数据不同步或半成品状态。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 对所有本地数据库操作使用事务保证 ACID 特性，关键操作（IP 分配、设备删除、网段修改）失败时完整回滚
+2. THE IPAM_System SHALL 对跨系统操作（DHCP/DNS/交换机配置下发）采用最终一致性模型，通过任务编排引擎（需求 150）保证补偿回滚
+3. THE IPAM_System SHALL 对所有异步操作（定时扫描、数据同步、报表生成）采用幂等设计，重复执行不会产生副作用
+4. THE IPAM_System SHALL 对并发操作采用乐观锁机制，防止两个管理员同时修改同一资源导致数据覆盖
+
+### 需求 157：用户体验设计规范
+
+**用户故事：** 作为最终用户，我希望系统的交互体验一致、高效、容错，不会因为误操作导致不可挽回的后果。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 所有破坏性操作（删除、批量修改、配置下发、回滚）必须有二次确认弹窗，核心操作需输入确认文字（如输入"确认删除"）或短信验证码
+2. THE IPAM_System SHALL 所有耗时操作（扫描、批量导入、报表生成、配置下发）必须有进度条和预计剩余时间，支持取消操作
+3. THE IPAM_System SHALL 所有表单支持草稿自动保存，页面意外关闭后重新打开可恢复未提交的表单内容
+4. THE IPAM_System SHALL 所有列表页支持用户自定义列显示/隐藏、列宽调整、排序偏好，偏好自动保存至个人配置
+5. THE IPAM_System SHALL 支持操作撤销（Undo），最近 10 步操作可一键撤销（仅限本地数据修改，跨系统操作通过快照回滚）
+6. THE IPAM_System SHALL 所有错误提示必须包含：错误原因、影响范围、建议解决方案，禁止出现"未知错误"或纯技术堆栈信息
+
+
+### 需求 158：资产折旧与财务报表对接
+
+**用户故事：** 作为财务人员，我希望系统能按会计准则自动计算 IT 资产月度折旧，生成标准会计分录格式，实现"无单据不入库，无入库不入账，无回收不核销"的强钩稽关系。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持按不同会计准则计算折旧：直线法、双倍余额递减法、年数总和法，可按资产分类配置默认折旧方法和年限
+2. THE IPAM_System SHALL 每月自动计算所有资产的当月折旧额、累计折旧、净值，生成折旧明细表
+3. THE IPAM_System SHALL 强制要求采购入库时关联合同号和发票号，否则无法转为正式资产（强钩稽）
+4. THE IPAM_System SHALL 报废时自动计算残值和累计折旧，生成财务核销建议单，需财务审批后方可核销
+5. THE IPAM_System SHALL 支持导出标准会计分录格式（借：累计折旧/贷：固定资产），可对接金蝶/用友等财务系统
+
+### 需求 159：变更健康度验证与回滚剧本
+
+**用户故事：** 作为网络工程师，我希望每次网络变更执行后，系统自动验证核心业务连通性，验证不通过自动执行回滚剧本，不用我手忙脚乱地人工回退。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 在变更执行后自动触发健康度验证：Ping/Traceroute 关键业务 IP、检查核心端口连通性、检查业务应用 HTTP 状态码
+2. THE IPAM_System SHALL 验证结果分级：全部通过（变更成功）、部分失败（告警+人工确认）、核心失败（自动触发回滚）
+3. THE IPAM_System SHALL 在提交变更申请时强制要求填写回滚方案，回滚方案可关联配置脚本模板（需求 140），一键执行回滚
+4. THE IPAM_System SHALL 支持自动回滚触发条件配置：如变更后 5 分钟内丢包率 > 10% 自动回滚，无需人工干预
+5. THE IPAM_System SHALL 记录变更验证全过程（验证项、验证结果、回滚执行详情），纳入变更复盘报告
+
+### 需求 160：业务事件标记与时间轴关联
+
+**用户故事：** 作为 IT 管理员，我希望能在系统时间轴上标记关键业务事件（如系统上线、促销活动、组织架构调整），分析故障时能看到当时业务背景，不用靠记忆回忆。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持在全局时间轴上创建业务事件标记（事件名称、时间范围、影响范围、描述），如"双 11 大促""ERP 系统升级""总部搬迁"
+2. THE IPAM_System SHALL 在查看任意历史数据（告警、流量、性能）时，自动在时间轴上叠加显示同时段的业务事件标记
+3. THE IPAM_System SHALL 支持业务事件与数据快照自动关联，查看事件时可一键跳转至该时段的系统数据快照
+4. THE IPAM_System SHALL 在 AI 分析（需求 59）中自动考虑业务事件因素，如"流量激增 300% 是因为双 11 大促，属于正常波动"
+
+### 需求 161：告警风暴压缩与拓扑关联根因分析
+
+**用户故事：** 作为网络工程师，当核心交换机宕机时，下游 100 台设备同时告警，我希望系统能自动压缩这些告警为一条根因告警，而不是被 100 条告警淹没。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持告警风暴检测，当短时间内（可配置，如 1 分钟内）同一类型告警超过阈值（如 10 条）时，自动触发告警压缩
+2. THE IPAM_System SHALL 基于网络拓扑关系自动分析根因：如果上游设备离线，下游设备的告警自动标记为"关联告警"，仅展示根因告警
+3. THE IPAM_System SHALL 压缩后的告警展示为："核心交换机 SW-Core-01 宕机（根因），导致关联 100 台设备不可达（关联告警 100 条，点击展开）"
+4. THE IPAM_System SHALL 根因恢复后，关联告警自动批量恢复，无需逐条处理
+5. THE IPAM_System SHALL 支持告警压缩规则自定义，管理员可配置压缩条件（时间窗口、告警数量阈值、拓扑关联深度）
+
+### 需求 162：故障自愈剧本引擎
+
+**用户故事：** 作为运维人员，我希望系统能针对常见故障场景（如 ARP 表满、端口 flapping、DHCP 地址池耗尽）自动执行预设的修复脚本，无需人工干预，实现故障自愈。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持故障自愈剧本管理，可创建自愈剧本：触发条件（告警类型+设备类型+严重级别）→ 自动执行动作（执行脚本/重启服务/切换备用链路/扩容地址池）
+2. THE IPAM_System SHALL 内置常见故障自愈模板：ARP 表满自动清理、端口 flapping 自动关闭并延迟恢复、DHCP 地址池耗尽自动扩容、DNS 缓存异常自动刷新
+3. THE IPAM_System SHALL 自愈执行前自动创建快照，自愈失败可一键回滚
+4. THE IPAM_System SHALL 自愈执行后自动验证修复结果（如重新 Ping 检测），验证通过标记"已自愈"，验证失败升级为人工处理
+5. THE IPAM_System SHALL 记录所有自愈执行日志（触发告警、执行动作、执行结果、耗时），生成自愈效果统计报表（自愈成功率、平均修复时间）
+
+### 需求 163：3D 机房可视化与数字孪生
+
+**用户故事：** 作为数据中心管理员，我希望系统能以 3D 视图展示机房全貌，360 度查看机柜内部设备布局、温度热力图、线缆走向，实现机房的数字孪生。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持 3D 机房可视化，可导入机房 CAD 图纸或通过内置编辑器搭建 3D 机房模型
+2. THE IPAM_System SHALL 在 3D 视图中展示机柜位置、设备安装位置（U 位）、线缆走向、冷热通道布局
+3. THE IPAM_System SHALL 在 3D 视图中叠加实时数据：设备状态（绿色正常/红色故障）、温度热力图、功耗数据
+4. THE IPAM_System SHALL 支持 3D 视图交互：点击机柜展开查看内部设备、点击设备查看详情浮层、点击线缆查看连接信息
+5. THE IPAM_System SHALL 支持 3D 视图嵌入数字化大屏（需求 82），适合指挥中心投屏展示
+
+### 需求 164：低代码可视化表单引擎
+
+**用户故事：** 作为系统管理员，我希望无需写代码，通过拖拽字段就能创建新的数据模型和表单（如会议室预定、门禁申请、访客登记），系统自动生成对应的列表页、详情页和 API。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 提供低代码可视化表单设计器，支持拖拽字段组件（文本、数字、下拉框、日期、附件、关联选择、级联选择、富文本、签名）构建表单
+2. THE IPAM_System SHALL 表单发布后自动生成：数据列表页（支持搜索/筛选/排序/导出）、数据详情页、新增/编辑表单页、RESTful API 接口
+3. THE IPAM_System SHALL 支持表单与现有模块数据关联，如自定义表单中的"关联设备"字段可选择系统中的设备记录
+4. THE IPAM_System SHALL 支持表单审批流程配置，拖拽方式定义审批节点和流转规则
+5. THE IPAM_System SHALL 支持表单模板市场，管理员创建的表单可发布为模板供其他租户/用户复用
+
+### 需求 165：低代码逻辑编排引擎
+
+**用户故事：** 作为系统管理员，我希望通过可视化连线的方式定义自动化业务流程（如"当 A 发生时，执行 B，然后通知 C"），无需写代码就能实现复杂的自动化场景。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 提供可视化逻辑编排画布，支持拖拽节点和连线方式定义自动化流程
+2. THE IPAM_System SHALL 支持以下节点类型：
+   - 触发器：告警触发、定时触发、工单状态变更触发、数据变更触发、Webhook 触发
+   - 条件判断：IF/ELSE 分支、多条件组合（AND/OR）
+   - 动作执行：发送通知、创建工单、执行脚本、调用 API、修改数据、分配 IP、下发配置
+   - 延时等待：等待指定时间、等待人工确认
+3. THE IPAM_System SHALL 支持流程调试模式，可模拟触发流程并逐步查看每个节点的执行结果
+4. THE IPAM_System SHALL 支持流程版本管理，流程变更自动保存历史版本，可一键回滚
+5. THE IPAM_System SHALL 记录流程执行日志，每次触发的执行路径、各节点耗时、执行结果均可追溯
+
+### 需求 166：跨系统数据自动对账引擎
+
+**用户故事：** 作为 IT 管理员，我希望系统能自动对比 IPAM 数据与外部系统（CMDB、财务系统、AD）的数据一致性，发现差异自动告警，不用人工逐条核对。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持自动对账规则配置，定义对账维度（如"IPAM 设备数量 = CMDB 设备数量 ± 5%""IPAM 资产总数 = 财务系统固定资产数量"）
+2. THE IPAM_System SHALL 支持定时自动对账（每日/每周），自动拉取外部系统数据与 IPAM 数据逐条比对
+3. THE IPAM_System SHALL 生成对账差异报告：一致项数量、差异项明细（IPAM 有但外部无、外部有但 IPAM 无、双方数据不一致），差异项可一键跳转至详情
+4. THE IPAM_System SHALL 差异超过阈值时自动触发告警，推送至相关管理员处理
+5. THE IPAM_System SHALL 记录对账历史，展示数据一致率趋势，辅助数据治理效果评估
+
+### 需求 167：操作预加载与上下文感知助手
+
+**用户故事：** 作为运维工程师，我希望系统能预判我的下一步操作，当我查看某个告警时，自动加载相关的日志、配置、拓扑、历史案例，减少我来回切换页面查找信息的时间。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持上下文感知预加载，当用户查看告警详情时，自动在侧边栏预加载：该设备最近 30 分钟的 Syslog 日志、性能指标变化、配置变更记录、关联的知识库案例
+2. THE IPAM_System SHALL 支持上下文感知预加载，当用户查看设备详情时，自动预加载：该设备的拓扑位置、上下游设备状态、端口面板、最近告警、关联工单
+3. THE IPAM_System SHALL 支持 AI 智能建议（基于需求 59），根据当前查看的告警/故障，自动推荐可能的处理方案和相似历史案例
+4. THE IPAM_System SHALL 支持一键执行推荐方案，AI 推荐的处理方案可一键执行（如"建议重启端口 GE0/0/1"→ 一键执行），执行前需确认
+
+### 需求 168：敏感数据访问异常检测（UEBA）
+
+**用户故事：** 作为安全管理员，我希望系统能学习每个用户的正常数据访问模式，当出现异常行为（如开发人员频繁查询薪资数据、非工作时间批量导出数据）时自动预警。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持用户行为基线学习，自动建立每个用户的正常访问模式（常用功能、访问时段、数据查询范围、导出频率）
+2. THE IPAM_System SHALL 支持异常行为检测规则：非常用时段访问、非常用模块访问、短时间内大量数据导出、越权数据查询、批量删除操作
+3. WHEN 检测到异常行为时，THE IPAM_System SHALL 按风险等级自动响应：低风险 → 记录并告警；中风险 → 动态脱敏敏感字段；高风险 → 立即阻断访问并冻结账号
+4. THE IPAM_System SHALL 生成用户行为分析报表，展示各用户的行为风险评分、异常事件统计、高风险用户清单
+
+### 需求 169：IT 碳排放追踪与绿色报表
+
+**用户故事：** 作为 IT 管理员，我希望系统能根据设备功耗和运行时长自动计算 IT 碳排放量，生成绿色 IT 报表，响应企业"双碳"战略。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持设备碳排放计算，根据设备类型、额定功率、实际功耗、运行时长、电力碳排放因子自动计算碳排放量（kgCO2e）
+2. THE IPAM_System SHALL 生成月度/年度 IT 碳排放报表，按机房/设备类型/部门维度统计碳排放量和趋势
+3. THE IPAM_System SHALL 识别高能耗设备并给出节能建议（如"服务器 A 平均 CPU 使用率仅 5%，建议虚拟化整合"）
+4. THE IPAM_System SHALL 支持碳排放目标设定和达标追踪，展示实际排放与目标的差距
+
+### 需求 170：离线应急门户与边缘缓存
+
+**用户故事：** 作为运维人员，当 IPAM 系统本身故障或网络中断时，我希望仍能查看核心网络架构信息和紧急联系人，不至于"断网断知"。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持离线应急门户，当系统不可用时自动切换到静态 HTML 页面，展示：核心网络架构图、关键设备 IP 列表、紧急联系人、应急预案摘要
+2. THE IPAM_System SHALL 支持移动端（需求 56）本地缓存核心数据（网段列表、设备列表、IP 分配表），网络中断时可离线查看
+3. THE IPAM_System SHALL 网络恢复后自动同步离线期间的数据变更，冲突数据标记待人工确认
+
+## 设计原则附录
+
+### 核心设计原则
+
+1. **低代码平台底座**：系统以低代码平台为核心架构，所有业务功能（表单、流程、报表、仪表盘、大屏、告警规则、自动化工作流）均通过可视化拖拽设计器构建和配置。用户可通过设计器自定义创建新的业务模块和功能页面，无需编写代码。系统提供统一设计器框架（需求 15 第 14 条），所有设计器共享一致的交互规范、组件库和数据源体系
+2. **模块化插件架构**：所有功能以独立模块形式开发，模块间通过标准 API 通信，可独立部署、升级、扩展。新功能模块可通过插件机制（需求 131）低成本接入，无需修改核心代码。系统提供标准模块接入规范（数据模型注册、菜单注册、权限注册、API 注册），新模块按规范开发即可自动集成到系统导航、权限体系、搜索引擎和数据可视化中。用户也可通过低代码方式直接创建新业务模块（需求 131 第 6 条）
+3. **数据驱动**：所有决策基于采集的真实数据，而非人工录入；所有展示基于实时计算，而非静态报表。数据源通过自定义连接器（需求 131 第 9 条）统一管理，所有设计器可直接引用
+4. **防御性设计**：默认用户会犯错、网络会中断、硬件会故障，系统内置护栏（二次确认、Dry Run、自动回滚）和逃生舱（离线门户、快照恢复）
+5. **自动化闭环**：能自动发现的绝不手动录入，能自动修复的绝不人工干预，能自动分析的绝不人工统计。自动化工作流引擎（需求 131 第 10 条）支持事件驱动的全流程自动化
+6. **用户友好零门槛**：每个功能模块均内置交互式帮助向导（分步引导 + 高亮提示）、案例参考（预置行业最佳实践模板）和视频教程入口。所有设计器提供"从模板开始"快速入口，用户可基于预置模板修改而非从零开始，降低使用门槛
+
+
+## IT 价值量化与降本增效
+
+### 需求 171：IT 运维效率量化看板
+
+**用户故事：** 作为 IT 负责人，领导问我"IT 部门到底创造了什么价值"，我希望系统能用数据说话——自动统计 IT 运维的效率提升、故障减少、响应加速等指标，生成可量化的价值报告，让领导看到 IT 不是成本中心而是效率引擎。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 提供"效率基线配置"功能，管理员可录入系统上线前的人工操作基线数据（如：手工分配一个 IP 平均耗时 30 分钟、人工巡检一台设备平均耗时 15 分钟、人工盘点一台资产平均耗时 5 分钟），作为效率对比的基准
+2. THE IPAM_System SHALL 自动采集系统上线后的实际操作耗时，按以下维度统计效率指标并与基线对比：
+   - IP 分配效率：记录每次 IP 分配从工单提交到分配完成的耗时，计算月均耗时。展示："上线前人工分配平均 30 分钟/次 → 上线后自动分配平均 2 分钟/次，效率提升 93.3%，本月共分配 150 次，累计节省 70 小时"
+   - 故障发现速度（MTTD）：记录从故障实际发生到系统告警触达运维人员的时间差。展示："上线前人工发现故障平均 45 分钟 → 上线后自动告警平均 30 秒，MTTD 缩短 98.9%"
+   - 故障修复速度（MTTR）：记录从告警触发到告警恢复的时间差。展示："上线前平均修复 4 小时 → 上线后平均修复 35 分钟（含自愈场景），MTTR 缩短 85.4%"
+   - 工单处理效率：统计工单从创建到关闭的平均耗时、SLA 达标率、一次解决率。展示："平均处理时长 2.5 小时，SLA 达标率 96.8%，一次解决率 82.3%"
+   - 资产盘点效率：记录每次盘点任务从发起到完成的耗时。展示："上线前人工盘点 3000 台设备需 5 人 × 3 天 = 15 人天 → 上线后联网自动盘点仅需 1 人 × 0.5 天，效率提升 96.7%"
+   - 巡检效率：记录自动巡检覆盖设备数和耗时。展示："上线前人工巡检 200 台设备需 2 人 × 1 天 → 上线后自动巡检 200 台设备仅需 15 分钟，效率提升 99.0%"
+3. THE IPAM_System SHALL 自动将效率提升折算为人力成本节省，计算公式：节省人力成本 = 节省工时（小时）× 人均时薪（可配置）。展示："本月 IP 分配节省 70 小时 + 巡检节省 32 小时 + 盘点节省 112 小时 = 共节省 214 小时，折合人力成本 ¥21,400"
+4. THE IPAM_System SHALL 展示效率提升月度趋势折线图，每个指标一条线，清晰展示系统上线后各月的效率改善轨迹
+5. THE IPAM_System SHALL 支持效率数据钻取，点击任意指标可查看明细（如点击"IP 分配效率"可查看每次分配的具体耗时列表）
+
+### 需求 172：IT 成本节省量化分析
+
+**用户故事：** 作为 IT 负责人，我希望系统能自动计算通过 IT 管理优化节省的真金白银——闲置资产回收价值、软件许可证优化节省、能耗降低节省、故障损失减少等，生成"IT 省了多少钱"的报告给领导。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 自动统计以下成本节省维度，每个维度有明确的计算公式和数据来源：
+   - 闲置资产回收价值（数据来源：需求 78 终端在线监控 + 需求 121 资产盘点）：闲置设备数量 × 设备当前净值。展示："本月发现闲置设备 47 台，总净值 ¥235,000。其中 23 台已回收再利用（节省新采购 ¥115,000），12 台已报废处置（回收残值 ¥18,000）。如果不回收，47 台设备继续折旧浪费 ¥4,700/月"
+   - IP 资源优化节省（数据来源：需求 27 数据清洗 + 需求 2 临时 IP 自动回收）：回收的闲置 IP 数量 × 单个 IP 隐性成本（可配置）。展示："本月回收闲置 IP 484 个，按每个公网 IP ¥50/月计算，避免公网 IP 扩容支出 ¥24,200/月"
+   - 软件许可证优化（数据来源：需求 120 许可证管理）：可优化许可数量 × 许可单价。展示："Office 365 超量 120 个 × ¥1,200/年 = ¥144,000/年；AutoCAD 超量 22 个 × ¥15,000/年 = ¥330,000/年。合计许可证优化空间 ¥474,000/年"
+   - 能耗优化节省（数据来源：需求 169 碳排放 + 需求 95 服务器监控）：可整合服务器数量 × 单台年均电费（额定功率 × 24 × 365 × 电价 × PUE）。展示："发现 CPU < 10% 的服务器 15 台，整合后可节省电费 ¥78,840/年"
+   - 故障损失减少（数据来源：需求 94 预警 + 需求 162 故障自愈）：避免的故障次数 × 平均单次故障业务损失金额（可配置）。展示："本月预警避免故障 12 次，按平均单次损失 ¥50,000 计算，避免业务损失 ¥600,000"
+   - 人力成本节省（数据来源：需求 171 效率看板）：各模块节省工时之和 × 人均时薪。展示："本月自动化共节省 214 小时，折合 ¥21,400"
+2. THE IPAM_System SHALL 在页面顶部展示醒目汇总卡片："本月 IT 管理共为企业节省 ¥XX 元"，下方分维度展示明细和计算过程
+3. THE IPAM_System SHALL 展示成本节省月度趋势堆叠柱状图，每个维度一种颜色，清晰展示各月各维度的节省金额和总额变化
+4. THE IPAM_System SHALL 支持成本参数自定义配置（人均时薪、电价、PUE、单次故障损失金额、IP 单价等），不同企业可按实际情况调整
+5. THE IPAM_System SHALL 生成"IT 降本增效报告"（PDF），包含汇总金额、各维度明细、计算公式、数据来源说明、月度趋势图
+
+### 需求 173：IT 风险规避价值量化
+
+**用户故事：** 作为 IT 负责人，很多 IT 工作的价值不是"赚了多少钱"而是"避免了多少损失"，我希望系统能量化风险规避的价值——提前发现了多少安全隐患、阻止了多少违规接入、避免了多少次可能的业务中断。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 自动统计以下风险规避指标，每个指标有明确的数据来源和金额换算逻辑：
+   - 非法接入防护（数据来源：需求 37-42 NAC 准入）：本月 NAC 拒绝的非法终端接入次数、隔离的不合规终端数量、封堵的私接设备数量。金额换算：按行业基准"单次数据泄露平均损失 ¥500,000"（可配置）。展示："本月阻止非法接入 23 次，规避潜在损失 ¥11,500,000"。明细：每次非法接入的时间、终端 MAC、接入位置、处置方式
+   - 违规软件检测（数据来源：需求 126 软件审计）：本月发现的违规软件安装数量、涉及终端数量。金额换算：按"使用盗版软件被起诉的平均赔偿金额 ¥100,000/款"（可配置）。展示："本月发现 5 款违规软件安装在 47 台终端上，规避潜在法律风险 ¥500,000"
+   - 预警避免故障（数据来源：需求 94 预警引擎）：本月预警总数、因预警提前处理避免的故障数、预警平均提前时间。金额换算：避免的故障数 × 平均单次故障损失。展示："本月预警 35 条，其中 12 条提前处理避免故障，预警平均提前 3.2 天，避免业务损失 ¥600,000"
+   - 合规审计价值（数据来源：需求 43 准入审计 + 需求 23 合规报表）：自动生成的审计报表数量、节省的人工整理时间。展示："本月自动生成合规报表 8 份，节省人工整理 40 小时（¥4,000）。等保合规通过率 98.5%"
+   - 资产安全价值（数据来源：需求 155 未知资产发现 + 需求 42 异常封堵）：发现的未知设备数量、私改 IP 检测次数。展示："本月发现未知设备 8 台（3 台私接路由器已封堵，2 台未登记摄像头已纳管，3 台待确认）"
+2. THE IPAM_System SHALL 在页面顶部展示醒目汇总卡片："本月 IT 安全管理共规避潜在损失 ¥XX 元"
+3. THE IPAM_System SHALL 展示风险规避月度趋势堆叠图，按维度展示安全防护价值的持续积累
+4. THE IPAM_System SHALL 支持风险金额参数自定义配置（单次数据泄露损失、盗版软件赔偿金额、单次故障损失等）
+5. THE IPAM_System SHALL 在数字化大屏（需求 82）中展示"IT 价值"模块：本月效率提升百分比、成本节省金额、风险规避金额，三个核心数字一目了然
+
+### 需求 174：部门 IT 资源使用效率排行
+
+**用户故事：** 作为 IT 负责人，我希望系统能按部门统计 IT 资源使用效率，找出哪些部门资源浪费严重（IP 闲置率高、设备利用率低、打印量异常），推动各部门优化资源使用。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 按部门统计以下 IT 资源使用效率指标，每个指标有明确的评分标准：
+   - IP 使用效率（权重 20%）：闲置率 = (分配数 - 在线数) / 分配数。评分：闲置率 < 10% 得 100 分，10%-30% 得 70 分，> 30% 得 40 分
+   - 设备利用率（权重 20%）：闲置率 = (总数 - 在用数) / 总数。评分规则同上
+   - 终端合规率（权重 15%）：合规终端数 / 终端总数。评分：> 95% 得 100 分，80%-95% 得 70 分，< 80% 得 40 分
+   - 软件合规率（权重 15%）：违规终端数 / 终端总数。评分：< 5% 得 100 分，5%-15% 得 70 分，> 15% 得 40 分
+   - 打印成本（权重 10%）：人均月打印量。评分：< 100 页得 100 分，100-500 页得 70 分，> 500 页得 40 分
+   - 工单密度（权重 10%）：人均月工单数。评分：< 0.5 得 100 分，0.5-2 得 70 分，> 2 得 40 分
+   - 带宽合理性（权重 10%）：非工作应用流量占比。评分：< 10% 得 100 分，10%-30% 得 70 分，> 30% 得 40 分
+2. THE IPAM_System SHALL 计算部门综合效率评分 = 各指标评分 × 权重之和，按评分排序生成排行榜，TOP3 标绿，BOTTOM3 标红
+3. THE IPAM_System SHALL 每个部门展示综合评分、各维度评分雷达图、具体浪费项明细和自动生成的优化建议（如"研发部 IP 闲置率 42%，建议回收 56 个闲置 IP"）
+4. THE IPAM_System SHALL 支持排行榜按月推送至各部门负责人（邮件/企业微信），附带本部门的效率评分和改进建议
+5. THE IPAM_System SHALL 展示部门效率评分月度趋势，追踪各部门的改善轨迹
+6. THE IPAM_System SHALL 支持权重和评分标准自定义配置，企业可按实际情况调整
+
+### 需求 175：IT 投资回报率（ROI）计算器
+
+**用户故事：** 作为 IT 负责人，领导问"这套系统花了多少钱，回本了吗"，我希望系统能自动计算 IT 智维平台的投资回报率，用数据证明系统的价值。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 提供 ROI 配置页面，管理员录入系统建设成本明细：一次性投入（开发费用、硬件采购、部署实施、培训费用）+ 持续投入（每月运维费用、云资源费用、许可证费用），系统自动按月累计计算总投入金额
+2. THE IPAM_System SHALL 自动汇总系统产生的收益（数据自动关联，无需手动录入）：成本节省收益（来自需求 172）+ 风险规避收益（来自需求 173）+ 效率提升收益（来自需求 171），月度总收益 = 三者之和
+3. THE IPAM_System SHALL 自动计算以下 ROI 指标：
+   - 累计 ROI = (累计总收益 - 累计总投入) / 累计总投入 × 100%
+   - 月度净收益 = 当月总收益 - 当月持续投入
+   - 投资回收期 = 累计总投入 / 月均净收益（月）
+   - 年化收益率 = 年度总收益 / 年度总投入 × 100%
+4. THE IPAM_System SHALL 以图表展示 ROI 分析：累计投入 vs 累计收益双线图（交叉点即回本时间点，交叉后区域标绿）、月度净收益柱状图（正值标绿/负值标红）、ROI 趋势折线图、收益构成饼图
+5. THE IPAM_System SHALL 生成"IT 智维平台投资回报报告"（一页 PDF），核心内容：大字标题"累计 ROI：XXX%"、三个核心数字（累计投入/累计收益/净收益）、收益构成饼图+月度趋势图、一句话总结"系统上线 X 个月，每投入 1 元产生 X 元回报"
+
+### 需求 176：IT 服务价值月报（给领导看的一页纸）
+
+**用户故事：** 作为 IT 负责人，我希望系统每月自动生成一份"IT 服务价值月报"，一页纸浓缩 IT 部门的核心价值，不用我花半天时间手动整理 PPT。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 每月 1 日 9:00 自动生成"IT 服务价值月报"（一页 A4 PDF），布局分为 6 个区块：
+   - 区块 1（顶部横幅）：企业 LOGO + "IT 服务价值月报 - 2026 年 X 月" + 生成日期
+   - 区块 2（核心数字，占 20%）：三个醒目大数字并排——"效率提升 XX%"（绿色↑）、"成本节省 ¥XX 万"（绿色↑）、"风险规避 ¥XX 万"（绿色↑），每个数字下方小字标注环比变化
+   - 区块 3（资源概览，占 15%）：一行指标卡片——管理 IP 数 / 设备数 / 终端数 / 在线率 / 合规率 / 告警处理率，每个标注环比箭头
+   - 区块 4（效率与成本，占 25%）：左栏"效率提升"（IP 分配提速 XX%、故障修复提速 XX%、工单提速 XX%、巡检提速 XX%，合计节省 XX 小时 = ¥XX 元）；右栏"成本节省"（闲置资产回收 ¥XX、许可证优化 ¥XX、能耗节省 ¥XX、故障避免 ¥XX，合计 ¥XX 元）
+   - 区块 5（风险防护，占 20%）：阻止非法接入 XX 次 | 发现违规软件 XX 款 | 预警避免故障 XX 次 | 发现未知设备 XX 台。一句话："本月规避潜在损失 ¥XX 万"
+   - 区块 6（下月重点，占 20%）：基于预警自动列出 TOP3 待办，如"① 192.168.10.0/24 预计 45 天后 IP 耗尽""② 服务器 SRV-DB-03 健康评分持续下降""③ 防火墙维保合同 60 天后到期"
+2. THE IPAM_System SHALL 月报配色：正面数据绿色、负面数据红色、中性数据蓝色，整体简洁商务风，领导 10 秒内能抓住重点
+3. THE IPAM_System SHALL 支持月报模板自定义，管理员可调整区块内容、顺序、配色，保存为模板
+4. THE IPAM_System SHALL 自动推送月报至配置的接收人（邮件/企业微信/钉钉），推送标题："[IT 智维平台] 2026 年 X 月 IT 服务价值月报 | 本月为企业节省 ¥XX 万"
+5. THE IPAM_System SHALL 记录月报生成历史，支持查看和下载历史月报，便于年度汇总
+
+
+### 需求 177：降本增效量化指标体系
+
+**用户故事：** 作为 IT 负责人，我希望系统建立一套完整的降本增效量化指标体系，覆盖成本降低、效率提升、质量优化、收入增长四大维度，80% 以上指标可自动采集，用数据证明 IT 投入的合理性与必要性。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 建立降本增效量化指标体系，覆盖以下四大维度，每个指标有明确的计算公式、数据来源和采集方式：
+   - 成本降低维度：
+     - 运维成本降低率 = 自动化运维减少的人工干预工时 / 总运维工时 × 100%（数据来源：需求 171 效率看板 + 需求 162 故障自愈 + 需求 112 自动巡检）
+     - 资源利用率提升 = (当前平均利用率 - 基线利用率) / 基线利用率 × 100%（数据来源：需求 95 服务器监控 + 需求 88 设备性能监控 + 需求 28 容量规划）
+     - 故障处理成本下降 = (基线 MTTR - 当前 MTTR) / 基线 MTTR × 100%，对应业务损失减少金额 = 缩短时间 × 每小时业务损失金额（数据来源：需求 171 MTTR 统计）
+     - 采购成本优化 = 通过需求预测避免的重复采购金额 + 闲置资产回收金额（数据来源：需求 172 成本节省 + 需求 94 容量预警）
+   - 效率提升维度：
+     - 流程自动化率 = 自动化完成的运维操作数 / 总运维操作数 × 100%（数据来源：需求 46 配置下发 + 需求 162 故障自愈 + 需求 21 智能分配）
+     - 问题响应时长缩短率 = (基线响应时长 - 当前响应时长) / 基线响应时长 × 100%（数据来源：需求 171 MTTD/MTTR）
+     - 数据交付时效提升 = (基线报表生成时间 - 当前报表生成时间) / 基线报表生成时间 × 100%（数据来源：需求 115 报表中心）
+   - 质量优化维度：
+     - 系统可用性 = 核心系统正常运行时间 / 总时间 × 100%（数据来源：需求 110 网络质量拨测 + 需求 75 系统健康度）
+     - 用户满意度 = 工单满意度评分均值（数据来源：需求 138 满意度评价）
+     - 数据准确率 = 通过数据清洗后的合格数据条数 / 总数据条数 × 100%（数据来源：需求 27 数据清洗 + 需求 130 数据源对比）
+   - 收入增长维度：
+     - 数字化赋能收入 = 通过 API 对外服务产生的直接收入（数据来源：需求 25 API 调用统计）
+     - 业务中断减少带来的收入保障 = 避免的故障次数 × 平均每次故障导致的收入损失（数据来源：需求 173 风险规避）
+2. THE IPAM_System SHALL 80% 以上指标支持自动采集和计算，无需人工录入，剩余指标提供手动录入入口（如业务损失金额、行业基准值）
+3. THE IPAM_System SHALL 每个指标支持设置目标值和告警阈值，指标未达标时自动告警并生成改进建议
+
+### 需求 178：场景化降本增效价值分析
+
+**用户故事：** 作为 IT 负责人，我希望系统能按具体业务场景展示降本增效的价值，不是抽象的数字，而是"某个场景省了多少钱、提了多少效"的真实案例，增强对领导的说服力。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 内置以下降本增效场景模板，每个场景自动关联系统功能和量化数据：
+   - 场景 1：自动化运维降本
+     功能支撑：需求 162 故障自愈 + 需求 112 自动巡检 + 需求 46 配置下发 + 需求 21 智能 IP 分配
+     自动计算：本月自动化处理的运维操作次数、节省的人工工时、折合人力成本
+     展示示例："本月故障自愈成功 28 次（节省人工介入 56 小时）、自动巡检 200 台设备（节省人工巡检 100 小时）、自动分配 IP 150 次（节省人工分配 75 小时），合计节省 231 小时 = ¥23,100"
+   - 场景 2：资源优化增效
+     功能支撑：需求 28 容量预测 + 需求 95 服务器监控 + 需求 172 闲置资产回收
+     自动计算：回收的闲置资源价值、避免的过度采购金额、资源利用率提升百分比
+     展示示例："发现低负载服务器 15 台整合后节省电费 ¥78,840/年、回收闲置设备 47 台价值 ¥235,000、通过容量预测避免提前采购交换机 3 台节省 ¥180,000"
+   - 场景 3：数据驱动决策
+     功能支撑：需求 59 AI 分析 + 需求 147 业务服务映射 + 需求 115 报表中心
+     自动计算：AI 分析辅助决策次数、报表自动生成节省的人工整理时间、数据驱动的优化建议采纳数
+     展示示例："AI 分析提供运维建议 45 条（采纳 32 条），自动生成报表 86 份（节省人工整理 172 小时），业务影响分析辅助决策 12 次（避免决策失误损失约 ¥300,000）"
+   - 场景 4：风险预防止损
+     功能支撑：需求 94 预警引擎 + 需求 42 异常封堵 + 需求 168 UEBA + 需求 155 未知资产发现
+     自动计算：预警避免的故障次数和损失金额、封堵的安全事件次数和规避损失、发现的未知资产数量
+     展示示例："预警避免故障 12 次（规避损失 ¥600,000）、封堵非法接入 23 次（规避数据泄露风险 ¥11,500,000）、发现未知设备 8 台（消除安全盲区）"
+2. THE IPAM_System SHALL 支持自定义场景，管理员可创建新的降本增效场景，关联系统功能和量化指标
+3. THE IPAM_System SHALL 每个场景支持"故事化呈现"，以图文结合的方式展示：场景描述 → 系统如何解决 → 量化成果 → 对比（有系统 vs 无系统），适合在领导汇报中直接引用
+
+### 需求 179：管理层降本增效驾驶舱
+
+**用户故事：** 作为 CEO/CFO，我希望有一个专门的管理层驾驶舱，一张图看清 IT 部门的降本增效全貌，支持多维度下钻分析，不用看厚厚的报告。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 提供管理层降本增效驾驶舱（独立页面，简洁商务风格），顶部展示四个核心价值卡片：
+   - "累计成本节省 ¥XX 万"（绿色，点击下钻至需求 172 明细）
+   - "累计风险规避 ¥XX 万"（蓝色，点击下钻至需求 173 明细）
+   - "效率提升 XX%"（橙色，点击下钻至需求 171 明细）
+   - "投资回报率 ROI XX%"（金色，点击下钻至需求 175 ROI 详情）
+2. THE IPAM_System SHALL 在驾驶舱中部展示价值趋势图：累计投入 vs 累计收益双线图（交叉点标注"回本时间点"），月度净收益柱状图
+3. THE IPAM_System SHALL 在驾驶舱下部展示场景化价值卡片（来自需求 178），每个场景一张卡片，展示场景名称、核心数字、环比变化
+4. THE IPAM_System SHALL 支持驾驶舱按时间维度切换（本月/本季度/本年/累计），所有数据联动刷新
+5. THE IPAM_System SHALL 支持驾驶舱按部门维度筛选，查看各部门的降本增效贡献
+6. THE IPAM_System SHALL 驾驶舱支持全屏投屏模式，适合在管理层会议上展示
+7. THE IPAM_System SHALL 驾驶舱数据每日自动更新，支持手动刷新
+
+### 需求 180：IT 价值季度评审与优化闭环
+
+**用户故事：** 作为 IT 负责人，我希望系统支持季度 IT 价值评审机制，自动生成评审材料，对比目标与实际达成情况，输出下季度优化行动项，形成"度量 → 分析 → 优化 → 再度量"的闭环。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持 IT 价值目标设定，每季度初管理员可设定各维度的目标值（如"本季度成本节省目标 ¥50 万""MTTR 缩短目标 20%""系统可用性目标 99.9%"）
+2. THE IPAM_System SHALL 季度末自动生成"IT 价值季度评审报告"，包含：
+   - 目标 vs 实际达成对比表（每个指标的目标值、实际值、达成率，达成标绿、未达成标红）
+   - 本季度 TOP5 降本增效亮点（自动从场景数据中提取金额最大的 5 项成果）
+   - 本季度 TOP3 待改进项（自动从未达标指标中提取最需改进的 3 项，附带 AI 生成的改进建议）
+   - 下季度优化行动项建议（基于趋势预测和未达标分析，AI 自动生成 3-5 条可执行的行动项）
+3. THE IPAM_System SHALL 支持评审报告在线协作编辑，IT 负责人可在 AI 生成的报告基础上补充人工分析和行动计划
+4. THE IPAM_System SHALL 支持行动项跟踪，每条行动项可指定负责人、截止日期、当前状态（待启动/进行中/已完成），逾期自动提醒
+5. THE IPAM_System SHALL 记录历史季度评审报告，支持跨季度对比，展示 IT 价值的持续改善轨迹
+
+
+### 需求 181：AI 自动生成工作汇报 PPT（月报/季报/年报）
+
+**用户故事：** 作为 IT 负责人，我每个月都要写工作汇报 PPT 给领导，每次花半天到一天时间整理数据、做图表、写分析。我希望系统能结合 AI，自动从所有模块采集数据，一键生成排版精美的月报/季报/年报 PPT，我只需要微调就能直接汇报。
+
+#### 验收标准
+
+1. THE IPAM_System SHALL 支持一键生成三种工作汇报 PPT：月度工作汇报、季度工作汇报、年度工作汇报，每种 PPT 有独立的模板和内容结构
+2. THE IPAM_System SHALL 月度工作汇报 PPT 自动包含以下页面（约 12-15 页）：
+   - 封面页：企业 LOGO、"IT 部门月度工作汇报"、汇报人姓名、汇报日期
+   - 目录页：自动生成目录
+   - 本月核心成果页（1 页）：三个醒目数字——效率提升 XX%、成本节省 ¥XX 万、风险规避 ¥XX 万，环比箭头标注
+   - IT 资源概览页（1 页）：管理 IP 数/设备数/终端数/机房数/在线率/合规率，配迷你趋势图，环比对比
+   - 网络运维工作页（1-2 页）：本月告警总数及处理率、MTTD/MTTR 数据、网络可用性、拓扑变更记录、重大故障处理案例（AI 自动从告警和工单中提取最有代表性的 1-2 个案例，生成"故障描述→处理过程→解决结果→改进措施"的结构化描述）
+   - 资产管理工作页（1-2 页）：本月新增入库/领用/调拨/维修/报废数量、资产总值变化、盘点结果、闲置资产回收情况，配资产变动瀑布图
+   - 终端与安全工作页（1-2 页）：终端合规率、违规软件检测数、NAC 准入统计（认证成功率/非法接入封堵数）、安全事件处理情况
+   - 工单与服务工作页（1 页）：工单总数/按类型分布/SLA 达标率/平均处理时长/满意度评分，配工单趋势图
+   - 降本增效价值页（1-2 页）：各维度成本节省明细（闲置回收/许可证优化/能耗节省/人力节省/故障避免）、ROI 数据、场景化案例（AI 自动选取本月金额最大的 2 个降本增效案例，生成故事化描述）
+   - 下月工作计划页（1 页）：AI 基于预警数据和趋势预测自动生成 TOP5 下月重点工作项（如"XX 网段预计 45 天后 IP 耗尽需扩容""XX 服务器健康评分持续下降需维护""XX 合同即将到期需续签"），每项标注优先级和预计工作量
+   - 问题与建议页（1 页）：AI 自动分析本月数据中的异常趋势和薄弱环节，生成 2-3 条改进建议（如"建议推动市场部无纸化办公，该部门人均打印量是公司平均的 3.2 倍"）
+   - 致谢页：感谢语 + 联系方式
+3. THE IPAM_System SHALL 季度工作汇报 PPT 在月报基础上增加以下页面（约 18-22 页）：
+   - 季度目标达成页：本季度初设定的目标 vs 实际达成对比表（达成标绿/未达成标红）
+   - 季度趋势分析页：各核心指标的 3 个月趋势折线图，AI 自动标注拐点和异常并给出分析
+   - 季度降本增效汇总页：本季度累计成本节省/风险规避/效率提升金额，与上季度对比
+   - 部门 IT 资源效率排行页：各部门综合效率评分排行（来自需求 174），TOP3 和 BOTTOM3 高亮
+   - 重大项目/变更回顾页：AI 自动从变更记录和工单中提取本季度重大 IT 项目和变更事件，生成时间线
+   - 下季度规划页：AI 基于趋势预测和评审数据生成下季度重点规划
+4. THE IPAM_System SHALL 年度工作汇报 PPT 在季度报基础上增加以下页面（约 25-30 页）：
+   - 年度成果总览页：全年核心成果大数字展示（管理资产总数、处理工单总数、累计成本节省、累计风险规避、ROI）
+   - 年度趋势分析页：12 个月各核心指标趋势，AI 自动识别年度最佳月份和最差月份并分析原因
+   - 年度 ROI 分析页：全年投入 vs 收益详细分析，投资回收期，每投入 1 元产生 X 元回报
+   - 年度 TOP10 降本增效案例页：AI 自动选取全年金额最大的 10 个降本增效案例，每个案例一段故事化描述
+   - 年度对标分析页：与行业基准指标对比（如果配置了行业基准数据），标注优于/劣于行业平均的指标
+   - 下年度规划与预算建议页：AI 基于全年数据趋势，自动生成下年度 IT 重点规划建议和预算建议
+5. THE IPAM_System SHALL PPT 生成过程中 AI 自动完成以下工作：
+   - 数据采集：自动从所有模块（IP/设备/终端/机房/告警/工单/准入/流量/资产/成本等）采集当期数据
+   - 图表生成：自动生成柱状图、折线图、饼图、瀑布图、雷达图、趋势图，配色统一美观
+   - 文案撰写：AI 自动为每页生成分析文案（如"本月 MTTR 较上月缩短 15%，主要得益于故障自愈剧本覆盖率从 60% 提升至 78%"），语言风格可配置（正式商务/简洁直白）
+   - 亮点提取：AI 自动识别本期最突出的 3 个亮点和 3 个待改进项
+   - 案例生成：AI 自动从工单/告警/变更记录中提取最有代表性的案例，生成结构化描述
+6. THE IPAM_System SHALL 支持 PPT 模板自定义：
+   - 管理员可上传企业 PPT 模板（.pptx），系统按模板风格生成内容
+   - 支持自定义配色方案（企业品牌色）、字体、LOGO 位置
+   - 支持自定义页面顺序、增删页面、选择包含/排除的模块
+   - 支持保存多套模板（如"给 CEO 的简版""给 CTO 的技术版""给全员的通报版"）
+7. THE IPAM_System SHALL 生成的 PPT 支持在线预览和编辑：
+   - 生成后先在系统内在线预览，管理员可逐页查看
+   - 支持在线修改 AI 生成的文案（直接编辑文字）、调整图表数据范围、替换图片
+   - 修改满意后一键导出为 .pptx 文件（兼容 Microsoft PowerPoint / WPS）和 PDF 文件
+8. THE IPAM_System SHALL 支持 PPT 定时自动生成与推送：
+   - 月报 PPT：每月 1 日自动生成上月汇报，推送至配置的接收人
+   - 季报 PPT：每季度首月 1 日自动生成上季度汇报
+   - 年报 PPT：每年 1 月 1 日自动生成上年度汇报
+   - 推送方式：邮件附件 + 企业微信/钉钉消息链接
+9. THE IPAM_System SHALL 记录 PPT 生成历史，支持查看和下载历史 PPT，便于年度汇总和回顾
+10. THE IPAM_System SHALL 支持 AI 对话式微调，生成 PPT 后管理员可通过 AI 对话窗口（需求 59）下达指令微调，如"把第 5 页的故障案例换成上周五的核心交换机故障""下月计划再加一条关于机房扩容的""把降本增效的数字再突出一些"，AI 自动修改对应页面
+11. THE IPAM_System SHALL 支持 PPT 拖拽式编辑器，生成的 PPT 在系统内以可视化编辑模式打开，用户可拖拽调整页面顺序（拖拽缩略图排序）、拖拽调整页面内元素位置（图表/文本框/图片/形状），支持元素缩放、对齐辅助线和吸附功能
+12. THE IPAM_System SHALL PPT 编辑器支持图表交互式编辑，用户点击图表可弹出数据编辑面板，支持修改图表类型（柱状图↔折线图↔饼图↔雷达图互转）、调整数据范围（时间区间/数据维度）、修改配色方案、添加/删除数据系列，修改后图表实时刷新
+13. THE IPAM_System SHALL PPT 编辑器支持富文本编辑，用户可直接点击文本区域进入编辑模式，支持字体/字号/颜色/加粗/斜体/对齐/行距调整，支持插入超链接、编号列表、表格
+14. THE IPAM_System SHALL PPT 编辑器提供素材库面板，用户可拖拽插入预置素材（图标库/形状库/图片库/企业素材库），支持上传自定义素材并归类管理
+15. THE IPAM_System SHALL 支持 PPT 汇报模板库管理：
+    - 系统内置多套 PPT 模板（简约商务/科技蓝/深色高端/清新绿色等风格）
+    - 管理员可创建自定义模板并发布到模板库，设置模板分类（月报/季报/年报/专项报告）、适用场景描述、预览缩略图
+    - 支持模板收藏、模板评分、模板使用次数统计
+    - 支持模板跨租户/跨部门分享，分享时可设置权限（查看/使用/编辑）
+16. THE IPAM_System SHALL 支持专项报告生成，除月报/季报/年报外，管理员可创建专项报告（如"网络安全专项汇报""机房扩容可行性报告""年度 IT 预算申请报告"），通过拖拽选择需要包含的数据模块和页面，AI 自动生成对应内容
+17. THE IPAM_System SHALL 支持 PPT 版本管理，每次编辑保存自动生成新版本，支持版本列表查看（版本号/保存时间/操作人/版本备注）、任意版本预览、版本对比（高亮差异页面和内容变更）、版本回滚
+18. THE IPAM_System SHALL 支持 PPT 协作编辑，多人可同时编辑同一份 PPT，实时显示其他编辑者的光标位置和编辑区域，支持编辑锁定（按页面粒度锁定防止冲突）、编辑历史追溯、评论批注功能
+19. THE IPAM_System SHALL 支持多格式导出：PPTX（兼容 Microsoft PowerPoint / WPS / LibreOffice）、PDF（高清矢量）、PNG/JPG 图片（逐页导出或长图拼接）、HTML（在线分享链接，支持设置访问密码和有效期）
+20. THE IPAM_System SHALL 支持 PPT 数据自动刷新，已生成的 PPT 中的图表和数据支持一键刷新至最新数据，无需重新生成整份 PPT，刷新前后数据变化自动高亮标注
+21. THE IPAM_System SHALL 与系统 AI 引擎（需求 59）深度集成，PPT 生成和编辑全程可调用 AI 能力：AI 自动排版优化（检测页面布局不合理并建议调整）、AI 文案润色（选中文字后一键润色/扩写/缩写/翻译）、AI 图表推荐（根据数据特征推荐最佳图表类型）、AI 配色建议（根据模板风格推荐和谐配色）
+22. THE IPAM_System SHALL PPT 生成支持数据权限控制，不同角色生成的 PPT 仅包含其有权查看的数据（如部门经理仅看到本部门数据，CIO 看到全公司数据），敏感数据（如具体金额、人员信息）可配置脱敏规则
+23. THE IPAM_System SHALL PPT 编辑器支持撤销/重做操作（Ctrl+Z / Ctrl+Y），支持编辑过程自动保存（每 30 秒），意外关闭浏览器后可恢复到最近的编辑状态
