@@ -1,2131 +1,1866 @@
-# 设计文档：轻量版 IP 地址管理系统（IPAM）
+# 设计文档：IT 智维平台（低代码驱动的一体化 IT 运维管理平台）
 
 ## 概述
 
-本系统采用前后端分离的微服务架构，后端使用 FastAPI 提供 RESTful API，前端使用 Vue 3 构建单页应用。系统通过 Docker Compose 实现容器化部署，支持 Windows 10 开发环境和 Linux 生产环境。
+IT 智维平台是一个面向中大型企业的低代码驱动一体化 IT 运维管理平台，涵盖 15 个核心业务域：IPAM、DCIM、NAC、资产管理、终端管理、网络自动化、数据采集监控、AI 智能分析、工单 ITSM、低代码平台、安全合规、报表中心、IT 价值量化、运维协作、系统基础设施。
+
+本设计采用**微服务 + 插件化 + 事件驱动**架构，以低代码引擎为底座，支持十万级 IP 资产管理、多租户隔离、分布式任务调度、数据生命周期管理和 AI 智能分析。
 
 ### 技术栈
 
-**后端：**
-- Python 3.10
-- FastAPI（Web 框架）
-- SQLAlchemy（ORM）
-- Pydantic（数据验证）
-- PyJWT（JWT 认证）
-- Alembic（数据库迁移）
-- python-multipart（文件上传）
-- openpyxl（Excel 处理）
-- asyncio（异步 Ping 扫描）
+| 层级 | 技术选型 |
+|------|---------|
+| 后端框架 | Python 3.11 + FastAPI + SQLAlchemy 2.0 + Celery |
+| 前端框架 | Vue 3 + Element Plus + ECharts + AntV G6 + Fabric.js |
+| 关系数据库 | MySQL 8.0（业务数据，InnoDB，支持分区表） |
+| 时序数据库 | TimescaleDB（性能指标、流量数据、采集数据） |
+| 缓存/队列 | Redis 7.0（缓存 + Celery Broker + 分布式锁） |
+| 搜索引擎 | Elasticsearch 8.x（全文搜索、日志检索、智能搜索） |
+| 消息队列 | RabbitMQ 3.12（事件总线、异步通信） |
+| AI 引擎 | 多模型适配层（OpenAI/Azure/本地 LLM） |
+| 容器化 | Docker Compose + Kubernetes |
+| API 网关 | 自研网关层（限流/熔断/链路追踪） |
 
-**前端：**
-- Vue 3（Composition API）
-- Vite（构建工具）
-- Element Plus（UI 组件库）
-- Vue Router（路由管理）
-- Pinia（状态管理）
-- Axios（HTTP 客户端）
-- ECharts（数据可视化）
 
-**数据库：**
-- MySQL 8.0
+## 架构
 
-**容器化：**
-- Docker
-- Docker Compose
+### 系统总体分层架构
 
-### 系统架构
+```mermaid
+graph TB
+    subgraph 接入层["接入层 (Access Layer)"]
+        WEB["Vue 3 Web 应用"]
+        MOBILE["移动端 (小程序/钉钉)"]
+        API_CLIENT["第三方 API 客户端"]
+        WEBHOOK_IN["Webhook 入站"]
+    end
 
+    subgraph 网关层["API 网关层 (Gateway Layer)"]
+        GW["API Gateway<br/>限流/熔断/降级/链路追踪<br/>JWT 验证/RBAC 鉴权"]
+    end
+
+    subgraph 业务服务层["微服务层 (Microservice Layer)"]
+        subgraph 核心服务["核心基础服务"]
+            AUTH["认证鉴权服务<br/>(Auth Service)"]
+            TENANT["租户管理服务<br/>(Tenant Service)"]
+            CONFIG["配置中心服务<br/>(Config Service)"]
+            NOTIFY["通知中心服务<br/>(Notification Service)"]
+            AUDIT["审计日志服务<br/>(Audit Service)"]
+            SCHEDULER["任务调度服务<br/>(Scheduler Service)"]
+        end
+
+        subgraph IPAM服务["IPAM 域服务"]
+            SEGMENT["网段管理服务"]
+            IP_MGMT["IP 生命周期服务"]
+            CONFLICT["冲突检测服务"]
+            SCAN["扫描引擎服务"]
+            DHCP_DNS["DHCP/DNS 联动服务"]
+        end
+
+        subgraph DCIM服务["DCIM 域服务"]
+            DC["机房管理服务"]
+            RACK["机架管理服务"]
+            CABLE["线缆拓扑服务"]
+            PDU_SVC["PDU/环境监控服务"]
+        end
+
+        subgraph NAC服务["NAC 域服务"]
+            RADIUS_SVC["RADIUS 认证服务"]
+            POLICY["策略引擎服务"]
+            COMPLIANCE["合规检查服务"]
+            VISITOR["访客管理服务"]
+        end
+
+        subgraph 资产服务["资产管理域服务"]
+            DEVICE["设备资产服务"]
+            TERMINAL["终端管理服务"]
+            SOFTWARE["软件资产服务"]
+            LIFECYCLE["全生命周期服务"]
+            INVENTORY["盘点管理服务"]
+        end
+
+        subgraph 采集服务["数据采集域服务"]
+            COLLECTOR["多协议采集引擎"]
+            SNMP_SVC["SNMP 采集服务"]
+            SYSLOG_SVC["Syslog 接收服务"]
+            NETFLOW_SVC["NetFlow 采集服务"]
+            AGENT_SVC["Agent 管理服务"]
+        end
+
+        subgraph 智能服务["智能分析域服务"]
+            AI_SVC["AI 分析引擎"]
+            PREDICT["预警预测服务"]
+            SEARCH["智能搜索服务"]
+            FINGERPRINT["指纹识别服务"]
+        end
+
+        subgraph 协作服务["工单协作域服务"]
+            TICKET["工单引擎服务"]
+            WORKFLOW["流程引擎服务"]
+            SLA_SVC["SLA 管理服务"]
+            HELPDESK["Helpdesk 服务"]
+        end
+
+        subgraph 低代码服务["低代码平台域服务"]
+            FORM_ENGINE["表单引擎"]
+            REPORT_ENGINE["报表引擎"]
+            DASHBOARD_ENGINE["仪表盘引擎"]
+            SCREEN_ENGINE["大屏引擎"]
+            PPT_ENGINE["PPT 生成引擎"]
+            PLUGIN["插件管理服务"]
+            CONNECTOR["连接器服务"]
+            AUTOMATION["自动化工作流引擎"]
+        end
+
+        subgraph 网络自动化["网络自动化域服务"]
+            NET_AUTO["配置下发服务"]
+            ZTP_SVC["ZTP 零配置服务"]
+            SCRIPT["脚本模板服务"]
+            CHANGE["变更管理服务"]
+        end
+
+        subgraph 价值量化["IT 价值量化域服务"]
+            ROI_SVC["ROI 计算服务"]
+            COST["成本分析服务"]
+            EFFICIENCY["效率量化服务"]
+            VALUE_REPORT["价值报告服务"]
+        end
+    end
+
+    subgraph 事件总线["事件总线层 (Event Bus)"]
+        MQ["RabbitMQ<br/>事件驱动架构<br/>异步解耦"]
+    end
+
+    subgraph 数据层["数据存储层 (Data Layer)"]
+        MYSQL["MySQL 8.0<br/>业务数据<br/>分区表/读写分离"]
+        TSDB["TimescaleDB<br/>时序数据<br/>降采样/连续聚合"]
+        REDIS["Redis 7.0<br/>缓存/会话/分布式锁<br/>Celery Broker"]
+        ES["Elasticsearch 8.x<br/>全文搜索/日志<br/>智能检索"]
+        OSS["对象存储<br/>MinIO/S3<br/>文件/备份/归档"]
+    end
+
+    subgraph 基础设施["基础设施层"]
+        DOCKER["Docker Compose / K8s"]
+        PROM["Prometheus + Grafana"]
+        NGINX["Nginx 负载均衡"]
+    end
+
+    WEB --> GW
+    MOBILE --> GW
+    API_CLIENT --> GW
+    WEBHOOK_IN --> GW
+    GW --> 核心服务
+    GW --> IPAM服务
+    GW --> DCIM服务
+    GW --> NAC服务
+    GW --> 资产服务
+    GW --> 采集服务
+    GW --> 智能服务
+    GW --> 协作服务
+    GW --> 低代码服务
+    GW --> 网络自动化
+    GW --> 价值量化
+    业务服务层 <--> MQ
+    业务服务层 --> MYSQL
+    业务服务层 --> TSDB
+    业务服务层 --> REDIS
+    业务服务层 --> ES
+    业务服务层 --> OSS
+    DOCKER --- 业务服务层
+    PROM --- 业务服务层
+    NGINX --- GW
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                         用户浏览器                            │
-│                    (Vue 3 + Element Plus)                   │
-└────────────────────────┬────────────────────────────────────┘
-                         │ HTTPS/HTTP
-                         │
-┌────────────────────────▼────────────────────────────────────┐
-│                      Nginx (可选)                            │
-│                   (反向代理 + 静态文件)                       │
-└────────────────────────┬────────────────────────────────────┘
-                         │
-        ┌────────────────┴────────────────┐
-        │                                 │
-┌───────▼──────────┐            ┌────────▼─────────┐
-│   前端容器        │            │    后端容器       │
-│  (Vue 3 SPA)     │            │   (FastAPI)      │
-│  Port: 5173      │            │   Port: 8000     │
-└──────────────────┘            └────────┬─────────┘
-                                         │
-                                ┌────────▼─────────┐
-                                │   数据库容器      │
-                                │   (MySQL 8.0)    │
-                                │   Port: 3306     │
-                                └──────────────────┘
+
+### 微服务拆分与模块边界
+
+系统按 DDD（领域驱动设计）拆分为 15 个限界上下文，每个上下文对应一组微服务：
+
+| 域 | 微服务 | 职责 | 覆盖需求 |
+|----|--------|------|---------|
+| 系统基础 | auth-service, tenant-service, config-service, audit-service, notification-service, scheduler-service | 认证鉴权、多租户、配置中心、审计日志、通知推送、任务调度 | 10,11,12,13,17,18,22,30,36,60,61,62,132,154,156,157 |
+| IPAM | segment-service, ip-lifecycle-service, conflict-service, scan-service, dhcp-dns-service | 网段管理、IP 生命周期、冲突检测、Ping 扫描、DHCP/DNS 联动 | 1,2,4,5,9,20,21,50,51,52,67,70,73,111 |
+| DCIM | datacenter-service, rack-service, cable-topology-service, pdu-env-service | 机房管理、机架管理、线缆拓扑、PDU/环境监控 | 31,32,33,34,35,47,163 |
+| NAC | radius-service, policy-engine-service, compliance-service, visitor-service | RADIUS 认证、策略引擎、合规检查、访客管理 | 37,38,39,40,41,42,43,44,102,103,104,105,106 |
+| 资产管理 | device-service, terminal-service, software-service, lifecycle-service, inventory-service | 设备资产、终端管理、软件资产、全生命周期、盘点管理 | 3,48,49,71,76,77,78,79,80,81,92,95,97,98,99,116,117,118,119,120,121,122,123,125,126,158 |
+| 数据采集 | collector-engine, snmp-service, syslog-service, netflow-service, agent-service | 多协议采集引擎、SNMP/Syslog/NetFlow 采集、Agent 管理 | 83,84,85,86,87,149 |
+| 监控展示 | performance-service, syslog-view-service, traffic-view-service, iot-view-service | 设备性能监控、日志分析、流量分析、工控/IoT 展示 | 88,89,90,91,93,110 |
+| 智能分析 | ai-engine-service, prediction-service, search-service, fingerprint-service | AI 分析引擎、预警预测、智能搜索、指纹识别 | 59,94,152,155,161,167 |
+| 工单协作 | ticket-service, workflow-engine-service, sla-service, helpdesk-service | 工单引擎、流程引擎、SLA 管理、Helpdesk | 45,64,65,66,96,100,108,113,114,135,136,137,138,139,141,142,143,144,145,146 |
+| 低代码平台 | form-engine, report-engine, dashboard-engine, screen-engine, ppt-engine, plugin-service, connector-service, automation-service | 表单/报表/仪表盘/大屏/PPT 引擎、插件管理、连接器、自动化工作流 | 7,15,23,26,82,129,131,164,165,181 |
+| 网络自动化 | netauto-service, ztp-service, script-service, change-service | 配置下发、ZTP、脚本模板、变更管理 | 19,46,124,133,134,140,159 |
+| 数据治理 | cleaning-service, comparison-service, lifecycle-data-service | 数据清洗、数据源对比、数据生命周期 | 6,8,27,28,130,148,153,166 |
+| 报表中心 | report-center-service | 统一报表中心、全模块报表 | 115 |
+| IT 价值量化 | roi-service, cost-service, efficiency-service, value-report-service | ROI 计算、成本分析、效率量化、价值报告 | 109,169,171,172,173,174,175,176,177,178,179,180 |
+| 运维协作 | knowledge-service, duty-service, runbook-service, diagnostic-service, business-mapping-service | 知识库、值班排班、Runbook、诊断工具、业务映射 | 58,74,75,101,107,112,127,128,147,160,162,168,170 |
+
+
+## 组件与接口
+
+### 事件驱动架构（EDA）
+
+所有微服务通过 RabbitMQ 事件总线异步通信，实现模块间解耦。
+
+#### 事件总线设计
+
+```mermaid
+graph LR
+    subgraph 事件生产者
+        IP["IP 生命周期服务"]
+        DEV["设备资产服务"]
+        NAC_P["NAC 认证服务"]
+        SCAN_P["扫描引擎"]
+        CHANGE_P["变更管理"]
+    end
+
+    subgraph RabbitMQ["RabbitMQ 事件总线"]
+        EX_IP["Exchange: ipam.ip"]
+        EX_DEV["Exchange: ipam.device"]
+        EX_NAC["Exchange: ipam.nac"]
+        EX_SCAN["Exchange: ipam.scan"]
+        EX_ALERT["Exchange: ipam.alert"]
+        EX_CHANGE["Exchange: ipam.change"]
+        EX_AUDIT["Exchange: ipam.audit"]
+        EX_WORKFLOW["Exchange: ipam.workflow"]
+    end
+
+    subgraph 事件消费者
+        AUDIT_C["审计日志服务"]
+        NOTIFY_C["通知中心"]
+        DHCP_C["DHCP/DNS 联动"]
+        ALERT_C["告警引擎"]
+        AI_C["AI 分析引擎"]
+        ES_C["搜索索引服务"]
+        PREDICT_C["预警预测"]
+    end
+
+    IP --> EX_IP
+    DEV --> EX_DEV
+    NAC_P --> EX_NAC
+    SCAN_P --> EX_SCAN
+    CHANGE_P --> EX_CHANGE
+
+    EX_IP --> AUDIT_C
+    EX_IP --> DHCP_C
+    EX_IP --> ALERT_C
+    EX_IP --> ES_C
+    EX_DEV --> AUDIT_C
+    EX_DEV --> ES_C
+    EX_NAC --> AUDIT_C
+    EX_NAC --> ALERT_C
+    EX_SCAN --> ALERT_C
+    EX_SCAN --> PREDICT_C
+    EX_ALERT --> NOTIFY_C
+    EX_ALERT --> AI_C
 ```
 
-## 架构设计
+#### 核心事件类型
 
-### 后端架构（分层设计）
+| Exchange | Routing Key | 事件描述 | 消费者 |
+|----------|-------------|---------|--------|
+| ipam.ip | ip.allocated | IP 地址已分配 | audit, dhcp-dns, search, alert |
+| ipam.ip | ip.released | IP 地址已回收 | audit, dhcp-dns, search |
+| ipam.ip | ip.conflict.detected | IP 冲突已检测到 | alert, notification, audit |
+| ipam.ip | ip.status.changed | IP 状态变更 | audit, search, prediction |
+| ipam.device | device.created | 设备已创建 | audit, search, topology |
+| ipam.device | device.deleted | 设备已删除 | audit, search, ip-lifecycle, rack |
+| ipam.device | device.config.changed | 设备配置变更 | audit, alert, backup |
+| ipam.nac | nac.auth.success | 认证成功 | audit, terminal, ip-lifecycle |
+| ipam.nac | nac.auth.failed | 认证失败 | audit, alert, security |
+| ipam.nac | nac.violation.detected | 违规行为检测 | alert, notification, security |
+| ipam.scan | scan.completed | 扫描完成 | alert, prediction, report |
+| ipam.scan | scan.unregistered.found | 发现未注册设备 | alert, notification |
+| ipam.alert | alert.triggered | 告警触发 | notification, sla, duty |
+| ipam.alert | alert.resolved | 告警恢复 | notification, report |
+| ipam.change | change.executed | 变更已执行 | audit, topology, verification |
+| ipam.workflow | workflow.approved | 工单审批通过 | ip-lifecycle, device, automation |
+| ipam.audit | audit.logged | 审计日志已记录 | elasticsearch, compliance |
 
-```
-app/
-├── main.py                 # FastAPI 应用入口
-├── core/                   # 核心配置
-│   ├── config.py          # 配置管理
-│   ├── security.py        # 安全相关（JWT、密码加密）
-│   └── database.py        # 数据库连接
-├── models/                 # SQLAlchemy 数据模型
-│   ├── user.py
-│   ├── network_segment.py
-│   ├── ip_address.py
-│   ├── device.py
-│   ├── operation_log.py
-│   └── alert.py
-├── schemas/                # Pydantic 数据模式
-│   ├── user.py
-│   ├── network_segment.py
-│   ├── ip_address.py
-│   ├── device.py
-│   └── common.py
-├── api/                    # API 路由
-│   ├── deps.py            # 依赖注入
-│   ├── auth.py            # 认证相关
-│   ├── users.py
-│   ├── network_segments.py
-│   ├── ip_addresses.py
-│   ├── devices.py
-│   ├── logs.py
-│   ├── dashboard.py
-│   └── import_export.py
-├── services/               # 业务逻辑层
-│   ├── ip_service.py
-│   ├── device_service.py
-│   ├── conflict_detection.py
-│   ├── ping_scanner.py
-│   ├── alert_service.py
-│   └── excel_service.py
-└── utils/                  # 工具函数
-    ├── ip_utils.py
-    ├── validators.py
-    └── logger.py
-```
-
-### 前端架构（模块化设计）
-
-```
-src/
-├── main.js                 # 应用入口
-├── App.vue                 # 根组件
-├── router/                 # 路由配置
-│   └── index.js
-├── stores/                 # Pinia 状态管理
-│   ├── user.js
-│   ├── auth.js
-│   └── app.js
-├── api/                    # API 请求封装
-│   ├── request.js         # Axios 配置
-│   ├── auth.js
-│   ├── network.js
-│   ├── ip.js
-│   ├── device.js
-│   └── dashboard.js
-├── views/                  # 页面组件
-│   ├── Login.vue
-│   ├── Dashboard.vue
-│   ├── NetworkSegment/
-│   │   ├── List.vue
-│   │   └── Form.vue
-│   ├── IPAddress/
-│   │   ├── List.vue
-│   │   ├── Allocate.vue
-│   │   └── Scanner.vue
-│   ├── Device/
-│   │   ├── List.vue
-│   │   └── Form.vue
-│   ├── Log/
-│   │   └── List.vue
-│   └── ImportExport/
-│       └── Index.vue
-├── components/             # 可复用组件
-│   ├── Layout/
-│   │   ├── Header.vue
-│   │   ├── Sidebar.vue
-│   │   └── Main.vue
-│   ├── Charts/
-│   │   ├── UsageChart.vue
-│   │   └── StatusChart.vue
-│   └── Common/
-│       ├── Pagination.vue
-│       └── SearchBar.vue
-└── utils/                  # 工具函数
-    ├── auth.js
-    ├── validators.js
-    └── formatters.js
-```
-
-## 组件和接口
-
-### 数据模型设计
-
-#### User（用户表）
+### API 网关设计
 
 ```python
-class User(Base):
-    __tablename__ = "users"
-    
-    id: int                    # 主键
-    username: str              # 用户名（唯一）
-    hashed_password: str       # 加密密码
-    email: str                 # 邮箱
-    full_name: str             # 全名
-    role: str                  # 角色（admin/user/readonly）
-    is_active: bool            # 是否激活
-    created_at: datetime       # 创建时间
-    updated_at: datetime       # 更新时间
+# API 网关核心中间件栈
+class APIGateway:
+    """
+    API 网关 - 所有请求的统一入口
+    职责：限流、熔断、降级、链路追踪、JWT 验证、RBAC 鉴权
+    """
+    middleware_stack = [
+        TraceIDMiddleware,       # 链路追踪 - 生成 TraceID
+        RateLimitMiddleware,     # 限流 - 按 API Key/用户/IP 维度
+        CircuitBreakerMiddleware,# 熔断 - 下游故障快速失败
+        JWTAuthMiddleware,       # JWT 认证 - Token 验证
+        RBACMiddleware,          # RBAC 鉴权 - 权限校验
+        TenantIsolationMiddleware,# 租户隔离 - 数据范围限制
+        AuditLogMiddleware,      # 审计日志 - 操作记录
+        ResponseFormatMiddleware, # 统一响应格式
+    ]
 ```
 
-#### NetworkSegment（网段表）
+#### API 规范
 
-```python
-class NetworkSegment(Base):
-    __tablename__ = "network_segments"
-    
-    id: int                    # 主键
-    name: str                  # 网段名称
-    network: str               # 网络地址（如 192.168.1.0）
-    prefix_length: int         # 前缀长度（如 24）
-    gateway: str               # 网关地址（可选）
-    description: str           # 描述
-    usage_threshold: int       # 使用率告警阈值（百分比）
-    total_ips: int             # 总 IP 数量（计算字段）
-    used_ips: int              # 已用 IP 数量（计算字段）
-    created_by: int            # 创建人 ID（外键）
-    created_at: datetime       # 创建时间
-    updated_at: datetime       # 更新时间
-```
-
-#### IPAddress（IP 地址表）
-
-```python
-class IPAddress(Base):
-    __tablename__ = "ip_addresses"
-    
-    id: int                    # 主键
-    segment_id: int            # 所属网段 ID（外键）
-    ip_address: str            # IP 地址（唯一）
-    status: str                # 状态（available/used/reserved）
-    device_id: int             # 关联设备 ID（外键，可空）
-    allocated_at: datetime     # 分配时间
-    allocated_by: int          # 分配人 ID（外键）
-    last_seen: datetime        # 最后扫描时间
-    is_online: bool            # 是否在线（最后扫描结果）
-    created_at: datetime       # 创建时间
-    updated_at: datetime       # 更新时间
-```
-
-#### Device（设备表）
-
-```python
-class Device(Base):
-    __tablename__ = "devices"
-    
-    id: int                    # 主键
-    name: str                  # 设备名称
-    mac_address: str           # MAC 地址（唯一）
-    device_type: str           # 设备类型（服务器/交换机/路由器/终端等）
-    manufacturer: str          # 制造商
-    model: str                 # 型号
-    owner: str                 # 责任人
-    department: str            # 部门
-    location: str              # 物理位置
-    description: str           # 描述
-    created_by: int            # 创建人 ID（外键）
-    created_at: datetime       # 创建时间
-    updated_at: datetime       # 更新时间
-```
-
-#### OperationLog（操作日志表）
-
-```python
-class OperationLog(Base):
-    __tablename__ = "operation_logs"
-    
-    id: int                    # 主键
-    user_id: int               # 操作人 ID（外键）
-    username: str              # 操作人用户名（冗余字段）
-    operation_type: str        # 操作类型（create/update/delete/allocate/release）
-    resource_type: str         # 资源类型（ip/device/segment/user）
-    resource_id: int           # 资源 ID
-    details: str               # 操作详情（JSON 格式）
-    ip_address: str            # 客户端 IP
-    created_at: datetime       # 操作时间
-```
-
-#### Alert（告警表）
-
-```python
-class Alert(Base):
-    __tablename__ = "alerts"
-    
-    id: int                    # 主键
-    segment_id: int            # 网段 ID（外键）
-    alert_type: str            # 告警类型（usage_threshold）
-    severity: str              # 严重程度（warning/critical）
-    message: str               # 告警消息
-    current_usage: float       # 当前使用率
-    threshold: float           # 阈值
-    is_resolved: bool          # 是否已解决
-    resolved_at: datetime      # 解决时间
-    created_at: datetime       # 创建时间
-```
-
-#### ScanHistory（扫描历史表）
-
-```python
-class ScanHistory(Base):
-    __tablename__ = "scan_history"
-    
-    id: int                    # 主键
-    segment_id: int            # 网段 ID（外键）
-    scan_type: str             # 扫描类型（ping/arp）
-    total_ips: int             # 扫描 IP 总数
-    online_ips: int            # 在线 IP 数量
-    duration: float            # 扫描耗时（秒）
-    results: str               # 扫描结果（JSON 格式）
-    created_by: int            # 发起人 ID（外键）
-    created_at: datetime       # 扫描时间
-```
-
-### 数据库索引设计
-
-```sql
--- 用户表索引
-CREATE UNIQUE INDEX idx_users_username ON users(username);
-CREATE INDEX idx_users_role ON users(role);
-
--- 网段表索引
-CREATE INDEX idx_segments_network ON network_segments(network, prefix_length);
-
--- IP 地址表索引
-CREATE UNIQUE INDEX idx_ip_address ON ip_addresses(ip_address);
-CREATE INDEX idx_ip_segment ON ip_addresses(segment_id);
-CREATE INDEX idx_ip_status ON ip_addresses(status);
-CREATE INDEX idx_ip_device ON ip_addresses(device_id);
-
--- 设备表索引
-CREATE UNIQUE INDEX idx_device_mac ON devices(mac_address);
-CREATE INDEX idx_device_name ON devices(name);
-CREATE INDEX idx_device_owner ON devices(owner);
-
--- 操作日志表索引
-CREATE INDEX idx_log_user ON operation_logs(user_id);
-CREATE INDEX idx_log_type ON operation_logs(operation_type, resource_type);
-CREATE INDEX idx_log_time ON operation_logs(created_at);
-
--- 告警表索引
-CREATE INDEX idx_alert_segment ON alerts(segment_id);
-CREATE INDEX idx_alert_resolved ON alerts(is_resolved);
-CREATE INDEX idx_alert_time ON alerts(created_at);
-```
-
-### API 接口设计
-
-#### 认证接口
-
-```
-POST   /api/v1/auth/login          # 用户登录
-POST   /api/v1/auth/refresh        # 刷新 Token
-POST   /api/v1/auth/logout         # 用户登出
-GET    /api/v1/auth/me             # 获取当前用户信息
-```
-
-#### 用户管理接口
-
-```
-GET    /api/v1/users               # 获取用户列表
-POST   /api/v1/users               # 创建用户（仅管理员）
-GET    /api/v1/users/{id}          # 获取用户详情
-PUT    /api/v1/users/{id}          # 更新用户信息
-DELETE /api/v1/users/{id}          # 删除用户（仅管理员）
-PUT    /api/v1/users/{id}/password # 修改密码
-```
-
-#### 网段管理接口
-
-```
-GET    /api/v1/segments            # 获取网段列表
-POST   /api/v1/segments            # 创建网段
-GET    /api/v1/segments/{id}       # 获取网段详情
-PUT    /api/v1/segments/{id}       # 更新网段
-DELETE /api/v1/segments/{id}       # 删除网段
-GET    /api/v1/segments/{id}/stats # 获取网段统计信息
-```
-
-#### IP 地址管理接口
-
-```
-GET    /api/v1/ips                 # 获取 IP 地址列表
-POST   /api/v1/ips/allocate        # 分配 IP 地址
-POST   /api/v1/ips/release         # 回收 IP 地址
-GET    /api/v1/ips/{id}            # 获取 IP 详情
-PUT    /api/v1/ips/{id}            # 更新 IP 信息
-POST   /api/v1/ips/check-conflict  # 检查 IP 冲突
-POST   /api/v1/ips/scan            # 扫描网段
-GET    /api/v1/ips/scan-history    # 获取扫描历史
-```
-
-#### 设备管理接口
-
-```
-GET    /api/v1/devices             # 获取设备列表
-POST   /api/v1/devices             # 创建设备
-GET    /api/v1/devices/{id}        # 获取设备详情
-PUT    /api/v1/devices/{id}        # 更新设备信息
-DELETE /api/v1/devices/{id}        # 删除设备
-GET    /api/v1/devices/{id}/ips    # 获取设备关联的 IP
-```
-
-#### 操作日志接口
-
-```
-GET    /api/v1/logs                # 获取操作日志列表
-GET    /api/v1/logs/{id}           # 获取日志详情
-```
-
-#### 告警管理接口
-
-```
-GET    /api/v1/alerts              # 获取告警列表
-GET    /api/v1/alerts/{id}         # 获取告警详情
-PUT    /api/v1/alerts/{id}/resolve # 解决告警
-```
-
-#### 仪表板接口
-
-```
-GET    /api/v1/dashboard/stats     # 获取统计数据
-GET    /api/v1/dashboard/charts    # 获取图表数据
-```
-
-#### 导入导出接口
-
-```
-GET    /api/v1/import-export/template      # 下载 Excel 模板
-POST   /api/v1/import-export/import        # 导入 Excel 数据
-GET    /api/v1/import-export/export        # 导出 Excel 数据
-```
-
-### API 响应格式
-
-#### 成功响应
+所有 API 遵循 RESTful 规范，统一响应格式：
 
 ```json
 {
-  "code": 200,
-  "message": "Success",
-  "data": {
-    // 响应数据
-  }
+    "code": 200,
+    "message": "success",
+    "data": {},
+    "trace_id": "abc-123-def",
+    "timestamp": "2026-01-01T00:00:00Z"
 }
 ```
 
-#### 错误响应
+API 版本控制：`/api/v1/...`，路径规范：
 
-```json
-{
-  "code": 400,
-  "message": "Invalid request parameters",
-  "errors": [
-    {
-      "field": "ip_address",
-      "message": "Invalid IP address format"
-    }
-  ]
-}
+| 资源 | 路径 | 方法 |
+|------|------|------|
+| 网段 | /api/v1/segments | GET, POST |
+| 网段详情 | /api/v1/segments/{id} | GET, PUT, DELETE |
+| IP 地址 | /api/v1/ips | GET, POST |
+| IP 分配 | /api/v1/ips/allocate | POST |
+| IP 批量分配 | /api/v1/ips/batch-allocate | POST |
+| 设备 | /api/v1/devices | GET, POST |
+| 终端 | /api/v1/terminals | GET, POST |
+| 机房 | /api/v1/datacenters | GET, POST |
+| 机架 | /api/v1/racks | GET, POST |
+| VLAN | /api/v1/vlans | GET, POST |
+| 工单 | /api/v1/tickets | GET, POST |
+| 告警 | /api/v1/alerts | GET |
+| 扫描任务 | /api/v1/scans | GET, POST |
+| 报表 | /api/v1/reports | GET, POST |
+| 仪表盘 | /api/v1/dashboards | GET, POST |
+
+### 插件扩展机制
+
+```mermaid
+graph TB
+    subgraph 插件注册中心
+        REG["插件注册表<br/>- 菜单注册<br/>- 路由注册<br/>- 权限注册<br/>- 数据模型注册<br/>- 搜索注册<br/>- API 注册"]
+    end
+
+    subgraph 插件生命周期
+        INSTALL["安装"] --> LOAD["加载"]
+        LOAD --> INIT["初始化"]
+        INIT --> ENABLE["启用"]
+        ENABLE --> DISABLE["禁用"]
+        DISABLE --> UNINSTALL["卸载"]
+    end
+
+    subgraph 插件SDK
+        HOOK["钩子接口<br/>on_install()<br/>on_enable()<br/>on_disable()<br/>on_uninstall()"]
+        EXT["扩展点<br/>- 数据模型扩展<br/>- API 扩展<br/>- UI 组件扩展<br/>- 事件监听扩展<br/>- 采集协议扩展"]
+    end
+
+    REG --> 插件生命周期
+    插件SDK --> REG
 ```
 
-#### 分页响应
+#### 插件接口定义
 
-```json
-{
-  "code": 200,
-  "message": "Success",
-  "data": {
-    "items": [...],
-    "total": 100,
-    "page": 1,
-    "page_size": 20,
-    "total_pages": 5
-  }
-}
+```python
+class PluginBase(ABC):
+    """插件基类 - 所有插件必须继承"""
+    
+    @abstractmethod
+    def get_manifest(self) -> PluginManifest:
+        """返回插件清单：名称、版本、依赖、注册信息"""
+        pass
+    
+    @abstractmethod
+    def on_install(self, context: PluginContext) -> None:
+        """安装时执行：创建数据表、注册菜单/路由/权限"""
+        pass
+    
+    @abstractmethod
+    def on_enable(self, context: PluginContext) -> None:
+        """启用时执行：注册事件监听、启动后台任务"""
+        pass
+    
+    @abstractmethod
+    def on_disable(self, context: PluginContext) -> None:
+        """禁用时执行：注销事件监听、停止后台任务"""
+        pass
+
+class PluginManifest(BaseModel):
+    name: str                    # 插件名称
+    version: str                 # 版本号
+    description: str             # 描述
+    dependencies: list[str]      # 依赖的其他插件
+    menus: list[MenuRegistration]     # 菜单注册
+    routes: list[RouteRegistration]   # 路由注册
+    permissions: list[PermRegistration] # 权限注册
+    models: list[ModelRegistration]   # 数据模型注册
+    apis: list[APIRegistration]       # API 注册
+    search_indexes: list[SearchRegistration] # 搜索注册
 ```
+
+### 低代码引擎架构
+
+```mermaid
+graph TB
+    subgraph 统一设计器框架["统一设计器框架 (Unified Designer Framework)"]
+        TOOLBAR["统一工具栏<br/>撤销/重做/预览/保存"]
+        CANVAS["统一画布引擎<br/>拖拽/缩放/对齐/吸附"]
+        PROP_PANEL["统一属性面板<br/>组件属性/数据绑定/样式"]
+        COMP_LIB["统一组件库<br/>通用组件/业务组件/图表组件"]
+        DS_SYSTEM["统一数据源体系<br/>内部API/自定义连接器/SQL"]
+    end
+
+    subgraph 设计器实例["设计器实例"]
+        FORM_D["表单设计器"]
+        FLOW_D["流程设计器"]
+        REPORT_D["报表设计器"]
+        DASH_D["仪表盘设计器"]
+        SCREEN_D["大屏设计器"]
+        PPT_D["PPT 设计器"]
+        PAGE_D["页面布局设计器"]
+    end
+
+    subgraph 运行时引擎["运行时引擎"]
+        FORM_RT["表单渲染引擎"]
+        FLOW_RT["流程执行引擎"]
+        REPORT_RT["报表渲染引擎"]
+        DASH_RT["仪表盘渲染引擎"]
+        SCREEN_RT["大屏渲染引擎"]
+        PPT_RT["PPT 渲染引擎"]
+    end
+
+    统一设计器框架 --> 设计器实例
+    设计器实例 --> 运行时引擎
+```
+
+#### 设计器共享规范
+
+所有设计器共享以下交互规范（需求 15.14, 129）：
+- 拖拽手势：从左侧组件面板拖拽到中央画布
+- 属性面板：右侧属性面板，选中组件后展示属性配置
+- 快捷键：Ctrl+Z 撤销、Ctrl+Y 重做、Ctrl+S 保存、Ctrl+P 预览
+- 模式切换：设计模式 ↔ 预览模式一键切换
+- 模板入口：首次打开提供"从模板开始"和"从空白开始"
+- 帮助向导：内置操作提示模式和案例参考侧边栏
+
 
 ## 数据模型
 
-### IP 地址状态机
+### 多数据库策略
 
 ```mermaid
-stateDiagram-v2
-    [*] --> Available: 创建网段时自动生成
-    Available --> Used: 分配给设备
-    Available --> Reserved: 手动标记为保留
-    Used --> Available: 回收 IP
-    Reserved --> Available: 取消保留
-    Reserved --> Used: 分配给设备
-    Used --> [*]: 删除网段
-    Available --> [*]: 删除网段
-    Reserved --> [*]: 删除网段
+graph LR
+    subgraph 写入路径["写入路径 (Write Path)"]
+        APP["应用服务"] -->|业务数据| MYSQL_M["MySQL 主库"]
+        APP -->|时序数据| TSDB_W["TimescaleDB"]
+        APP -->|缓存更新| REDIS_W["Redis"]
+        APP -->|索引更新| ES_W["Elasticsearch"]
+    end
+
+    subgraph 读取路径["读取路径 (Read Path / CQRS)"]
+        QUERY["查询请求"] -->|热数据| REDIS_R["Redis 缓存"]
+        QUERY -->|业务查询| MYSQL_S["MySQL 从库"]
+        QUERY -->|全文搜索| ES_R["Elasticsearch"]
+        QUERY -->|时序查询| TSDB_R["TimescaleDB"]
+    end
+
+    MYSQL_M -->|主从复制| MYSQL_S
+    MYSQL_M -->|Binlog CDC| ES_W
 ```
 
-### 网段使用率计算
+### 核心数据库表设计（MySQL）
 
-```python
-def calculate_segment_usage(segment: NetworkSegment) -> dict:
-    """
-    计算网段使用率
-    
-    Args:
-        segment: 网段对象
-        
-    Returns:
-        {
-            'total_ips': int,      # 总 IP 数量
-            'used_ips': int,       # 已用 IP 数量
-            'available_ips': int,  # 可用 IP 数量
-            'reserved_ips': int,   # 保留 IP 数量
-            'usage_rate': float    # 使用率（百分比）
-        }
-    """
-    # 计算总 IP 数量（排除网络地址和广播地址）
-    total_ips = 2 ** (32 - segment.prefix_length) - 2
-    
-    # 查询各状态 IP 数量
-    used_ips = count_ips_by_status(segment.id, 'used')
-    reserved_ips = count_ips_by_status(segment.id, 'reserved')
-    available_ips = total_ips - used_ips - reserved_ips
-    
-    # 计算使用率
-    usage_rate = (used_ips + reserved_ips) / total_ips * 100
-    
-    return {
-        'total_ips': total_ips,
-        'used_ips': used_ips,
-        'available_ips': available_ips,
-        'reserved_ips': reserved_ips,
-        'usage_rate': round(usage_rate, 2)
+#### 租户与权限域
+
+```sql
+-- 租户表
+CREATE TABLE tenants (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    code VARCHAR(50) UNIQUE NOT NULL,
+    status ENUM('active','disabled') DEFAULT 'active',
+    config JSON,  -- 租户级配置
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_code (code),
+    INDEX idx_status (status)
+) ENGINE=InnoDB;
+
+-- 用户表
+CREATE TABLE users (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    tenant_id BIGINT NOT NULL,
+    username VARCHAR(100) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,  -- bcrypt/Argon2
+    display_name VARCHAR(100),
+    email VARCHAR(200),
+    phone VARCHAR(20),
+    department VARCHAR(200),
+    ldap_dn VARCHAR(500),  -- LDAP DN (若 LDAP 同步)
+    status ENUM('active','disabled','locked') DEFAULT 'active',
+    language ENUM('zh-CN','en-US') DEFAULT 'zh-CN',
+    timezone VARCHAR(50) DEFAULT 'Asia/Shanghai',
+    theme JSON,  -- 主题偏好
+    last_login_at DATETIME,
+    last_login_ip VARCHAR(45),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_tenant_username (tenant_id, username),
+    INDEX idx_tenant (tenant_id),
+    INDEX idx_status (status),
+    FOREIGN KEY (tenant_id) REFERENCES tenants(id)
+) ENGINE=InnoDB;
+
+-- 角色表
+CREATE TABLE roles (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    tenant_id BIGINT NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    code VARCHAR(50) NOT NULL,
+    is_system BOOLEAN DEFAULT FALSE,  -- 系统预定义角色不可删除
+    parent_id BIGINT,  -- 角色继承
+    permissions JSON,  -- 细粒度权限树 {"module.action": true}
+    data_scope JSON,   -- 数据范围 {"segments": [...], "datacenters": [...]}
+    valid_from DATETIME,
+    valid_until DATETIME,  -- 权限有效期
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_tenant_code (tenant_id, code),
+    FOREIGN KEY (tenant_id) REFERENCES tenants(id)
+) ENGINE=InnoDB;
+
+-- 用户角色关联表
+CREATE TABLE user_roles (
+    user_id BIGINT NOT NULL,
+    role_id BIGINT NOT NULL,
+    PRIMARY KEY (user_id, role_id),
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (role_id) REFERENCES roles(id)
+) ENGINE=InnoDB;
+```
+
+#### IPAM 域
+
+```sql
+-- 网段表（支持子网嵌套）
+CREATE TABLE network_segments (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    tenant_id BIGINT NOT NULL,
+    cidr VARCHAR(43) NOT NULL,  -- CIDR 表示法
+    network_address VARCHAR(39) NOT NULL,
+    broadcast_address VARCHAR(39),
+    prefix_length INT NOT NULL,
+    ip_version TINYINT DEFAULT 4,
+    parent_id BIGINT,  -- 父网段（子网嵌套）
+    group_id BIGINT,   -- 所属分组
+    vlan_id BIGINT,    -- 关联 VLAN
+    description TEXT,
+    business_group VARCHAR(200),
+    total_ips INT NOT NULL,
+    used_ips INT DEFAULT 0,
+    reserved_ips INT DEFAULT 0,
+    temporary_ips INT DEFAULT 0,
+    usage_rate DECIMAL(5,2) DEFAULT 0.00,
+    alert_threshold_warning INT DEFAULT 80,
+    alert_threshold_critical INT DEFAULT 90,
+    tags JSON,  -- 自定义标签
+    custom_fields JSON,  -- 自定义字段
+    status ENUM('active','archived') DEFAULT 'active',
+    created_by BIGINT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at DATETIME,  -- 软删除
+    version INT DEFAULT 1,  -- 乐观锁
+    INDEX idx_tenant (tenant_id),
+    INDEX idx_parent (parent_id),
+    INDEX idx_cidr (cidr),
+    INDEX idx_usage (usage_rate),
+    INDEX idx_group (group_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+    FOREIGN KEY (parent_id) REFERENCES network_segments(id)
+) ENGINE=InnoDB;
+
+-- 网段分组表
+CREATE TABLE segment_groups (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    tenant_id BIGINT NOT NULL,
+    name VARCHAR(200) NOT NULL,
+    parent_id BIGINT,  -- 分组嵌套
+    description TEXT,
+    sort_order INT DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_tenant (tenant_id),
+    INDEX idx_parent (parent_id)
+) ENGINE=InnoDB;
+
+-- IP 地址表（核心表，支持分区）
+CREATE TABLE ip_addresses (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    tenant_id BIGINT NOT NULL,
+    segment_id BIGINT NOT NULL,
+    ip_address VARCHAR(39) NOT NULL,
+    ip_numeric BIGINT NOT NULL,  -- IP 数值（用于范围查询和排序）
+    status ENUM('available','used','reserved','temporary') DEFAULT 'available',
+    device_id BIGINT,
+    terminal_id BIGINT,
+    mac_address VARCHAR(17),
+    hostname VARCHAR(255),
+    responsible_person VARCHAR(100),
+    department VARCHAR(200),
+    allocation_reason TEXT,
+    reservation_reason TEXT,
+    reservation_expires_at DATETIME,
+    temporary_expires_at DATETIME,
+    dns_name VARCHAR(255),
+    dhcp_lease_id BIGINT,
+    last_seen_at DATETIME,  -- 最后在线时间
+    last_scan_at DATETIME,
+    tags JSON,
+    custom_fields JSON,
+    allocated_at DATETIME,
+    allocated_by BIGINT,
+    released_at DATETIME,
+    released_by BIGINT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at DATETIME,
+    version INT DEFAULT 1,
+    UNIQUE KEY uk_tenant_ip (tenant_id, ip_address),
+    INDEX idx_segment (segment_id),
+    INDEX idx_status (status),
+    INDEX idx_device (device_id),
+    INDEX idx_mac (mac_address),
+    INDEX idx_numeric (ip_numeric),
+    INDEX idx_last_seen (last_seen_at),
+    FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+    FOREIGN KEY (segment_id) REFERENCES network_segments(id)
+) ENGINE=InnoDB
+PARTITION BY RANGE (ip_numeric) (
+    PARTITION p_10 VALUES LESS THAN (184549376),    -- 10.x.x.x
+    PARTITION p_172 VALUES LESS THAN (2886729728),   -- 172.16-31.x.x
+    PARTITION p_192 VALUES LESS THAN (3232301056),   -- 192.168.x.x
+    PARTITION p_other VALUES LESS THAN MAXVALUE
+);
+
+-- IP 地址生命周期日志
+CREATE TABLE ip_lifecycle_logs (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    tenant_id BIGINT NOT NULL,
+    ip_address_id BIGINT NOT NULL,
+    ip_address VARCHAR(39) NOT NULL,
+    action ENUM('allocate','release','reserve','unreserve','status_change','tag_change') NOT NULL,
+    old_status VARCHAR(20),
+    new_status VARCHAR(20),
+    device_id BIGINT,
+    operator_id BIGINT,
+    operator_name VARCHAR(100),
+    reason TEXT,
+    details JSON,  -- 变更前后差异
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_ip (ip_address_id),
+    INDEX idx_tenant_time (tenant_id, created_at),
+    INDEX idx_operator (operator_id)
+) ENGINE=InnoDB
+PARTITION BY RANGE (YEAR(created_at)) (
+    PARTITION p2025 VALUES LESS THAN (2026),
+    PARTITION p2026 VALUES LESS THAN (2027),
+    PARTITION p2027 VALUES LESS THAN (2028),
+    PARTITION pmax VALUES LESS THAN MAXVALUE
+);
+
+-- 冲突检测记录
+CREATE TABLE conflict_records (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    tenant_id BIGINT NOT NULL,
+    ip_address VARCHAR(39) NOT NULL,
+    conflict_type ENUM('logical','physical') NOT NULL,
+    detection_method ENUM('ping','arp','dai') NOT NULL,
+    conflicting_mac VARCHAR(17),
+    conflicting_device VARCHAR(255),
+    detection_time DATETIME NOT NULL,
+    resolved BOOLEAN DEFAULT FALSE,
+    resolved_at DATETIME,
+    resolved_by BIGINT,
+    details JSON,
+    INDEX idx_tenant_ip (tenant_id, ip_address),
+    INDEX idx_time (detection_time)
+) ENGINE=InnoDB;
+
+-- 扫描任务表
+CREATE TABLE scan_tasks (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    tenant_id BIGINT NOT NULL,
+    name VARCHAR(200),
+    scan_type ENUM('ping','arp','snmp') DEFAULT 'ping',
+    segment_ids JSON,  -- 扫描的网段列表
+    status ENUM('pending','running','paused','completed','failed') DEFAULT 'pending',
+    concurrency INT DEFAULT 50,
+    timeout_ms INT DEFAULT 3000,
+    total_ips INT DEFAULT 0,
+    scanned_ips INT DEFAULT 0,
+    online_ips INT DEFAULT 0,
+    offline_ips INT DEFAULT 0,
+    unregistered_ips INT DEFAULT 0,
+    started_at DATETIME,
+    completed_at DATETIME,
+    created_by BIGINT,
+    schedule_cron VARCHAR(100),  -- 定时扫描 Cron 表达式
+    INDEX idx_tenant (tenant_id),
+    INDEX idx_status (status)
+) ENGINE=InnoDB;
+
+-- 扫描结果表
+CREATE TABLE scan_results (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    task_id BIGINT NOT NULL,
+    ip_address VARCHAR(39) NOT NULL,
+    status ENUM('online','offline','timeout') NOT NULL,
+    response_time_ms INT,
+    mac_address VARCHAR(17),
+    is_registered BOOLEAN DEFAULT FALSE,
+    device_id BIGINT,
+    scanned_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_task (task_id),
+    INDEX idx_ip (ip_address),
+    INDEX idx_status (status),
+    FOREIGN KEY (task_id) REFERENCES scan_tasks(id)
+) ENGINE=InnoDB;
+```
+
+#### DCIM 域
+
+```sql
+-- 机房表
+CREATE TABLE datacenters (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    tenant_id BIGINT NOT NULL,
+    name VARCHAR(200) NOT NULL,
+    site_id BIGINT,  -- 站点
+    building VARCHAR(200),
+    floor VARCHAR(50),
+    area_sqm DECIMAL(10,2),
+    power_capacity_kw DECIMAL(10,2),
+    geo_latitude DECIMAL(10,7),
+    geo_longitude DECIMAL(10,7),
+    address TEXT,
+    floor_plan_url VARCHAR(500),  -- 平面图
+    status ENUM('active','maintenance','decommissioned') DEFAULT 'active',
+    custom_fields JSON,
+    INDEX idx_tenant (tenant_id),
+    INDEX idx_site (site_id)
+) ENGINE=InnoDB;
+
+-- 机架表
+CREATE TABLE racks (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    tenant_id BIGINT NOT NULL,
+    datacenter_id BIGINT NOT NULL,
+    name VARCHAR(200) NOT NULL,
+    total_units INT DEFAULT 42,  -- 总 U 数
+    used_units INT DEFAULT 0,
+    rated_power_w INT,
+    current_power_w INT DEFAULT 0,
+    max_weight_kg DECIMAL(10,2),
+    position_x INT,  -- 平面图坐标
+    position_y INT,
+    status ENUM('active','reserved','decommissioned') DEFAULT 'active',
+    INDEX idx_tenant (tenant_id),
+    INDEX idx_dc (datacenter_id),
+    FOREIGN KEY (datacenter_id) REFERENCES datacenters(id)
+) ENGINE=InnoDB;
+
+-- 机架设备安装表
+CREATE TABLE rack_installations (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    rack_id BIGINT NOT NULL,
+    device_id BIGINT NOT NULL,
+    start_unit INT NOT NULL,  -- 起始 U 位
+    unit_count INT NOT NULL,  -- 占用 U 数
+    face ENUM('front','rear') DEFAULT 'front',
+    installed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    installed_by BIGINT,
+    uninstalled_at DATETIME,
+    INDEX idx_rack (rack_id),
+    INDEX idx_device (device_id),
+    FOREIGN KEY (rack_id) REFERENCES racks(id)
+) ENGINE=InnoDB;
+
+-- VLAN 表
+CREATE TABLE vlans (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    tenant_id BIGINT NOT NULL,
+    vlan_id INT NOT NULL CHECK (vlan_id BETWEEN 1 AND 4094),
+    name VARCHAR(200),
+    description TEXT,
+    group_name VARCHAR(200),
+    status ENUM('active','disabled') DEFAULT 'active',
+    UNIQUE KEY uk_tenant_vlan (tenant_id, vlan_id),
+    INDEX idx_tenant (tenant_id)
+) ENGINE=InnoDB;
+
+-- 线缆连接表
+CREATE TABLE cable_connections (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    tenant_id BIGINT NOT NULL,
+    cable_id VARCHAR(100),  -- 线缆编号
+    cable_type ENUM('fiber','copper','dac') NOT NULL,
+    cable_length_m DECIMAL(10,2),
+    device_a_id BIGINT NOT NULL,
+    port_a VARCHAR(100) NOT NULL,
+    device_b_id BIGINT NOT NULL,
+    port_b VARCHAR(100) NOT NULL,
+    status ENUM('active','planned','disconnected') DEFAULT 'active',
+    INDEX idx_device_a (device_a_id),
+    INDEX idx_device_b (device_b_id)
+) ENGINE=InnoDB;
+```
+
+#### 资产管理域
+
+```sql
+-- 设备资产表（统一资产表）
+CREATE TABLE devices (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    tenant_id BIGINT NOT NULL,
+    asset_number VARCHAR(100) UNIQUE,  -- 资产编号
+    name VARCHAR(200) NOT NULL,
+    device_type ENUM('switch','router','firewall','ap','ac','server',
+                     'terminal','printer','camera','sensor','pdu','ups','other') NOT NULL,
+    category_id BIGINT,  -- 资产分类
+    manufacturer VARCHAR(200),
+    model VARCHAR(200),
+    serial_number VARCHAR(200),
+    mac_address VARCHAR(17),
+    firmware_version VARCHAR(100),
+    purchase_date DATE,
+    warranty_expires DATE,
+    purchase_price DECIMAL(12,2),
+    current_value DECIMAL(12,2),  -- 当前净值（折旧后）
+    depreciation_method ENUM('straight_line','double_declining','sum_of_years'),
+    useful_life_years INT,
+    responsible_person VARCHAR(100),
+    department VARCHAR(200),
+    location VARCHAR(500),
+    datacenter_id BIGINT,
+    rack_id BIGINT,
+    lifecycle_status ENUM('purchasing','in_stock','in_use','maintenance',
+                          'idle','decommissioned','scrapped') DEFAULT 'in_stock',
+    images JSON,  -- 设备图片 URL 列表
+    accessories JSON,  -- 配件信息
+    tags JSON,
+    custom_fields JSON,
+    health_score INT DEFAULT 100,  -- 健康评分 0-100
+    last_inspection_at DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at DATETIME,
+    version INT DEFAULT 1,
+    INDEX idx_tenant (tenant_id),
+    INDEX idx_type (device_type),
+    INDEX idx_mac (mac_address),
+    INDEX idx_status (lifecycle_status),
+    INDEX idx_category (category_id),
+    INDEX idx_department (department),
+    FULLTEXT INDEX ft_name_model (name, model, manufacturer)
+) ENGINE=InnoDB;
+
+-- 资产分类表
+CREATE TABLE asset_categories (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    tenant_id BIGINT NOT NULL,
+    name VARCHAR(200) NOT NULL,
+    parent_id BIGINT,
+    level INT DEFAULT 1,
+    field_template JSON,  -- 该分类的专属字段模板
+    numbering_rule VARCHAR(200),  -- 编号规则
+    INDEX idx_tenant (tenant_id),
+    INDEX idx_parent (parent_id)
+) ENGINE=InnoDB;
+
+-- 资产流转记录表
+CREATE TABLE asset_transfers (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    device_id BIGINT NOT NULL,
+    transfer_type ENUM('receive','issue','transfer','borrow','return','repair','scrap') NOT NULL,
+    from_department VARCHAR(200),
+    to_department VARCHAR(200),
+    from_user VARCHAR(100),
+    to_user VARCHAR(100),
+    reason TEXT,
+    ticket_id BIGINT,  -- 关联工单
+    operator_id BIGINT,
+    operated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_device (device_id),
+    INDEX idx_type (transfer_type)
+) ENGINE=InnoDB;
+
+-- 终端详情表
+CREATE TABLE terminals (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    device_id BIGINT NOT NULL,  -- 关联设备表
+    tenant_id BIGINT NOT NULL,
+    hostname VARCHAR(255),
+    os_type VARCHAR(50),
+    os_version VARCHAR(100),
+    cpu_info VARCHAR(200),
+    memory_gb DECIMAL(10,2),
+    disk_info JSON,
+    user_id BIGINT,  -- 使用人
+    user_name VARCHAR(100),
+    user_department VARCHAR(200),
+    nac_status ENUM('compliant','non_compliant','quarantined','unknown') DEFAULT 'unknown',
+    compliance_score INT DEFAULT 0,
+    access_switch VARCHAR(200),
+    access_port VARCHAR(100),
+    access_vlan INT,
+    online_status ENUM('online','offline','dormant') DEFAULT 'unknown',
+    last_online_at DATETIME,
+    fingerprint_type VARCHAR(100),  -- 指纹识别结果
+    fingerprint_confidence ENUM('high','medium','low'),
+    agent_version VARCHAR(50),
+    agent_last_report_at DATETIME,
+    tags JSON,
+    INDEX idx_tenant (tenant_id),
+    INDEX idx_device (device_id),
+    INDEX idx_user (user_id),
+    INDEX idx_online (online_status),
+    INDEX idx_nac (nac_status)
+) ENGINE=InnoDB;
+```
+
+#### 工单与流程域
+
+```sql
+-- 工单表
+CREATE TABLE tickets (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    tenant_id BIGINT NOT NULL,
+    ticket_number VARCHAR(50) UNIQUE NOT NULL,
+    title VARCHAR(500) NOT NULL,
+    description TEXT,
+    ticket_type ENUM('ip_request','device_request','permission_request',
+                     'repair','change','incident','service_request') NOT NULL,
+    priority ENUM('low','medium','high','urgent') DEFAULT 'medium',
+    status ENUM('draft','submitted','in_review','approved','rejected',
+                'executing','completed','closed') DEFAULT 'draft',
+    workflow_id BIGINT,  -- 关联流程定义
+    workflow_instance_id BIGINT,  -- 流程实例
+    current_node_id BIGINT,
+    applicant_id BIGINT NOT NULL,
+    assignee_id BIGINT,
+    form_data JSON,  -- 表单数据
+    related_ips JSON,
+    related_devices JSON,
+    sla_deadline DATETIME,
+    sla_status ENUM('normal','warning','breached') DEFAULT 'normal',
+    satisfaction_score INT,  -- 满意度 1-5
+    satisfaction_feedback TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    completed_at DATETIME,
+    INDEX idx_tenant (tenant_id),
+    INDEX idx_status (status),
+    INDEX idx_type (ticket_type),
+    INDEX idx_applicant (applicant_id),
+    INDEX idx_assignee (assignee_id),
+    INDEX idx_sla (sla_deadline)
+) ENGINE=InnoDB;
+
+-- 流程定义表
+CREATE TABLE workflow_definitions (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    tenant_id BIGINT NOT NULL,
+    name VARCHAR(200) NOT NULL,
+    category VARCHAR(100),
+    definition JSON NOT NULL,  -- 流程节点和连线定义
+    form_binding JSON,  -- 表单绑定配置
+    version INT DEFAULT 1,
+    status ENUM('draft','published','disabled') DEFAULT 'draft',
+    created_by BIGINT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_tenant (tenant_id),
+    INDEX idx_category (category)
+) ENGINE=InnoDB;
+
+-- 流程实例表
+CREATE TABLE workflow_instances (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    definition_id BIGINT NOT NULL,
+    definition_version INT NOT NULL,
+    ticket_id BIGINT NOT NULL,
+    current_node VARCHAR(100),
+    status ENUM('running','completed','terminated','suspended') DEFAULT 'running',
+    variables JSON,  -- 流程变量
+    started_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    completed_at DATETIME,
+    INDEX idx_definition (definition_id),
+    INDEX idx_ticket (ticket_id),
+    INDEX idx_status (status)
+) ENGINE=InnoDB;
+```
+
+#### 告警与通知域
+
+```sql
+-- 告警表
+CREATE TABLE alerts (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    tenant_id BIGINT NOT NULL,
+    alert_type VARCHAR(100) NOT NULL,  -- segment_usage, device_offline, nac_violation...
+    severity ENUM('info','warning','critical','emergency') NOT NULL,
+    source_type VARCHAR(50),  -- segment, device, terminal, rack...
+    source_id BIGINT,
+    source_name VARCHAR(200),
+    title VARCHAR(500) NOT NULL,
+    description TEXT,
+    is_prediction BOOLEAN DEFAULT FALSE,  -- 预警 vs 告警
+    status ENUM('active','acknowledged','resolved','suppressed') DEFAULT 'active',
+    acknowledged_by BIGINT,
+    acknowledged_at DATETIME,
+    resolved_at DATETIME,
+    resolved_by BIGINT,
+    resolution_note TEXT,
+    escalation_level INT DEFAULT 0,
+    suppressed_until DATETIME,
+    root_cause_alert_id BIGINT,  -- 根因告警（告警风暴压缩）
+    related_alert_count INT DEFAULT 0,
+    auto_heal_status ENUM('none','executing','success','failed'),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_tenant (tenant_id),
+    INDEX idx_type (alert_type),
+    INDEX idx_severity (severity),
+    INDEX idx_status (status),
+    INDEX idx_source (source_type, source_id),
+    INDEX idx_created (created_at),
+    INDEX idx_root_cause (root_cause_alert_id)
+) ENGINE=InnoDB
+PARTITION BY RANGE (YEAR(created_at)) (
+    PARTITION p2025 VALUES LESS THAN (2026),
+    PARTITION p2026 VALUES LESS THAN (2027),
+    PARTITION pmax VALUES LESS THAN MAXVALUE
+);
+```
+
+#### 审计日志域
+
+```sql
+-- 操作审计日志表（不可篡改）
+CREATE TABLE audit_logs (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    tenant_id BIGINT NOT NULL,
+    user_id BIGINT,
+    user_name VARCHAR(100),
+    user_role VARCHAR(100),
+    action VARCHAR(100) NOT NULL,  -- create, update, delete, allocate, release...
+    resource_type VARCHAR(50) NOT NULL,  -- ip, device, segment, ticket...
+    resource_id BIGINT,
+    resource_name VARCHAR(200),
+    severity ENUM('normal','sensitive','critical') DEFAULT 'normal',
+    details JSON,  -- 操作前后差异
+    ip_address VARCHAR(45),
+    user_agent VARCHAR(500),
+    trace_id VARCHAR(100),
+    hash_value VARCHAR(64),  -- SHA-256 哈希（防篡改）
+    prev_hash VARCHAR(64),   -- 前一条日志哈希（链式校验）
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_tenant_time (tenant_id, created_at),
+    INDEX idx_user (user_id),
+    INDEX idx_action (action),
+    INDEX idx_resource (resource_type, resource_id),
+    INDEX idx_severity (severity)
+) ENGINE=InnoDB
+PARTITION BY RANGE (YEAR(created_at)) (
+    PARTITION p2025 VALUES LESS THAN (2026),
+    PARTITION p2026 VALUES LESS THAN (2027),
+    PARTITION pmax VALUES LESS THAN MAXVALUE
+);
+```
+
+#### 低代码引擎域
+
+```sql
+-- 设计器配置表（统一存储所有设计器产物）
+CREATE TABLE designer_configs (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    tenant_id BIGINT NOT NULL,
+    designer_type ENUM('form','workflow','report','dashboard','screen','ppt','page') NOT NULL,
+    name VARCHAR(200) NOT NULL,
+    category VARCHAR(100),
+    config JSON NOT NULL,  -- 设计器配置（组件树、布局、数据绑定）
+    is_template BOOLEAN DEFAULT FALSE,
+    template_category VARCHAR(100),
+    version INT DEFAULT 1,
+    status ENUM('draft','published','disabled') DEFAULT 'draft',
+    created_by BIGINT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_tenant (tenant_id),
+    INDEX idx_type (designer_type),
+    INDEX idx_template (is_template, template_category)
+) ENGINE=InnoDB;
+
+-- 自定义连接器表
+CREATE TABLE custom_connectors (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    tenant_id BIGINT NOT NULL,
+    name VARCHAR(200) NOT NULL,
+    connector_type ENUM('rest_api','database','ldap','smtp','wechat','dingtalk','feishu') NOT NULL,
+    config JSON NOT NULL,  -- 连接配置（加密存储敏感字段）
+    field_mapping JSON,  -- 字段映射
+    cache_strategy JSON,  -- 缓存策略
+    status ENUM('active','disabled','error') DEFAULT 'active',
+    last_test_at DATETIME,
+    last_test_result BOOLEAN,
+    INDEX idx_tenant (tenant_id),
+    INDEX idx_type (connector_type)
+) ENGINE=InnoDB;
+
+-- 自动化工作流表
+CREATE TABLE automation_workflows (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    tenant_id BIGINT NOT NULL,
+    name VARCHAR(200) NOT NULL,
+    trigger_type ENUM('data_change','schedule','webhook','alert','ticket_status') NOT NULL,
+    trigger_config JSON NOT NULL,
+    nodes JSON NOT NULL,  -- 流程节点定义
+    status ENUM('active','disabled') DEFAULT 'active',
+    version INT DEFAULT 1,
+    last_triggered_at DATETIME,
+    execution_count INT DEFAULT 0,
+    INDEX idx_tenant (tenant_id),
+    INDEX idx_trigger (trigger_type),
+    INDEX idx_status (status)
+) ENGINE=InnoDB;
+```
+
+### TimescaleDB 时序数据表
+
+```sql
+-- 设备性能指标（时序数据）
+CREATE TABLE device_metrics (
+    time TIMESTAMPTZ NOT NULL,
+    device_id BIGINT NOT NULL,
+    metric_name VARCHAR(100) NOT NULL,  -- cpu_usage, memory_usage, temperature...
+    metric_value DOUBLE PRECISION NOT NULL,
+    tags JSONB
+);
+SELECT create_hypertable('device_metrics', 'time');
+-- 连续聚合：5 分钟聚合
+CREATE MATERIALIZED VIEW device_metrics_5min
+WITH (timescaledb.continuous) AS
+SELECT time_bucket('5 minutes', time) AS bucket,
+       device_id, metric_name,
+       AVG(metric_value) AS avg_val,
+       MAX(metric_value) AS max_val,
+       MIN(metric_value) AS min_val
+FROM device_metrics
+GROUP BY bucket, device_id, metric_name;
+-- 数据保留策略
+SELECT add_retention_policy('device_metrics', INTERVAL '7 days');
+SELECT add_retention_policy('device_metrics_5min', INTERVAL '30 days');
+
+-- 端口流量数据
+CREATE TABLE port_traffic (
+    time TIMESTAMPTZ NOT NULL,
+    device_id BIGINT NOT NULL,
+    port_name VARCHAR(100) NOT NULL,
+    in_octets BIGINT,
+    out_octets BIGINT,
+    in_packets BIGINT,
+    out_packets BIGINT,
+    bandwidth_utilization DOUBLE PRECISION
+);
+SELECT create_hypertable('port_traffic', 'time');
+
+-- NetFlow 流量记录
+CREATE TABLE netflow_records (
+    time TIMESTAMPTZ NOT NULL,
+    src_ip INET NOT NULL,
+    dst_ip INET NOT NULL,
+    src_port INT,
+    dst_port INT,
+    protocol INT,
+    bytes BIGINT,
+    packets BIGINT,
+    duration_ms INT,
+    application VARCHAR(100)
+);
+SELECT create_hypertable('netflow_records', 'time');
+SELECT add_retention_policy('netflow_records', INTERVAL '30 days');
+```
+
+### Elasticsearch 索引设计
+
+```json
+// 全局搜索索引
+{
+  "ipam_global_search": {
+    "mappings": {
+      "properties": {
+        "object_type": { "type": "keyword" },
+        "object_id": { "type": "long" },
+        "tenant_id": { "type": "long" },
+        "title": { "type": "text", "analyzer": "ik_max_word" },
+        "content": { "type": "text", "analyzer": "ik_max_word" },
+        "ip_address": { "type": "ip" },
+        "mac_address": { "type": "keyword" },
+        "tags": { "type": "keyword" },
+        "status": { "type": "keyword" },
+        "department": { "type": "keyword" },
+        "updated_at": { "type": "date" }
+      }
     }
+  }
+}
+
+// Syslog 日志索引（按月滚动）
+{
+  "syslog-YYYY-MM": {
+    "mappings": {
+      "properties": {
+        "timestamp": { "type": "date" },
+        "device_id": { "type": "long" },
+        "device_ip": { "type": "ip" },
+        "severity": { "type": "keyword" },
+        "facility": { "type": "keyword" },
+        "message": { "type": "text", "analyzer": "standard" },
+        "parsed_fields": { "type": "object" }
+      }
+    }
+  }
+}
 ```
 
-### IP 地址冲突检测流程
-
-```mermaid
-flowchart TD
-    A[开始分配 IP] --> B[逻辑冲突检测]
-    B --> C{数据库中是否存在?}
-    C -->|是| D[检查状态]
-    D --> E{状态是否为 available?}
-    E -->|否| F[返回逻辑冲突错误]
-    E -->|是| G[物理冲突检测]
-    C -->|否| G
-    G --> H[执行 Ping 测试]
-    H --> I{是否有响应?}
-    I -->|是| J[返回物理冲突错误]
-    I -->|否| K[执行 ARP 检测]
-    K --> L{是否发现 MAC?}
-    L -->|是| M[返回物理冲突错误]
-    L -->|否| N[分配 IP 成功]
-    F --> O[结束]
-    J --> O
-    M --> O
-    N --> O
-```
 
 ## 正确性属性
 
-*属性是一个特征或行为，应该在系统的所有有效执行中保持为真——本质上是关于系统应该做什么的形式化陈述。属性作为人类可读规范和机器可验证正确性保证之间的桥梁。*
+*正确性属性是一种在系统所有合法执行中都应成立的特征或行为——本质上是关于系统应该做什么的形式化陈述。属性是人类可读规范与机器可验证正确性保证之间的桥梁。*
 
-### 网段管理属性
+### Property 1: CIDR 解析与网段-IP 关系一致性
 
-**属性 1：CIDR 格式验证**
-*对于任何* 输入的网段字符串，如果它符合有效的 CIDR 表示法（如 192.168.1.0/24），系统应该接受它；如果格式无效，系统应该拒绝并返回错误。
-**验证需求：1.1**
+*对于任意*合法 CIDR 字符串，解析后的网络地址、广播地址、可用 IP 总数应满足：total_ips = 2^(32-prefix_length) - 2（/31 和 /32 除外），且任意分配的 IP 地址的数值必须在 [network_address+1, broadcast_address-1] 范围内。对于任意非法 CIDR 字符串，解析应返回错误。
 
-**属性 2：网段编辑保持 IP 关联**
-*对于任何* 已存在的网段，当更新其信息（名称、描述等）时，该网段内所有已分配 IP 地址的关联关系应该保持不变。
-**验证需求：1.2**
+**验证需求: 1.1, 1.8, 2.1**
 
-**属性 3：删除网段前检查 IP 分配**
-*对于任何* 包含已分配 IP 地址的网段，删除操作应该被拒绝并返回错误信息。
-**验证需求：1.3, 1.4**
+### Property 2: 网段使用率计算不变量
 
-**属性 4：网段可用 IP 计算正确性**
-*对于任何* CIDR 网段，计算的总 IP 数量应该等于 2^(32 - prefix_length) - 2（排除网络地址和广播地址）。
-**验证需求：1.5**
+*对于任意*网段，used_ips + reserved_ips + temporary_ips + available_ips = total_ips 恒成立，且 usage_rate = (used_ips + reserved_ips + temporary_ips) / total_ips * 100。父网段的使用率应等于所有子网段使用量之和除以父网段总量。
 
-**属性 5：网段使用率计算正确性**
-*对于任何* 网段，使用率应该等于 (已用 IP 数 + 保留 IP 数) / 总 IP 数 × 100%。
-**验证需求：1.6**
+**验证需求: 1.5, 1.6, 1.8**
 
-### IP 地址生命周期管理属性
+### Property 3: IP 地址状态机合法性
 
-**属性 6：IP 地址必须属于已存在网段**
-*对于任何* IP 地址分配请求，只有当 IP 地址在某个已存在网段的范围内时，系统才应该接受该请求。
-**验证需求：2.1**
+*对于任意* IP 地址状态转换序列，状态只能在 {available, used, reserved, temporary} 之间按合法路径转换：available→used, available→reserved, available→temporary, used→available, reserved→available, temporary→available, temporary→used。任何非法状态转换应被拒绝。
 
-**属性 7：IP 回收状态转换**
-*对于任何* 状态为"已用"的 IP 地址，回收操作后其状态应该变为"空闲"，且设备关联应该被解除（device_id 为 null）。
-**验证需求：2.3**
+**验证需求: 2.4**
 
-**属性 8：IP 状态枚举完整性**
-*对于任何* IP 地址，其状态只能是以下三种之一：Available（空闲）、Used（已用）、Reserved（保留）。
-**验证需求：2.4**
+### Property 4: 双重冲突检测一致性
 
-**属性 9：IP 查询返回完整信息**
-*对于任何* IP 地址查询请求，返回的数据应该包含当前状态、关联设备信息和历史操作记录。
-**验证需求：2.5**
+*对于任意*已标记为 "used" 或 "reserved" 的 IP 地址，逻辑冲突检测应返回冲突。*对于任意*标记为 "available" 的 IP 地址，逻辑冲突检测应通过。冲突检测结果应与数据库状态一致。
 
-**属性 10：保留 IP 不可自动分配**
-*对于任何* 状态为"保留"的 IP 地址，自动分配操作应该跳过该 IP，不将其分配给任何设备。
-**验证需求：2.6**
+**验证需求: 2.2, 4.1, 4.2, 4.5, 4.6**
 
-### 设备资产管理属性
+### Property 5: MAC 地址格式验证
 
-**属性 11：设备创建必填字段验证**
-*对于任何* 设备创建请求，如果缺少设备名称、MAC 地址或责任人信息中的任何一项，系统应该拒绝该请求。
-**验证需求：3.1**
+*对于任意*符合 IEEE 802 标准的 MAC 地址字符串（支持 XX:XX:XX:XX:XX:XX、XX-XX-XX-XX-XX-XX、XXXXXXXXXXXX 格式，大小写不敏感），验证函数应返回 true 并标准化为统一格式。*对于任意*不符合格式的字符串，应返回 false。
 
-**属性 12：MAC 地址格式验证**
-*对于任何* MAC 地址输入，系统应该验证其格式（如 AA:BB:CC:DD:EE:FF 或 AA-BB-CC-DD-EE-FF），只接受有效格式。
-**验证需求：3.2**
+**验证需求: 3.2**
 
-**属性 13：设备关联 IP 状态验证**
-*对于任何* 设备与 IP 的关联操作，只有当 IP 地址状态为"空闲"或"保留"时，系统才应该允许关联。
-**验证需求：3.3**
+### Property 6: 审计日志链式完整性
 
-**属性 14：设备编辑保持 IP 关联**
-*对于任何* 设备信息更新操作，该设备关联的所有 IP 地址应该保持不变。
-**验证需求：3.4**
+*对于任意*审计日志序列，每条日志的 hash_value = SHA256(prev_hash + log_content)，且 prev_hash 等于前一条日志的 hash_value。验证任意子序列的链式哈希应能检测到篡改（插入、删除、修改任意一条日志都会导致后续所有哈希不匹配）。
 
-**属性 15：设备删除级联回收 IP**
-*对于任何* 设备删除操作，该设备关联的所有 IP 地址应该自动被回收（状态变为"空闲"）。
-**验证需求：3.5**
+**验证需求: 6.6**
 
-**属性 16：设备模糊搜索结果正确性**
-*对于任何* 设备搜索请求，返回的所有设备记录应该在设备名称、MAC 地址或责任人字段中包含搜索关键词。
-**验证需求：3.6**
+### Property 7: JWT Token 生命周期 Round-Trip
 
-### IP 冲突检测属性
+*对于任意*有效用户，生成 JWT Token 后解码应返回相同的 user_id、role、tenant_id、permissions。Token 过期后解码应返回过期错误。刷新 Token 后，旧 Token 应立即失效（解码返回已吊销错误）。
 
-**属性 17：逻辑冲突检测**
-*对于任何* IP 分配请求，如果该 IP 在数据库中已被标记为"已用"或"保留"，系统应该拒绝分配并返回逻辑冲突错误。
-**验证需求：4.2**
+**验证需求: 10.2, 10.3, 10.4, 10.5, 10.6**
 
-**属性 18：冲突错误信息完整性**
-*对于任何* 冲突检测失败的情况，返回的错误信息应该明确指出是逻辑冲突还是物理冲突。
-**验证需求：4.6**
+### Property 8: RBAC 权限隔离
 
-### IP 扫描属性
+*对于任意*用户和操作组合，如果用户的角色权限树中不包含该操作的权限点，API 应返回 403。如果包含，应允许执行。权限继承应正确传递（子角色继承父角色权限）。
 
-**属性 19：扫描结果数据完整性**
-*对于任何* IP 扫描操作，每个被扫描 IP 的结果应该包含响应状态（在线/离线）和响应时间。
-**验证需求：5.4**
+**验证需求: 11.1-11.6**
 
-**属性 20：扫描报告标识未注册 IP**
-*对于任何* 扫描完成后的报告，应该明确标识出在网络中在线但未在数据库中注册的 IP 地址。
-**验证需求：5.5**
+### Property 9: 多租户数据隔离
 
-**属性 21：扫描结果持久化**
-*对于任何* 完成的扫描操作，其结果应该被存储到数据库中，并可通过历史记录查询接口检索。
-**验证需求：5.6**
+*对于任意*两个不同租户 A 和 B，租户 A 的 API 请求不应返回租户 B 的任何数据（网段、IP、设备、终端、工单、告警等）。跨租户资源访问应返回 404 或 403。
 
-### 操作日志属性
+**验证需求: 22.1, 22.2, 22.3**
 
-**属性 22：IP 分配操作日志完整性**
-*对于任何* IP 分配操作，系统应该创建一条日志记录，包含操作人、操作时间、IP 地址和关联设备信息。
-**验证需求：6.1**
+### Property 10: 事务原子性与回滚一致性
 
-**属性 23：IP 回收操作日志完整性**
-*对于任何* IP 回收操作，系统应该创建一条日志记录，包含操作人、操作时间和 IP 地址。
-**验证需求：6.2**
+*对于任意*跨系统事务（如 IP 分配 + DHCP 下发 + DNS 创建），如果任意一步失败，所有已完成步骤应按逆序回滚，事务完成后系统状态应与事务开始前完全一致。*对于任意*成功事务，所有步骤的结果应持久化。
 
-**属性 24：设备操作日志完整性**
-*对于任何* 设备的创建、编辑或删除操作，系统应该创建一条日志记录，包含完整的操作详情。
-**验证需求：6.3**
+**验证需求: 13.2, 150.3, 156.1**
 
-**属性 25：网段操作日志完整性**
-*对于任何* 网段的创建、编辑或删除操作，系统应该创建一条日志记录，包含网段信息和操作类型。
-**验证需求：6.4**
+### Property 11: 机架 U 位空间不变量
 
-**属性 26：日志筛选结果正确性**
-*对于任何* 带筛选条件的日志查询，返回的所有日志记录应该匹配指定的操作人、操作类型或时间范围条件。
-**验证需求：6.5**
+*对于任意*机架，已安装设备占用的 U 位不应重叠（任意两个安装记录的 [start_unit, start_unit+unit_count-1] 区间不相交），且 used_units = 所有安装记录的 unit_count 之和，used_units ≤ total_units。
 
-### 数据可视化属性
+**验证需求: 32.3, 32.4, 32.5**
 
-**属性 27：网段使用率统计正确性**
-*对于任何* 网段使用率统计请求，返回的每个网段的使用率数据应该与实际数据库中的 IP 分配情况一致。
-**验证需求：7.1**
+### Property 12: VLAN ID 唯一性不变量
 
-**属性 28：IP 状态分布统计正确性**
-*对于任何* IP 状态分布统计请求，返回的空闲、已用、保留 IP 数量总和应该等于所有网段的总 IP 数量。
-**验证需求：7.2**
+*对于任意*租户，同一租户内不应存在两个相同的 VLAN ID。创建重复 VLAN ID 应被拒绝。
 
-**属性 29：设备统计数据正确性**
-*对于任何* 设备统计请求，返回的设备总数应该等于数据库中设备表的记录数。
-**验证需求：7.3**
+**验证需求: 34.2**
 
-**属性 30：仪表板关键指标完整性**
-*对于任何* 仪表板数据请求，返回的数据应该包含总 IP 数、已用 IP 数和设备总数这三个关键指标。
-**验证需求：7.4**
+### Property 13: 工作流状态机正确性
 
-**属性 31：统计数据实时性**
-*对于任何* 统计数据请求，返回的数据应该反映当前数据库的最新状态（不使用过期缓存）。
-**验证需求：7.5**
+*对于任意*流程定义和工单实例，流程应严格按定义的节点顺序流转。条件分支应根据工单数据正确匹配分支路径。并行分支应所有分支完成后才汇聚到下一节点。
 
-**属性 32：时间范围筛选正确性**
-*对于任何* 带时间范围的统计请求，返回的数据应该只包含指定时间范围内的记录。
-**验证需求：7.6**
+**验证需求: 45.7, 45.8, 45.9**
 
-### Excel 导入导出属性
+### Property 14: 配置版本 Round-Trip
 
-**属性 33：导入数据格式验证**
-*对于任何* Excel 导入请求，如果文件中存在格式错误（无效 IP、无效 MAC、缺少必填字段），系统应该拒绝整个导入并返回详细错误报告。
-**验证需求：8.2, 8.3, 8.4**
+*对于任意*系统配置，修改配置后回滚到历史版本，配置值应与该历史版本完全一致。配置快照应完整记录所有字段值。
 
-**属性 34：导出数据完整性**
-*对于任何* 数据导出请求，生成的 Excel 文件应该包含所有数据字段（不丢失任何列）。
-**验证需求：8.5**
+**验证需求: 60.3**
 
-**属性 35：导出筛选结果正确性**
-*对于任何* 带筛选条件的导出请求，导出的数据应该只包含符合筛选条件的记录。
-**验证需求：8.6**
+### Property 15: API 统一响应格式
 
-### 告警管理属性
+*对于任意* API 端点的任意请求（成功或失败），响应 JSON 必须包含 code（整数）、message（字符串）、data（对象或 null）三个字段。错误响应的 code 应与 HTTP 状态码一致。
 
-**属性 36：使用率告警触发条件**
-*对于任何* 网段，当其使用率达到或超过设置的阈值时，系统应该自动生成一条告警记录。
-**验证需求：9.2**
+**验证需求: 14.3, 14.5**
 
-**属性 37：告警记录数据完整性**
-*对于任何* 生成的告警记录，应该包含触发时间、网段信息、当前使用率和阈值。
-**验证需求：9.4**
+### Property 16: API 速率限制
 
-**属性 38：告警自动解除条件**
-*对于任何* 活跃的告警，当对应网段的使用率降低到阈值以下时，系统应该自动将告警标记为已解除。
-**验证需求：9.5**
+*对于任意* API 密钥，在配置的时间窗口内，超过频率限制的请求应返回 429 状态码。未超过限制的请求应正常处理。速率计数器在时间窗口结束后应重置。
 
-**属性 39：告警查询筛选正确性**
-*对于任何* 带筛选条件的告警查询，返回的告警记录应该匹配指定的筛选条件。
-**验证需求：9.6**
+**验证需求: 151.1**
 
-### 认证与授权属性
+### Property 17: 乐观锁并发安全
 
-**属性 40：JWT Token 内容完整性**
-*对于任何* 成功登录后生成的 JWT Token，解码后应该包含用户 ID、角色和过期时间信息。
-**验证需求：10.3**
+*对于任意*资源的两个并发修改请求（携带相同 version），只有一个应成功（version+1），另一个应收到版本冲突错误（409）。成功的修改应正确持久化。
 
-**属性 41：过期 Token 拒绝访问**
-*对于任何* 使用过期 JWT Token 的 API 请求，系统应该返回 401 未授权错误。
-**验证需求：10.4, 10.5**
+**验证需求: 156.4**
 
-**属性 42：角色枚举完整性**
-*对于任何* 用户，其角色只能是以下三种之一：Administrator、Regular_User、ReadOnly_User。
-**验证需求：11.1**
+### Property 18: 密码加密安全性
 
-**属性 43：管理员权限完整性**
-*对于任何* 角色为 Administrator 的用户，应该能够执行所有操作（创建、读取、更新、删除）。
-**验证需求：11.2**
+*对于任意*密码字符串，bcrypt/Argon2 加密后的哈希值应与原密码不同（不可逆），但验证函数 verify(password, hash) 应返回 true。*对于任意*不同密码，verify(wrong_password, hash) 应返回 false。
 
-**属性 44：普通用户权限限制**
-*对于任何* 角色为 Regular_User 的用户，尝试创建/删除网段或管理用户的操作应该被拒绝并返回 403 错误。
-**验证需求：11.4**
+**验证需求: 18.1**
 
-**属性 45：只读用户权限限制**
-*对于任何* 角色为 ReadOnly_User 的用户，所有修改操作（POST、PUT、DELETE）应该被拒绝并返回 403 错误。
-**验证需求：11.5**
+### Property 19: 数据降采样聚合一致性
 
-**属性 46：权限拒绝错误码**
-*对于任何* 超出用户权限的操作请求，系统应该返回 403 禁止访问错误。
-**验证需求：11.6**
+*对于任意*时序数据集，5 分钟聚合的 AVG 值应等于该 5 分钟内所有原始数据点的算术平均值。MAX/MIN 值应等于该时间段内的实际最大/最小值。降采样不应丢失极值信息。
 
-**属性 47：日志记录包含角色信息**
-*对于任何* 操作日志记录，应该包含执行操作的用户的角色信息。
-**验证需求：11.7**
+**验证需求: 148.1**
 
-### 数据持久化属性
+### Property 20: 告警风暴压缩正确性
 
-**属性 48：事务原子性**
-*对于任何* 包含多个数据库操作的事务，如果任何一步失败，所有操作应该被回滚，不留下部分数据。
-**验证需求：13.2, 13.3**
+*对于任意*告警序列，如果上游设备离线导致 N 台下游设备告警，压缩后应只展示 1 条根因告警，关联告警数量应为 N。根因恢复后，所有关联告警应自动恢复。
 
-### API 接口属性
-
-**属性 49：HTTP 状态码正确性**
-*对于任何* API 响应，应该使用适当的 HTTP 状态码：成功操作返回 2xx，客户端错误返回 4xx，服务器错误返回 5xx。
-**验证需求：14.2**
-
-**属性 50：响应格式统一性**
-*对于任何* API 响应，JSON 格式应该包含 code、message 和 data 字段。
-**验证需求：14.3**
-
-**属性 51：验证错误详细信息**
-*对于任何* 参数验证失败的请求，返回的错误信息应该包含具体的字段名和错误原因。
-**验证需求：14.5**
-
-**属性 52：分页排序筛选支持**
-*对于任何* 列表查询接口，应该支持 page、page_size、sort_by 和 filter 等查询参数。
-**验证需求：15.3**
-
-**属性 53：日志格式完整性**
-*对于任何* 系统日志记录，应该包含时间戳、日志级别、模块名称和详细信息。
-**验证需求：17.2**
-
+**验证需求: 161.1, 161.2, 161.3, 161.4**
 
 
 ## 错误处理
 
-### 错误分类
-
-系统采用分层错误处理策略，将错误分为以下几类：
-
-1. **验证错误（Validation Errors）**：输入数据格式或内容不符合要求
-2. **业务逻辑错误（Business Logic Errors）**：违反业务规则（如删除包含 IP 的网段）
-3. **资源不存在错误（Not Found Errors）**：请求的资源不存在
-4. **权限错误（Permission Errors）**：用户无权执行该操作
-5. **冲突错误（Conflict Errors）**：资源状态冲突（如 IP 地址已被占用）
-6. **系统错误（System Errors）**：数据库连接失败、外部服务不可用等
-
-### 错误响应格式
-
-```json
-{
-  "code": 400,
-  "message": "Validation failed",
-  "errors": [
-    {
-      "field": "ip_address",
-      "message": "Invalid IP address format",
-      "value": "192.168.1.999"
-    }
-  ],
-  "timestamp": "2024-01-15T10:30:00Z",
-  "path": "/api/v1/ips/allocate"
-}
-```
-
 ### 错误处理策略
 
-#### 1. 验证错误处理
+| 层级 | 策略 | 实现 |
+|------|------|------|
+| API 网关层 | 统一异常捕获 + 标准错误响应 | FastAPI ExceptionHandler，所有异常转为 {code, message, data} 格式 |
+| 业务服务层 | 领域异常 + 业务规则校验 | 自定义异常类（BusinessError, ValidationError, ConflictError） |
+| 数据访问层 | 事务回滚 + 重试机制 | SQLAlchemy 事务管理，死锁自动重试（最多 3 次） |
+| 外部集成层 | 熔断 + 降级 + 补偿 | Circuit Breaker 模式，失败操作进入补偿队列 |
+| 异步任务层 | 重试 + 死信队列 | Celery 自动重试（指数退避），失败任务进入 DLQ |
 
-```python
-from pydantic import BaseModel, validator, ValidationError
-from fastapi import HTTPException
+### 错误码规范
 
-class IPAllocationRequest(BaseModel):
-    ip_address: str
-    segment_id: int
-    device_id: int
-    
-    @validator('ip_address')
-    def validate_ip(cls, v):
-        try:
-            ipaddress.ip_address(v)
-        except ValueError:
-            raise ValueError('Invalid IP address format')
-        return v
+```
+错误码格式: XXYYYY
+XX = 模块代码 (10=IPAM, 20=DCIM, 30=NAC, 40=资产, 50=工单, 60=系统)
+YYYY = 错误序号
 
-@app.post("/api/v1/ips/allocate")
-async def allocate_ip(request: IPAllocationRequest):
-    try:
-        # 业务逻辑
-        pass
-    except ValidationError as e:
-        raise HTTPException(
-            status_code=400,
-            detail={
-                "code": 400,
-                "message": "Validation failed",
-                "errors": e.errors()
-            }
-        )
+示例:
+100001 - 网段 CIDR 格式无效
+100002 - IP 地址逻辑冲突
+100003 - IP 地址物理冲突
+100004 - 网段使用率超阈值
+200001 - 机架 U 位空间不足
+200002 - 机架功率超限
+300001 - RADIUS 认证失败
+300002 - 终端合规检查不通过
+400001 - MAC 地址格式无效
+400002 - 资产编号重复
+500001 - 工单流程节点配置错误
+600001 - JWT Token 过期
+600002 - 权限不足
+600003 - 租户隔离违规
+600004 - 版本冲突（乐观锁）
+600005 - 速率限制超限
 ```
 
-#### 2. 业务逻辑错误处理
+### 熔断降级机制
 
 ```python
-class BusinessLogicError(Exception):
-    def __init__(self, message: str, code: str = None):
-        self.message = message
-        self.code = code
-        super().__init__(self.message)
+class CircuitBreaker:
+    """
+    熔断器 - 保护下游系统
+    状态: CLOSED(正常) -> OPEN(熔断) -> HALF_OPEN(探测恢复)
+    """
+    FAILURE_THRESHOLD = 5      # 连续失败 5 次触发熔断
+    RECOVERY_TIMEOUT = 60      # 熔断 60 秒后进入半开状态
+    HALF_OPEN_MAX_CALLS = 3    # 半开状态最多允许 3 个探测请求
 
-def delete_segment(segment_id: int):
-    segment = db.query(NetworkSegment).filter_by(id=segment_id).first()
-    if not segment:
-        raise HTTPException(status_code=404, detail="Segment not found")
-    
-    # 检查是否有已分配的 IP
-    used_ips = db.query(IPAddress).filter_by(
-        segment_id=segment_id,
-        status='used'
-    ).count()
-    
-    if used_ips > 0:
-        raise BusinessLogicError(
-            message=f"Cannot delete segment with {used_ips} allocated IPs",
-            code="SEGMENT_HAS_ALLOCATED_IPS"
-        )
-    
-    db.delete(segment)
-    db.commit()
+    # 降级策略示例
+    DEGRADATION_POLICIES = {
+        "dhcp_sync": "local_only",      # DHCP 不可用时仅本地分配
+        "dns_sync": "queue_retry",       # DNS 不可用时入队重试
+        "switch_config": "queue_retry",  # 交换机不可用时入队重试
+        "ai_analysis": "skip",           # AI 不可用时跳过分析
+        "syslog_receive": "buffer",      # Syslog 不可用时本地缓冲
+    }
 ```
 
-#### 3. 数据库错误处理
+### 分布式事务补偿
 
 ```python
-from sqlalchemy.exc import IntegrityError, OperationalError
-
-@app.post("/api/v1/devices")
-async def create_device(device: DeviceCreate):
-    try:
-        db_device = Device(**device.dict())
-        db.add(db_device)
-        db.commit()
-        db.refresh(db_device)
-        return db_device
-    except IntegrityError as e:
-        db.rollback()
-        if 'mac_address' in str(e):
-            raise HTTPException(
-                status_code=409,
-                detail="Device with this MAC address already exists"
-            )
-        raise HTTPException(status_code=500, detail="Database integrity error")
-    except OperationalError as e:
-        db.rollback()
-        logger.error(f"Database operational error: {e}")
-        raise HTTPException(
-            status_code=503,
-            detail="Database service unavailable"
-        )
+class TransactionOrchestrator:
+    """
+    事务编排器 - 跨系统操作的 Saga 模式
+    每个步骤定义: execute() + compensate()
+    """
+    # IP 分配事务示例
+    IP_ALLOCATION_SAGA = [
+        Step("allocate_ip",     execute=allocate_ip,     compensate=release_ip),
+        Step("create_dhcp",     execute=create_dhcp,     compensate=delete_dhcp),
+        Step("create_dns",      execute=create_dns,      compensate=delete_dns),
+        Step("update_firewall", execute=update_fw_group,  compensate=revert_fw_group),
+        Step("notify",          execute=send_notification, compensate=noop),
+    ]
+    # 任意步骤失败 -> 按逆序执行 compensate
 ```
-
-#### 4. 全局异常处理器
-
-```python
-from fastapi import Request
-from fastapi.responses import JSONResponse
-
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    logger.error(f"Unhandled exception: {exc}", exc_info=True)
-    return JSONResponse(
-        status_code=500,
-        content={
-            "code": 500,
-            "message": "Internal server error",
-            "timestamp": datetime.utcnow().isoformat(),
-            "path": str(request.url)
-        }
-    )
-
-@app.exception_handler(BusinessLogicError)
-async def business_logic_error_handler(request: Request, exc: BusinessLogicError):
-    return JSONResponse(
-        status_code=400,
-        content={
-            "code": 400,
-            "message": exc.message,
-            "error_code": exc.code,
-            "timestamp": datetime.utcnow().isoformat(),
-            "path": str(request.url)
-        }
-    )
-```
-
-### 日志记录策略
-
-```python
-import logging
-from logging.handlers import RotatingFileHandler
-
-# 配置日志
-def setup_logging():
-    log_level = os.getenv('LOG_LEVEL', 'INFO')
-    
-    # 创建日志格式
-    formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    )
-    
-    # 文件处理器（自动轮转）
-    file_handler = RotatingFileHandler(
-        'logs/ipam.log',
-        maxBytes=10*1024*1024,  # 10MB
-        backupCount=5
-    )
-    file_handler.setFormatter(formatter)
-    
-    # 控制台处理器
-    console_handler = logging.StreamHandler()
-    console_handler.setFormatter(formatter)
-    
-    # 配置根日志器
-    logger = logging.getLogger()
-    logger.setLevel(log_level)
-    logger.addHandler(file_handler)
-    logger.addHandler(console_handler)
-    
-    return logger
-
-# 使用日志
-logger = setup_logging()
-
-# 不同级别的日志示例
-logger.debug("Detailed debug information")
-logger.info("IP address allocated: 192.168.1.10")
-logger.warning("Network segment usage above 80%")
-logger.error("Failed to connect to database", exc_info=True)
-logger.critical("System critical failure", exc_info=True)
-```
-
-
 
 ## 测试策略
 
-### 双重测试方法
+### 双轨测试方法
 
-系统采用单元测试和基于属性的测试（Property-Based Testing）相结合的策略，确保全面的代码覆盖和正确性验证。
+本系统采用**单元测试 + 属性测试**双轨并行的测试策略：
 
-#### 单元测试（Unit Tests）
-- 验证特定示例和边界情况
-- 测试错误条件和异常处理
-- 测试组件之间的集成点
-- 使用 pytest 框架
+| 测试类型 | 工具 | 用途 | 最低迭代次数 |
+|---------|------|------|-------------|
+| 属性测试 | Hypothesis (Python) | 验证正确性属性（通用规则） | 100 次/属性 |
+| 单元测试 | pytest | 验证具体示例、边界条件、错误处理 | - |
+| 集成测试 | pytest + testcontainers | 验证跨服务交互、数据库操作 | - |
+| API 测试 | pytest + httpx | 验证 API 契约、响应格式 | - |
 
-#### 基于属性的测试（Property-Based Tests）
-- 验证跨所有输入的通用属性
-- 通过随机化实现全面的输入覆盖
-- 使用 Hypothesis 库（Python）
-- 每个属性测试最少运行 100 次迭代
-
-### 测试框架和工具
-
-**后端测试：**
-- pytest：测试框架
-- pytest-asyncio：异步测试支持
-- Hypothesis：基于属性的测试
-- pytest-cov：代码覆盖率
-- factory_boy：测试数据工厂
-- faker：生成随机测试数据
-
-**前端测试：**
-- Vitest：单元测试框架
-- @vue/test-utils：Vue 组件测试
-- fast-check：基于属性的测试（JavaScript）
-- Playwright：端到端测试
-
-### 测试组织结构
-
-```
-tests/
-├── unit/                      # 单元测试
-│   ├── test_ip_service.py
-│   ├── test_device_service.py
-│   ├── test_conflict_detection.py
-│   └── test_validators.py
-├── property/                  # 基于属性的测试
-│   ├── test_network_properties.py
-│   ├── test_ip_properties.py
-│   ├── test_device_properties.py
-│   └── test_auth_properties.py
-├── integration/               # 集成测试
-│   ├── test_api_endpoints.py
-│   ├── test_database.py
-│   └── test_excel_import_export.py
-├── e2e/                       # 端到端测试
-│   └── test_user_workflows.py
-├── fixtures/                  # 测试固件
-│   ├── database.py
-│   ├── users.py
-│   └── sample_data.py
-└── conftest.py               # pytest 配置
-```
-
-### 基于属性的测试示例
-
-#### 示例 1：网段 CIDR 格式验证（属性 1）
+### 属性测试配置
 
 ```python
-from hypothesis import given, strategies as st
-import ipaddress
+# conftest.py
+from hypothesis import settings, HealthCheck
 
-# 生成有效的 CIDR 字符串
-@st.composite
-def valid_cidr(draw):
-    # 生成随机 IP 地址
-    octets = [draw(st.integers(0, 255)) for _ in range(4)]
-    ip = '.'.join(map(str, octets))
-    # 生成随机前缀长度
-    prefix = draw(st.integers(8, 30))
-    return f"{ip}/{prefix}"
-
-# 生成无效的 CIDR 字符串
-@st.composite
-def invalid_cidr(draw):
-    return draw(st.one_of(
-        st.text(),  # 随机文本
-        st.just("192.168.1.0/33"),  # 无效前缀
-        st.just("999.999.999.999/24"),  # 无效 IP
-        st.just("192.168.1.0"),  # 缺少前缀
-    ))
-
-@given(cidr=valid_cidr())
-def test_valid_cidr_accepted(cidr):
-    """
-    Feature: ipam-system, Property 1: CIDR 格式验证
-    对于任何有效的 CIDR 格式，系统应该接受它
-    """
-    result = validate_cidr(cidr)
-    assert result.is_valid == True
-    assert result.error is None
-
-@given(cidr=invalid_cidr())
-def test_invalid_cidr_rejected(cidr):
-    """
-    Feature: ipam-system, Property 1: CIDR 格式验证
-    对于任何无效的 CIDR 格式，系统应该拒绝它
-    """
-    result = validate_cidr(cidr)
-    assert result.is_valid == False
-    assert result.error is not None
+settings.register_profile("ci", max_examples=200, suppress_health_check=[HealthCheck.too_slow])
+settings.register_profile("dev", max_examples=100)
+settings.load_profile("dev")
 ```
 
-#### 示例 2：网段使用率计算（属性 5）
+### 属性测试与设计属性映射
+
+每个属性测试必须以注释引用设计文档中的属性编号：
 
 ```python
-from hypothesis import given, strategies as st, assume
+# Feature: ipam-system, Property 1: CIDR 解析与网段-IP 关系一致性
+@given(cidr=valid_cidr_strategy())
+def test_cidr_parsing_roundtrip(cidr):
+    """Property 1: 合法 CIDR 解析后 total_ips 应正确计算"""
+    segment = parse_cidr(cidr)
+    prefix = segment.prefix_length
+    if prefix < 31:
+        assert segment.total_ips == 2 ** (32 - prefix) - 2
+    # 任意生成的 IP 在范围内应属于该网段
+    ...
 
-@given(
-    prefix_length=st.integers(8, 30),
-    used_count=st.integers(0, 1000),
-    reserved_count=st.integers(0, 1000)
-)
-def test_segment_usage_calculation(prefix_length, used_count, reserved_count):
-    """
-    Feature: ipam-system, Property 5: 网段使用率计算正确性
-    对于任何网段，使用率应该等于 (已用 + 保留) / 总数 × 100%
-    """
-    # 计算总 IP 数
-    total_ips = 2 ** (32 - prefix_length) - 2
-    
-    # 确保已用和保留的总数不超过总 IP 数
-    assume(used_count + reserved_count <= total_ips)
-    
-    # 创建测试网段
-    segment = create_test_segment(
-        prefix_length=prefix_length,
-        used_ips=used_count,
-        reserved_ips=reserved_count
-    )
-    
-    # 计算使用率
-    stats = calculate_segment_usage(segment)
-    
-    # 验证计算正确性
-    expected_usage = (used_count + reserved_count) / total_ips * 100
-    assert abs(stats['usage_rate'] - expected_usage) < 0.01
-    assert stats['total_ips'] == total_ips
-    assert stats['used_ips'] == used_count
-    assert stats['reserved_ips'] == reserved_count
+# Feature: ipam-system, Property 7: JWT Token 生命周期 Round-Trip
+@given(user=valid_user_strategy())
+def test_jwt_roundtrip(user):
+    """Property 7: Token 编码后解码应返回相同用户信息"""
+    token = generate_jwt(user)
+    decoded = decode_jwt(token)
+    assert decoded.user_id == user.id
+    assert decoded.role == user.role
+    assert decoded.tenant_id == user.tenant_id
 ```
 
-#### 示例 3：IP 回收状态转换（属性 7）
+### 单元测试重点
 
-```python
-from hypothesis import given, strategies as st
+单元测试聚焦以下场景（属性测试不覆盖的部分）：
 
-@st.composite
-def used_ip_address(draw):
-    """生成一个已使用的 IP 地址"""
-    ip = draw(st.ip_addresses(v=4))
-    device_id = draw(st.integers(1, 1000))
-    return create_test_ip(
-        ip_address=str(ip),
-        status='used',
-        device_id=device_id
-    )
+- 边界条件：/32 网段、VLAN ID 1 和 4094、空网段删除
+- 错误路径：无效输入、权限不足、资源不存在
+- 集成点：DHCP/DNS 联动、交换机配置下发、RADIUS 认证
+- 状态转换：IP 状态机非法转换、工单流程异常路径
+- 并发场景：乐观锁冲突、分布式锁竞争
 
-@given(ip=used_ip_address())
-def test_ip_release_state_transition(ip):
-    """
-    Feature: ipam-system, Property 7: IP 回收状态转换
-    对于任何已用 IP，回收后状态应变为空闲且设备关联解除
-    """
-    # 记录原始状态
-    original_ip = ip.ip_address
-    original_device_id = ip.device_id
-    
-    # 执行回收操作
-    result = release_ip(ip.id)
-    
-    # 验证状态转换
-    updated_ip = get_ip_by_id(ip.id)
-    assert updated_ip.status == 'available'
-    assert updated_ip.device_id is None
-    assert updated_ip.ip_address == original_ip  # IP 地址本身不变
+### 需求覆盖矩阵
+
+| 属性编号 | 覆盖需求 | 测试类型 |
+|---------|---------|---------|
+| Property 1 | 1.1, 1.8, 2.1 | 属性测试 |
+| Property 2 | 1.5, 1.6, 1.8 | 属性测试 |
+| Property 3 | 2.4 | 属性测试 |
+| Property 4 | 2.2, 4.1-4.6 | 属性测试 |
+| Property 5 | 3.2 | 属性测试 |
+| Property 6 | 6.6 | 属性测试 |
+| Property 7 | 10.2-10.6 | 属性测试 |
+| Property 8 | 11.1-11.6 | 属性测试 |
+| Property 9 | 22.1-22.3 | 属性测试 |
+| Property 10 | 13.2, 150.3, 156.1 | 属性测试 |
+| Property 11 | 32.3-32.5 | 属性测试 |
+| Property 12 | 34.2 | 属性测试 |
+| Property 13 | 45.7-45.9 | 属性测试 |
+| Property 14 | 60.3 | 属性测试 |
+| Property 15 | 14.3, 14.5 | 属性测试 |
+| Property 16 | 151.1 | 属性测试 |
+| Property 17 | 156.4 | 属性测试 |
+| Property 18 | 18.1 | 属性测试 |
+| Property 19 | 148.1 | 属性测试 |
+| Property 20 | 161.1-161.4 | 属性测试 |
+| 需求 3-9, 19-21, 23-28 等 | 功能验证 | 单元测试 + 集成测试 |
+| 需求 37-44 (NAC) | RADIUS 认证流程 | 集成测试 |
+| 需求 83-93 (数据采集) | 协议采集正确性 | 集成测试 |
+| 需求 7, 15, 82 (UI) | 前端交互 | E2E 测试 (Cypress) |
+
+
+## 数据生命周期管理
+
+### 冷热数据分层策略
+
+```mermaid
+graph LR
+    subgraph 热数据["热数据 (Hot) - 7天"]
+        HOT_TSDB["TimescaleDB<br/>1秒精度原始数据"]
+        HOT_REDIS["Redis<br/>实时缓存"]
+    end
+
+    subgraph 温数据["温数据 (Warm) - 30天"]
+        WARM_TSDB["TimescaleDB<br/>5分钟聚合数据<br/>(连续聚合视图)"]
+    end
+
+    subgraph 冷数据["冷数据 (Cold) - 1年"]
+        COLD_TSDB["TimescaleDB<br/>1小时聚合数据"]
+    end
+
+    subgraph 归档数据["归档 (Archive) - 5年+"]
+        ARCHIVE["MinIO/S3<br/>1天聚合 Parquet 文件"]
+    end
+
+    HOT_TSDB -->|"retention_policy<br/>7天后自动删除"| WARM_TSDB
+    WARM_TSDB -->|"retention_policy<br/>30天后自动删除"| COLD_TSDB
+    COLD_TSDB -->|"归档任务<br/>1年后导出"| ARCHIVE
 ```
 
-#### 示例 4：设备删除级联回收 IP（属性 15）
+### 各数据类型保留策略
 
-```python
-from hypothesis import given, strategies as st
+| 数据类型 | 热数据 | 温数据 | 冷数据 | 归档 |
+|---------|--------|--------|--------|------|
+| 设备性能指标 | 7天(1秒) | 30天(5分钟) | 1年(1小时) | 5年(1天) |
+| 端口流量 | 7天(1秒) | 30天(5分钟) | 1年(1小时) | 5年(1天) |
+| NetFlow 流量 | 30天(原始) | - | 1年(1小时聚合) | 3年(1天) |
+| Syslog 日志 | 90天(原始) | - | - | 2年(压缩) |
+| 审计日志 | 永久(MySQL) | - | - | - |
+| 扫描结果 | 90天 | - | - | 1年 |
+| 配置备份 | 最近10版本 | - | - | 永久 |
+| 告警记录 | 1年 | - | - | 5年 |
 
-@st.composite
-def device_with_ips(draw):
-    """生成一个关联了多个 IP 的设备"""
-    device = create_test_device()
-    ip_count = draw(st.integers(1, 10))
-    ips = [
-        create_test_ip(
-            status='used',
-            device_id=device.id
-        )
-        for _ in range(ip_count)
-    ]
-    return device, ips
+## 安全架构
 
-@given(data=device_with_ips())
-def test_device_deletion_cascades_ip_release(data):
-    """
-    Feature: ipam-system, Property 15: 设备删除级联回收 IP
-    对于任何设备，删除后其所有关联 IP 应自动回收
-    """
-    device, ips = data
-    ip_ids = [ip.id for ip in ips]
-    
-    # 删除设备
-    delete_device(device.id)
-    
-    # 验证所有 IP 都被回收
-    for ip_id in ip_ids:
-        ip = get_ip_by_id(ip_id)
-        assert ip.status == 'available'
-        assert ip.device_id is None
+### 安全分层
+
+| 层级 | 安全措施 |
+|------|---------|
+| 传输层 | HTTPS/TLS 1.3 全链路加密，内部服务间 mTLS |
+| 认证层 | JWT + Refresh Token，支持 LDAP/AD/企业微信 SSO，MFA 多因素认证 |
+| 授权层 | RBAC + 数据范围控制，细粒度权限树，管理员层级 |
+| 数据层 | 敏感字段 AES-256 加密存储，备份文件加密，日志脱敏 |
+| 审计层 | 链式哈希审计日志，特权操作录屏，UEBA 行为分析 |
+| 网络层 | API 速率限制，IP 白名单，WAF 防护 |
+| 应用层 | 参数化查询防 SQL 注入，输入转义防 XSS，CSRF Token |
+
+### 凭证管理
+
+```
+凭证保险库 (Vault)
+├── 网络设备凭证 (SSH/Telnet/SNMP/Web)
+│   ├── AES-256 加密存储
+│   ├── 自动密码轮换 (90天周期)
+│   └── 临时凭证申请 (审批+时效+录屏)
+├── 数据库凭证
+├── API 密钥
+├── RADIUS 共享密钥
+└── LDAP 绑定密码
 ```
 
-#### 示例 5：权限控制（属性 44, 45）
+## 部署架构
 
-```python
-from hypothesis import given, strategies as st
+### Docker Compose 部署（单机/小规模）
 
-@given(
-    user_role=st.sampled_from(['regular_user', 'readonly_user']),
-    operation=st.sampled_from(['create_segment', 'delete_segment', 'manage_users'])
-)
-def test_permission_restrictions(user_role, operation):
-    """
-    Feature: ipam-system, Property 44, 45: 权限限制
-    对于非管理员用户，特定操作应被拒绝
-    """
-    user = create_test_user(role=user_role)
-    token = generate_jwt_token(user)
-    
-    # 尝试执行操作
-    response = execute_operation(operation, token)
-    
-    # 验证被拒绝
-    assert response.status_code == 403
-    assert 'forbidden' in response.json()['message'].lower()
-```
-
-### 单元测试示例
-
-#### 示例 1：IP 冲突检测
-
-```python
-import pytest
-from unittest.mock import Mock, patch
-
-def test_logical_conflict_detection():
-    """测试逻辑冲突检测"""
-    # 创建一个已使用的 IP
-    existing_ip = create_test_ip(
-        ip_address='192.168.1.10',
-        status='used'
-    )
-    
-    # 尝试分配相同 IP
-    with pytest.raises(ConflictError) as exc_info:
-        allocate_ip('192.168.1.10', device_id=999)
-    
-    assert 'logical conflict' in str(exc_info.value).lower()
-
-@patch('services.conflict_detection.ping')
-def test_physical_conflict_detection(mock_ping):
-    """测试物理冲突检测"""
-    # 模拟 ping 返回成功（IP 在线）
-    mock_ping.return_value = True
-    
-    # 尝试分配 IP
-    with pytest.raises(ConflictError) as exc_info:
-        allocate_ip('192.168.1.20', device_id=1)
-    
-    assert 'physical conflict' in str(exc_info.value).lower()
-    mock_ping.assert_called_once_with('192.168.1.20')
-```
-
-#### 示例 2：JWT Token 验证
-
-```python
-import pytest
-from datetime import datetime, timedelta
-
-def test_jwt_token_contains_required_claims():
-    """测试 JWT Token 包含必需的声明"""
-    user = create_test_user(role='admin')
-    token = generate_jwt_token(user)
-    
-    # 解码 token
-    payload = decode_jwt_token(token)
-    
-    # 验证必需字段
-    assert 'user_id' in payload
-    assert 'role' in payload
-    assert 'exp' in payload
-    assert payload['user_id'] == user.id
-    assert payload['role'] == user.role
-
-def test_expired_token_rejected():
-    """测试过期 token 被拒绝"""
-    user = create_test_user()
-    # 生成一个已过期的 token
-    token = generate_jwt_token(
-        user,
-        expires_delta=timedelta(seconds=-1)
-    )
-    
-    # 尝试使用过期 token
-    with pytest.raises(AuthenticationError) as exc_info:
-        verify_jwt_token(token)
-    
-    assert 'expired' in str(exc_info.value).lower()
-```
-
-### 集成测试示例
-
-```python
-import pytest
-from fastapi.testclient import TestClient
-
-@pytest.fixture
-def client():
-    """创建测试客户端"""
-    return TestClient(app)
-
-@pytest.fixture
-def admin_token(client):
-    """获取管理员 token"""
-    response = client.post('/api/v1/auth/login', json={
-        'username': 'admin',
-        'password': 'admin123'
-    })
-    return response.json()['data']['access_token']
-
-def test_create_segment_workflow(client, admin_token):
-    """测试创建网段的完整流程"""
-    headers = {'Authorization': f'Bearer {admin_token}'}
-    
-    # 1. 创建网段
-    response = client.post('/api/v1/segments', json={
-        'name': 'Test Segment',
-        'network': '192.168.100.0',
-        'prefix_length': 24,
-        'description': 'Test segment'
-    }, headers=headers)
-    
-    assert response.status_code == 201
-    segment_id = response.json()['data']['id']
-    
-    # 2. 查询网段
-    response = client.get(f'/api/v1/segments/{segment_id}', headers=headers)
-    assert response.status_code == 200
-    assert response.json()['data']['name'] == 'Test Segment'
-    
-    # 3. 分配 IP
-    response = client.post('/api/v1/ips/allocate', json={
-        'ip_address': '192.168.100.10',
-        'segment_id': segment_id,
-        'device_id': 1
-    }, headers=headers)
-    
-    assert response.status_code == 201
-    
-    # 4. 尝试删除网段（应该失败，因为有已分配的 IP）
-    response = client.delete(f'/api/v1/segments/{segment_id}', headers=headers)
-    assert response.status_code == 400
-    assert 'allocated' in response.json()['message'].lower()
-```
-
-### 测试配置
-
-#### pytest.ini
-
-```ini
-[pytest]
-testpaths = tests
-python_files = test_*.py
-python_classes = Test*
-python_functions = test_*
-addopts = 
-    --verbose
-    --cov=app
-    --cov-report=html
-    --cov-report=term-missing
-    --hypothesis-show-statistics
-markers =
-    unit: Unit tests
-    property: Property-based tests
-    integration: Integration tests
-    e2e: End-to-end tests
-    slow: Slow running tests
-```
-
-#### Hypothesis 配置
-
-```python
-from hypothesis import settings, Verbosity
-
-# 配置 Hypothesis
-settings.register_profile("default", max_examples=100)
-settings.register_profile("ci", max_examples=1000)
-settings.register_profile("debug", max_examples=10, verbosity=Verbosity.verbose)
-
-# 加载配置
-settings.load_profile(os.getenv('HYPOTHESIS_PROFILE', 'default'))
-```
-
-### 测试覆盖率目标
-
-- 单元测试代码覆盖率：≥ 80%
-- 关键业务逻辑覆盖率：≥ 90%
-- 所有正确性属性必须有对应的属性测试
-- 每个 API 端点必须有集成测试
-
-### 持续集成
-
-```yaml
-# .github/workflows/test.yml
-name: Tests
-
-on: [push, pull_request]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: testpass
-          MYSQL_DATABASE: ipam_test
-        ports:
-          - 3306:3306
-    
-    steps:
-      - uses: actions/checkout@v2
-      
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.10'
-      
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-          pip install -r requirements-dev.txt
-      
-      - name: Run unit tests
-        run: pytest tests/unit -m unit
-      
-      - name: Run property tests
-        run: pytest tests/property -m property
-        env:
-          HYPOTHESIS_PROFILE: ci
-      
-      - name: Run integration tests
-        run: pytest tests/integration -m integration
-      
-      - name: Upload coverage
-        uses: codecov/codecov-action@v2
-```
-
-### 测试数据管理
-
-```python
-# tests/fixtures/database.py
-import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-
-@pytest.fixture(scope='session')
-def test_db():
-    """创建测试数据库"""
-    engine = create_engine('mysql://root:testpass@localhost/ipam_test')
-    Base.metadata.create_all(engine)
-    yield engine
-    Base.metadata.drop_all(engine)
-
-@pytest.fixture
-def db_session(test_db):
-    """创建数据库会话"""
-    Session = sessionmaker(bind=test_db)
-    session = Session()
-    yield session
-    session.rollback()
-    session.close()
-
-# tests/fixtures/sample_data.py
-from factory import Factory, Faker, SubFactory
-from factory.alchemy import SQLAlchemyModelFactory
-
-class UserFactory(SQLAlchemyModelFactory):
-    class Meta:
-        model = User
-        sqlalchemy_session = db_session
-    
-    username = Faker('user_name')
-    email = Faker('email')
-    full_name = Faker('name')
-    role = 'regular_user'
-
-class NetworkSegmentFactory(SQLAlchemyModelFactory):
-    class Meta:
-        model = NetworkSegment
-        sqlalchemy_session = db_session
-    
-    name = Faker('word')
-    network = '192.168.1.0'
-    prefix_length = 24
-    created_by = SubFactory(UserFactory)
-```
-
-
-
-## 安全实现细节
-
-### 密码加密
-
-```python
-from passlib.context import CryptContext
-
-# 使用 bcrypt 算法
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-def hash_password(password: str) -> str:
-    """加密密码"""
-    return pwd_context.hash(password)
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """验证密码"""
-    return pwd_context.verify(plain_password, hashed_password)
-```
-
-### JWT Token 实现
-
-```python
-from datetime import datetime, timedelta
-from jose import JWTError, jwt
-from typing import Optional
-
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-secret-key-here")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-REFRESH_TOKEN_EXPIRE_DAYS = 7
-
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
-    """创建访问令牌"""
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    
-    to_encode.update({
-        "exp": expire,
-        "iat": datetime.utcnow(),
-        "type": "access"
-    })
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
-
-def create_refresh_token(data: dict):
-    """创建刷新令牌"""
-    to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
-    to_encode.update({
-        "exp": expire,
-        "iat": datetime.utcnow(),
-        "type": "refresh"
-    })
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
-
-def decode_token(token: str) -> dict:
-    """解码令牌"""
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        return payload
-    except JWTError:
-        raise AuthenticationError("Invalid token")
-```
-
-### 权限装饰器
-
-```python
-from functools import wraps
-from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-
-security = HTTPBearer()
-
-def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """获取当前用户"""
-    token = credentials.credentials
-    try:
-        payload = decode_token(token)
-        user_id = payload.get("user_id")
-        if user_id is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid authentication credentials"
-            )
-        user = get_user_by_id(user_id)
-        if user is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="User not found"
-            )
-        return user
-    except JWTError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials"
-        )
-
-def require_role(*allowed_roles):
-    """角色权限装饰器"""
-    def decorator(func):
-        @wraps(func)
-        async def wrapper(*args, current_user: User = Depends(get_current_user), **kwargs):
-            if current_user.role not in allowed_roles:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail=f"Permission denied. Required roles: {allowed_roles}"
-                )
-            return await func(*args, current_user=current_user, **kwargs)
-        return wrapper
-    return decorator
-
-# 使用示例
-@app.post("/api/v1/segments")
-@require_role("admin")
-async def create_segment(
-    segment: NetworkSegmentCreate,
-    current_user: User = Depends(get_current_user)
-):
-    # 只有管理员可以创建网段
-    pass
-```
-
-### SQL 注入防护
-
-```python
-# 使用 SQLAlchemy ORM 的参数化查询
-from sqlalchemy import select
-
-# ✅ 安全：使用参数化查询
-def get_device_by_mac(mac_address: str):
-    stmt = select(Device).where(Device.mac_address == mac_address)
-    return db.execute(stmt).scalar_one_or_none()
-
-# ❌ 不安全：字符串拼接（永远不要这样做）
-def get_device_by_mac_unsafe(mac_address: str):
-    query = f"SELECT * FROM devices WHERE mac_address = '{mac_address}'"
-    return db.execute(query)
-```
-
-### XSS 防护
-
-```python
-from html import escape
-
-def sanitize_input(text: str) -> str:
-    """清理用户输入，防止 XSS"""
-    return escape(text)
-
-# 在 Pydantic 模型中使用
-from pydantic import BaseModel, validator
-
-class DeviceCreate(BaseModel):
-    name: str
-    description: str
-    
-    @validator('name', 'description')
-    def sanitize_text(cls, v):
-        return sanitize_input(v)
-```
-
-### 请求频率限制
-
-```python
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
-
-limiter = Limiter(key_func=get_remote_address)
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-
-# 应用到路由
-@app.post("/api/v1/auth/login")
-@limiter.limit("5/minute")  # 每分钟最多 5 次登录尝试
-async def login(request: Request, credentials: LoginRequest):
-    # 登录逻辑
-    pass
-
-@app.post("/api/v1/ips/allocate")
-@limiter.limit("100/minute")  # 每分钟最多 100 次 IP 分配
-async def allocate_ip(request: Request, ip_request: IPAllocationRequest):
-    # IP 分配逻辑
-    pass
-```
-
-### CORS 配置
-
-```python
-from fastapi.middleware.cors import CORSMiddleware
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",  # 开发环境
-        "https://ipam.example.com"  # 生产环境
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-```
-
-## 部署配置
-
-### Docker Compose 配置
-
-```yaml
-version: '3.8'
-
-services:
-  # MySQL 数据库
-  mysql:
-    image: mysql:8.0
-    container_name: ipam-mysql
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-    networks:
-      - ipam-network
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # 后端 API
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: ipam-backend
-    environment:
-      DATABASE_URL: mysql+pymysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE}
-      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
-      JWT_ALGORITHM: HS256
-      ACCESS_TOKEN_EXPIRE_MINUTES: 30
-      LOG_LEVEL: ${LOG_LEVEL:-INFO}
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./backend:/app
-      - backend_logs:/app/logs
-    depends_on:
-      mysql:
-        condition: service_healthy
-    networks:
-      - ipam-network
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-
-  # 前端应用
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: ipam-frontend
-    ports:
-      - "5173:5173"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    environment:
-      VITE_API_BASE_URL: http://localhost:8000/api/v1
-    networks:
-      - ipam-network
-    command: npm run dev -- --host
-
-  # Nginx 反向代理（生产环境）
-  nginx:
-    image: nginx:alpine
-    container_name: ipam-nginx
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./nginx/ssl:/etc/nginx/ssl
-      - frontend_dist:/usr/share/nginx/html
-    depends_on:
-      - backend
-      - frontend
-    networks:
-      - ipam-network
-    profiles:
-      - production
-
-volumes:
-  mysql_data:
-  backend_logs:
-  frontend_dist:
-
-networks:
-  ipam-network:
-    driver: bridge
-```
-
-### 后端 Dockerfile
-
-```dockerfile
-FROM python:3.10-slim
-
-WORKDIR /app
-
-# 安装系统依赖
-RUN apt-get update && apt-get install -y \
-    gcc \
-    default-libmysqlclient-dev \
-    pkg-config \
-    && rm -rf /var/lib/apt/lists/*
-
-# 复制依赖文件
-COPY requirements.txt .
-
-# 安装 Python 依赖
-RUN pip install --no-cache-dir -r requirements.txt
-
-# 复制应用代码
-COPY . .
-
-# 创建日志目录
-RUN mkdir -p /app/logs
-
-# 暴露端口
-EXPOSE 8000
-
-# 健康检查
-HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-  CMD curl -f http://localhost:8000/api/v1/health || exit 1
-
-# 启动命令
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
-```
-
-### 前端 Dockerfile
-
-```dockerfile
-# 构建阶段
-FROM node:18-alpine AS builder
-
-WORKDIR /app
-
-# 复制依赖文件
-COPY package*.json ./
-
-# 安装依赖
-RUN npm ci
-
-# 复制源代码
-COPY . .
-
-# 构建应用
-RUN npm run build
-
-# 生产阶段
-FROM nginx:alpine
-
-# 复制构建产物
-COPY --from=builder /app/dist /usr/share/nginx/html
-
-# 复制 Nginx 配置
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-EXPOSE 80
-
-CMD ["nginx", "-g", "daemon off;"]
-```
-
-### 环境变量配置（.env）
-
-```bash
-# 数据库配置
-MYSQL_ROOT_PASSWORD=your_root_password_here
-MYSQL_DATABASE=ipam
-MYSQL_USER=ipam_user
-MYSQL_PASSWORD=your_password_here
-
-# JWT 配置
-JWT_SECRET_KEY=your_jwt_secret_key_here_change_in_production
-JWT_ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-
-# 日志配置
-LOG_LEVEL=INFO
-
-# 应用配置
-BACKEND_PORT=8000
-FRONTEND_PORT=5173
-
-# CORS 配置
-ALLOWED_ORIGINS=http://localhost:5173,https://ipam.example.com
-```
-
-### 数据库初始化脚本（init.sql）
-
-```sql
--- 创建数据库（如果不存在）
-CREATE DATABASE IF NOT EXISTS ipam CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
-USE ipam;
-
--- 创建默认管理员用户
--- 密码：admin123（已使用 bcrypt 加密）
-INSERT INTO users (username, hashed_password, email, full_name, role, is_active, created_at, updated_at)
-VALUES (
-    'admin',
-    '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYqVr/1jrPK',
-    'admin@example.com',
-    'System Administrator',
-    'admin',
-    TRUE,
-    NOW(),
-    NOW()
-) ON DUPLICATE KEY UPDATE username=username;
-
--- 创建示例网段
-INSERT INTO network_segments (name, network, prefix_length, description, usage_threshold, created_by, created_at, updated_at)
-VALUES (
-    'Default Network',
-    '192.168.1.0',
-    24,
-    'Default network segment',
-    80,
-    1,
-    NOW(),
-    NOW()
-) ON DUPLICATE KEY UPDATE name=name;
-```
-
-### Nginx 配置（生产环境）
-
-```nginx
-upstream backend {
-    server backend:8000;
-}
-
-server {
-    listen 80;
-    server_name ipam.example.com;
-
-    # 重定向到 HTTPS
-    return 301 https://$server_name$request_uri;
-}
-
-server {
-    listen 443 ssl http2;
-    server_name ipam.example.com;
-
-    # SSL 证书配置
-    ssl_certificate /etc/nginx/ssl/cert.pem;
-    ssl_certificate_key /etc/nginx/ssl/key.pem;
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers HIGH:!aNULL:!MD5;
-
-    # 前端静态文件
-    location / {
-        root /usr/share/nginx/html;
-        try_files $uri $uri/ /index.html;
-    }
-
-    # 后端 API 代理
-    location /api/ {
-        proxy_pass http://backend;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+```mermaid
+graph TB
+    subgraph Docker Compose
+        NGINX_C["Nginx<br/>:80/:443<br/>反向代理+负载均衡"]
         
-        # WebSocket 支持
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-    }
+        subgraph 前端容器
+            VUE["Vue 3 SPA<br/>:3000"]
+        end
+        
+        subgraph 后端容器组
+            API1["FastAPI 实例 1<br/>:8000"]
+            API2["FastAPI 实例 2<br/>:8001"]
+            CELERY_W["Celery Worker<br/>(4 进程)"]
+            CELERY_B["Celery Beat<br/>(定时调度)"]
+            RADIUS_C["RADIUS 服务<br/>:1812/:1813"]
+            SYSLOG_C["Syslog 服务<br/>:514"]
+            NETFLOW_C["NetFlow 收集器<br/>:2055"]
+        end
+        
+        subgraph 数据容器组
+            MYSQL_C["MySQL 8.0<br/>:3306<br/>数据卷持久化"]
+            TSDB_C["TimescaleDB<br/>:5432"]
+            REDIS_C["Redis 7.0<br/>:6379"]
+            ES_C["Elasticsearch<br/>:9200"]
+            RABBIT_C["RabbitMQ<br/>:5672/:15672"]
+            MINIO_C["MinIO<br/>:9000"]
+        end
+    end
 
-    # 日志配置
-    access_log /var/log/nginx/ipam_access.log;
-    error_log /var/log/nginx/ipam_error.log;
-}
+    NGINX_C --> VUE
+    NGINX_C --> API1
+    NGINX_C --> API2
+    API1 --> MYSQL_C
+    API1 --> TSDB_C
+    API1 --> REDIS_C
+    API1 --> ES_C
+    API1 --> RABBIT_C
+    CELERY_W --> MYSQL_C
+    CELERY_W --> REDIS_C
+    CELERY_W --> RABBIT_C
 ```
 
-### 部署步骤
+### Kubernetes 部署（大规模/高可用）
 
-#### 开发环境
-
-```bash
-# 1. 克隆代码
-git clone https://github.com/your-org/ipam-system.git
-cd ipam-system
-
-# 2. 配置环境变量
-cp .env.example .env
-# 编辑 .env 文件，设置密码和密钥
-
-# 3. 启动服务
-docker-compose up -d
-
-# 4. 查看日志
-docker-compose logs -f
-
-# 5. 访问应用
-# 前端：http://localhost:5173
-# 后端 API：http://localhost:8000
-# API 文档：http://localhost:8000/docs
+```
+K8s Namespace: ipam-system
+├── Deployment: api-gateway (2+ replicas, HPA)
+├── Deployment: ipam-service (2+ replicas)
+├── Deployment: dcim-service (2+ replicas)
+├── Deployment: nac-service (2+ replicas)
+├── Deployment: asset-service (2+ replicas)
+├── Deployment: collector-service (2+ replicas)
+├── Deployment: ai-service (1+ replicas)
+├── Deployment: ticket-service (2+ replicas)
+├── Deployment: lowcode-service (2+ replicas)
+├── Deployment: celery-worker (4+ replicas)
+├── CronJob: celery-beat (1 replica)
+├── StatefulSet: mysql (主从, 2 replicas)
+├── StatefulSet: timescaledb (2 replicas)
+├── StatefulSet: elasticsearch (3 replicas)
+├── StatefulSet: rabbitmq (3 replicas, 镜像队列)
+├── Deployment: redis-sentinel (3 replicas)
+├── Deployment: minio (4 replicas, 纠删码)
+├── Ingress: nginx-ingress (TLS termination)
+└── ConfigMap/Secret: 配置和密钥
 ```
 
-#### 生产环境
+### 性能优化策略
 
-```bash
-# 1. 准备服务器
-# - 安装 Docker 和 Docker Compose
-# - 配置防火墙规则
-# - 准备 SSL 证书
+| 优化维度 | 策略 | 实现 |
+|---------|------|------|
+| 数据库索引 | 核心查询字段建立复合索引 | tenant_id + 业务字段组合索引 |
+| 分区表 | IP 地址表按 IP 数值范围分区，日志表按年分区 | MySQL RANGE 分区 |
+| 读写分离 | 写入走主库，读取走从库 + Redis 缓存 | CQRS 模式 |
+| 缓存策略 | 热点数据 Redis 缓存，TTL 5分钟 | Cache-Aside 模式 |
+| 搜索优化 | 全文搜索走 Elasticsearch，业务查询走 MySQL | 双写 + CDC 同步 |
+| 批量操作 | 批量 INSERT/UPDATE 使用 executemany | SQLAlchemy bulk_insert |
+| 连接池 | MySQL 连接池 20-50，Redis 连接池 10-20 | SQLAlchemy pool_size |
+| 异步处理 | 耗时操作（扫描、报表、AI 分析）走 Celery 异步 | 优先级队列 |
+| 降采样 | 时序数据自动降采样，减少存储和查询压力 | TimescaleDB 连续聚合 |
+| 分片存储 | 十万级 IP 资产按网段分片查询 | 分区表 + 分页查询 |
 
-# 2. 配置环境变量
-cp .env.example .env
-# 设置强密码和随机密钥
 
-# 3. 构建生产镜像
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml build
+## 需求设计映射
 
-# 4. 启动生产服务
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml --profile production up -d
+### 需求到微服务/组件映射总表
 
-# 5. 初始化数据库
-docker-compose exec backend alembic upgrade head
-
-# 6. 验证服务状态
-docker-compose ps
-curl https://ipam.example.com/api/v1/health
-
-# 7. 配置备份任务
-# 添加 cron 任务定期备份数据库
-0 2 * * * /usr/local/bin/backup-ipam-db.sh
-```
-
-### 监控和维护
-
-#### 健康检查端点
-
-```python
-@app.get("/api/v1/health")
-async def health_check():
-    """健康检查端点"""
-    try:
-        # 检查数据库连接
-        db.execute("SELECT 1")
-        db_status = "healthy"
-    except Exception as e:
-        logger.error(f"Database health check failed: {e}")
-        db_status = "unhealthy"
-    
-    return {
-        "status": "healthy" if db_status == "healthy" else "unhealthy",
-        "timestamp": datetime.utcnow().isoformat(),
-        "version": "1.0.0",
-        "components": {
-            "database": db_status,
-            "api": "healthy"
-        }
-    }
-```
-
-#### 数据库备份脚本
-
-```bash
-#!/bin/bash
-# backup-ipam-db.sh
-
-BACKUP_DIR="/var/backups/ipam"
-DATE=$(date +%Y%m%d_%H%M%S)
-BACKUP_FILE="$BACKUP_DIR/ipam_backup_$DATE.sql"
-
-# 创建备份目录
-mkdir -p $BACKUP_DIR
-
-# 执行备份
-docker-compose exec -T mysql mysqldump \
-    -u root \
-    -p$MYSQL_ROOT_PASSWORD \
-    ipam > $BACKUP_FILE
-
-# 压缩备份文件
-gzip $BACKUP_FILE
-
-# 删除 30 天前的备份
-find $BACKUP_DIR -name "*.sql.gz" -mtime +30 -delete
-
-echo "Backup completed: ${BACKUP_FILE}.gz"
-```
-
-#### 日志轮转配置
-
-```bash
-# /etc/logrotate.d/ipam
-/var/log/ipam/*.log {
-    daily
-    rotate 30
-    compress
-    delaycompress
-    notifempty
-    create 0640 root root
-    sharedscripts
-    postrotate
-        docker-compose restart backend
-    endscript
-}
-```
-
+| 需求 | 标题 | 主服务 | 数据存储 | 关键设计决策 |
+|------|------|--------|---------|-------------|
+| 1 | 网段管理 | segment-service | MySQL(network_segments, segment_groups) | 子网嵌套用 parent_id 树形结构，CIDR 解析用 ipaddress 库 |
+| 2 | IP 地址生命周期 | ip-lifecycle-service | MySQL(ip_addresses, ip_lifecycle_logs) | 状态机模式管理四种状态，临时 IP 用 Celery 定时检查过期 |
+| 3 | 设备资产管理 | device-service | MySQL(devices, asset_transfers) | 统一设备表 + 分类字段模板，逻辑删除支持恢复 |
+| 4 | 双重冲突检测 | conflict-service | MySQL(conflict_records), Redis(锁) | 先逻辑检测(DB查询)再物理检测(Ping/ARP)，分布式锁防并发 |
+| 5 | IP Ping 扫描 | scan-service | MySQL(scan_tasks, scan_results) | Celery 异步任务，asyncio 并发 Ping，WebSocket 推送进度 |
+| 6 | 操作日志 | audit-service | MySQL(audit_logs), ES | 链式哈希防篡改，CDC 同步到 ES 支持全文搜索 |
+| 7 | 数据可视化 | dashboard-engine | MySQL(designer_configs) | 统一设计器框架，ECharts 渲染，数据源可视化绑定 |
+| 8 | Excel 导入导出 | ip-lifecycle/device-service | MySQL, MinIO(文件) | openpyxl 处理，Celery 异步导入，部分导入+错误报告 |
+| 9 | 网段使用率告警 | alert-engine | MySQL(alerts), Redis(抑制计数) | 多级阈值，告警升级用 Celery 延时任务，抑制用 Redis TTL |
+| 10 | JWT 鉴权 | auth-service | Redis(Token 黑名单) | RS256 签名，Refresh Token 机制，Token 吊销用 Redis Set |
+| 11 | RBAC 权限 | auth-service | MySQL(roles, user_roles) | 权限树 JSON 存储，角色继承，数据范围控制 |
+| 12 | 系统部署 | 基础设施 | Docker/K8s | Docker Compose + K8s 双模式，环境变量配置 |
+| 13 | 数据持久化 | 基础设施 | MySQL(主从), MinIO(备份) | 事务保证原子性，增量备份用 mysqlbinlog |
+| 14 | API 设计 | api-gateway | - | RESTful + OpenAPI 3.0，统一响应格式，版本控制 |
+| 15 | 前端界面 | Vue 3 前端 | - | Element Plus + 低代码布局编辑器，统一设计器框架 |
+| 16 | 性能可扩展 | 全局 | 分区表, Redis缓存 | 索引优化，CQRS 读写分离，连接池 |
+| 17 | 错误处理 | 全局 | 日志文件, ES | 结构化日志，loguru，日志轮转 |
+| 18 | 安全性 | auth-service, api-gateway | - | bcrypt 密码，参数化查询，速率限制 |
+| 19 | 网络设备集成 | device-service, collector | MySQL, TimescaleDB | SSH/SNMP 采集，Netmiko 库，配置备份版本管理 |
+| 20 | DHCP/DNS 联动 | dhcp-dns-service | MySQL | 事件驱动：IP 分配事件触发 DHCP/DNS 同步 |
+| 21 | 智能 IP 分配 | ip-lifecycle-service | MySQL, Redis | 连续空闲 IP 算法，预留段管理，模板批量创建 |
+| 22 | 多租户隔离 | tenant-service | MySQL(tenants) | 行级租户隔离(tenant_id)，中间件自动注入 |
+| 23 | 合规审计报表 | report-engine | MySQL, MinIO | 拖拽式报表设计器，参数化查询，定时推送 |
+| 24 | CMDB/监控集成 | connector-service | MySQL | REST API 双向同步，Webhook 告警接收 |
+| 25 | API 与 Webhook | api-gateway, connector | MySQL, Redis | API Key 管理，Webhook 事件配置，签名验证 |
+| 26 | 自定义字段表单 | form-engine | MySQL(designer_configs) | 拖拽式表单设计器，字段联动规则引擎，校验规则引擎 |
+| 27 | 数据清洗 | cleaning-service | MySQL | Celery 定时任务，清洗前自动快照，一键修复 |
+| 28 | 容量规划 | prediction-service | MySQL, TimescaleDB | 线性回归预测耗尽时间，模拟扩容 |
+| 29 | 高可用集群 | 基础设施 | MySQL主从, Redis Sentinel | Nginx 负载均衡，健康检查自动重启 |
+| 30 | LDAP 认证 | auth-service | MySQL, LDAP | python-ldap 库，混合认证降级，定时同步 |
+| 31 | 机房管理 | datacenter-service | MySQL(datacenters) | 层级结构(站点>建筑>楼层>机房)，平面图 MinIO 存储 |
+| 32 | 机架管理 | rack-service | MySQL(racks, rack_installations) | U 位可视化，空间/功率双重校验 |
+| 33 | 设备上下架 | rack-service | MySQL(rack_installations) | 批量上架，PDU 端口关联，位置历史记录 |
+| 34 | VLAN 管理 | segment-service | MySQL(vlans) | VLAN-网段-端口三方关联，唯一性校验 |
+| 35 | 网络拓扑线缆 | cable-topology-service | MySQL(cable_connections), ES | LLDP/CDP 自动发现，AntV G6 拓扑渲染，故障影响域分析 |
+| 36 | 统一通知中心 | notification-service | MySQL, Redis | 多渠道(邮件/企微/钉钉)，模板引擎，发送状态追踪 |
+| 37 | NAC 认证管理 | radius-service | MySQL, Redis | 内置 FreeRADIUS，802.1X/Portal/MAC/PPSK 四种模式 |
+| 38 | 终端合规检查 | compliance-service | MySQL | 合规检查项引擎，VLAN 动态切换，CoA 授权变更 |
+| 39 | 华为设备纳管 | collector, netauto-service | MySQL, TimescaleDB | SSH/SNMP 自动发现，RADIUS 客户端自动注册 |
+| 40 | 访客准入 | visitor-service | MySQL | 企微/钉钉扫码，临时账号+有效期，访客 VLAN 隔离 |
+| 41 | 哑终端白名单 | radius-service | MySQL | MAC 白名单批量导入，静态 IP 绑定，窄口径 ACL |
+| 42 | 异常行为封堵 | policy-engine-service | MySQL, Redis | 实时检测引擎，联动交换机封堵，告警升级 |
+| 43 | 准入审计合规 | audit-service | MySQL, ES | 全量准入日志归集，等保 2.0 模板，哈希防篡改 |
+| 44 | 企业微信认证 | auth-service | MySQL | OAuth2.0 对接，组织架构同步，混合认证降级 |
+| 45 | 工单审批流 | ticket-service, workflow-engine | MySQL(tickets, workflow_*) | 拖拽式流程设计器，条件分支，版本管理，模拟测试 |
+| 46 | 网络自动化配置 | netauto-service | MySQL | ZTP 零配置，Netmiko/NAPALM 多厂商适配，配置回滚 |
+| 47 | DCIM 深化管理 | pdu-env-service | MySQL, TimescaleDB | PDU 远程控制，温湿度传感器对接，热力图 |
+| 48 | 条码/RFID 盘点 | inventory-service | MySQL | 二维码生成(qrcode库)，移动端扫码，备品备件库 |
+| 49 | 虚拟化云 IP | ip-lifecycle-service | MySQL | VMware/K8s/公有云 API 对接，生命周期自动同步 |
+| 50 | DNS/DHCP 增强 | dhcp-dns-service | MySQL | PTR 反向解析，DNSSEC，终端指纹，私设 DHCP 检测 |
+| 51 | 公网 IP 管理 | ip-lifecycle-service | MySQL | 内外网分离，运营商/带宽/备案关联 |
+| 52 | 超网聚合地址 | segment-service | MySQL | 树形超网-子网关系，路由汇总可视化 |
+| 53 | 高阶合规审计 | audit-service | MySQL, MinIO | 特权操作录屏(WebSocket录制)，漏洞平台对接 |
+| 54 | SIEM 日志对接 | syslog-service | ES | Syslog/CEF/LEEF 格式输出，实时推送 |
+| 55 | 国产信创适配 | 基础设施 | 达梦/人大金仓(可选) | SQLAlchemy 方言切换，前端浏览器兼容 |
+| 56 | 移动端应用 | Vue 3 移动端 | - | 微信小程序/钉钉应用，响应式布局 |
+| 57 | 高可用大数据 | 基础设施 | MySQL分片, TimescaleDB | 异地多活，分片存储，扫描缓存 |
+| 58 | 知识库管理 | knowledge-service | MySQL, ES | 富文本编辑，资源关联绑定，全文搜索 |
+| 59 | AI 智能分析 | ai-engine-service | MySQL, Redis | 多模型适配层，RAG 知识库问答，流式对话 |
+| 60 | 配置中心 | config-service | MySQL, Redis | 在线修改即时生效，版本管理，敏感字段加密 |
+| 61 | 多语言国际化 | 前端 i18n | - | vue-i18n，时区配置 |
+| 62 | 定时任务调度 | scheduler-service | MySQL, Redis | Celery Beat + 自定义调度面板，任务依赖 |
+| 63 | IP 地图可视化 | dashboard-engine | MySQL | 高德/百度地图 API，站点标注，告警高亮 |
+| 64 | IP 自助门户 | ticket-service | MySQL | 引导式申请，自动推荐网段，进度追踪 |
+| 65 | 变更窗口管理 | change-service | MySQL | 变更窗口拦截中间件，变更计划审批 |
+| 66 | SLA 管理 | sla-service | MySQL | SLA 规则引擎，超时自动升级，达标率报表 |
+| 67 | IP 矩阵视图 | 前端组件 | MySQL | 网格渲染，颜色状态映射，快捷操作 |
+| 68 | 设备端口面板 | 前端组件 | MySQL, TimescaleDB | Canvas 面板渲染，实时状态刷新 |
+| 69 | 流量分析 TOP N | traffic-view-service | TimescaleDB | NetFlow 聚合查询，基线异常检测 |
+| 70 | 回收站 | 全局(软删除) | MySQL(deleted_at) | 逻辑删除，定时清理(30天)，关联恢复 |
+| 71 | 固件管理 | device-service | MySQL, MinIO | 固件库存储，版本巡检，批量升级 |
+| 72 | 合规基线检查 | compliance-service | MySQL | 基线模板，定期扫描，一键修复 |
+| 73 | IP 使用率热力图 | 前端组件 | MySQL | ECharts 热力图，多维度分组 |
+| 74 | 批量操作中心 | 全局 | MySQL | 统一批量操作框架，预览+确认+进度 |
+| 75 | 系统健康监控 | 基础设施 | Prometheus, TimescaleDB | /health 端点，Prometheus 指标暴露 |
+| 76 | 终端自动发现 | terminal-service, collector | MySQL | ARP/SNMP/WMI 多方式发现，指纹识别 |
+| 77 | 终端画像 | terminal-service | MySQL | 硬件/软件/网络/使用人全景，标签管理 |
+| 78 | 终端在线监控 | terminal-service | MySQL, TimescaleDB | Ping/ARP 检测，闲置标记(30天离线) |
+| 79 | 终端安全策略 | compliance-service | MySQL | 策略模板，密码/软件/USB 检查，合规评分 |
+| 80 | 终端分组策略 | terminal-service | MySQL | 动态分组(条件匹配)，静态分组，批量下发 |
+| 81 | 终端行为审计 | audit-service | MySQL, ES | IP 变更/软件安装/外设使用/网络行为记录 |
+| 82 | 数字化大屏 | screen-engine | MySQL(designer_configs) | 拖拽式大屏设计器，自由定位，多分辨率适配 |
+| 83 | 多协议采集引擎 | collector-engine | MySQL, TimescaleDB | 统一采集框架，15+协议支持，凭证集中管理 |
+| 84 | SNMP 采集 | snmp-service | MySQL, TimescaleDB | pysnmp 库，MIB 管理，Trap 接收 |
+| 85 | Syslog 采集 | syslog-service | ES | UDP/TCP/TLS 接收，Grok 解析，告警规则 |
+| 86 | NetFlow 采集 | netflow-service | TimescaleDB | NetFlow v5/v9/IPFIX 解析，流量基线 |
+| 87 | 采集任务调度 | collector-engine | MySQL, Redis | 健康度监控，优先级队列，数据完整性检查 |
+| 88 | 设备性能监控 | performance-service | TimescaleDB | 时序折线图，多设备对比，TOP N 排行 |
+| 89 | Syslog 分析中心 | syslog-view-service | ES | 实时滚动，多维筛选，关联分析 |
+| 90 | 流量分析中心 | traffic-view-service | TimescaleDB | 全网总览，TOP N，桑基图，异常事件 |
+| 91 | 工控/IoT 展示 | iot-view-service | TimescaleDB | Modbus/OPC/BACnet/MQTT 数据展示 |
+| 92 | 全网软件资产 | software-service | MySQL | 软件清单聚合，合规检查，版本一致性 |
+| 93 | 统一检索关联 | search-service | ES | 全局搜索框，标签页分类，时间线视图 |
+| 94 | 智能预警引擎 | prediction-service | MySQL, TimescaleDB | 趋势预测(线性回归/ARIMA)，多维度预警 |
+| 95 | 服务器监控 | performance-service | MySQL, TimescaleDB | SNMP/WMI/SSH 采集，进程/服务监控 |
+| 96 | 桌面运维远程 | helpdesk-service | MySQL | RDP/VNC Web 代理(Guacamole)，软件分发 |
+| 97 | 弱电系统管理 | device-service | MySQL | 弱电设备分类模板，平面图标注，巡检 |
+| 98 | 打印机管理 | device-service | MySQL, TimescaleDB | SNMP 采集状态/耗材，耗材预警 |
+| 99 | 资产全生命周期 | lifecycle-service | MySQL(devices, asset_transfers) | 状态机流转，折旧计算，合同关联 |
+| 100 | 值班排班 | duty-service | MySQL | 排班日历，告警联动值班人，交接记录 |
+| 101 | 全模块关联 | 全局(关联模型) | MySQL(外键), ES | 全局关联模型，关联图谱(AntV G6)，联动更新 |
+| 102 | PKI 证书管理 | radius-service | MySQL, MinIO | 轻量 CA(pyOpenSSL)，证书生命周期，CRL/OCSP |
+| 103 | 多因素认证 | auth-service | MySQL, Redis | TOTP(pyotp)，短信/企微推送，免密记忆 |
+| 104 | 认证策略引擎 | policy-engine-service | MySQL | 可视化规则链，优先级排序，模拟测试 |
+| 105 | 认证日志分析 | audit-service, ai-engine | ES, MySQL | 行为画像，异常检测，基线学习 |
+| 106 | 无线认证增强 | radius-service | MySQL | 多 SSID 策略，漫游无感知，终端定位 |
+| 107 | 用户全景查询 | search-service | ES, MySQL | 以人为中心聚合，流量/应用/认证/位置 |
+| 108 | IT 服务目录 | ticket-service | MySQL | 服务分类，一键提交，AI FAQ |
+| 109 | IT 成本分析 | cost-service | MySQL | 资源单价配置，部门分摊，预算管理 |
+| 110 | 网络质量拨测 | diagnostic-service | MySQL, TimescaleDB | ICMP/TCP/HTTP/DNS 拨测，多节点对比 |
+| 111 | IP 冲突自动修复 | conflict-service | MySQL | 策略配置(告警/隔离/重分配)，联动交换机 |
+| 112 | 设备巡检评分 | performance-service | MySQL | 多维度加权评分，巡检报告，趋势预警 |
+| 113 | 灾备应急预案 | change-service | MySQL | 预案管理，自动化步骤，演练模式 |
+| 114 | 运维周报月报 | value-report-service | MySQL | 模板配置，环比对比，定时推送 |
+| 115 | 统一报表中心 | report-center-service | MySQL | 26+模块报表，时间对比，多格式导出 |
+| 116 | 资产分类体系 | lifecycle-service | MySQL(asset_categories) | 多级分类，专属字段模板，自动编号 |
+| 117 | 资产入库验收 | lifecycle-service | MySQL | 入库流程，采购关联，二维码生成 |
+| 118 | 资产领用调拨 | lifecycle-service | MySQL(asset_transfers) | 领用/调拨/借用审批，流转链 |
+| 119 | 资产维修报废 | lifecycle-service | MySQL | 维修流程，报废审批，数据清除确认 |
+| 120 | 软件许可证 | software-service | MySQL | 许可台账，使用率对比，到期预警 |
+| 121 | 资产盘点增强 | inventory-service | MySQL | 全面/抽样/联网盘点，差异报告，定期计划 |
+| 122 | 合同供应商 | lifecycle-service | MySQL | 合同管理，供应商评价，到期预警 |
+| 123 | 资产月度对比 | value-report-service | MySQL | 月度对比报表，变动明细，资产看板 |
+| 124 | 交换机配置对比 | netauto-service | MySQL, MinIO | Diff 视图，AI 变更摘要，批量对比 |
+| 125 | 终端 Agent | agent-service | MySQL | 轻量 Agent(Python)，批量部署，远程升级 |
+| 126 | 软件安装审计 | software-service | MySQL | 非法软件库，实时监控，审计报告 |
+| 127 | 第三方系统集成 | connector-service | MySQL | 统一集成平台，内置适配器，双向同步 |
+| 128 | 自定义 API 对接 | connector-service | MySQL | 可视化字段映射，Webhook 接收，模板分享 |
+| 129 | 操作引导教程 | 前端组件 | MySQL | 首次登录向导，帮助按钮，案例参考，学习路径 |
+| 130 | 数据源对比 | comparison-service | MySQL | 多数据源逐字段对比，差异处理，定期对比 |
+| 131 | 插件扩展市场 | plugin-service | MySQL, MinIO | 插件化架构，热加载，低代码模块创建，连接器，自动化工作流 |
+| 132 | 管理员层级权限 | auth-service | MySQL(roles) | 层级管理员，功能树勾选，数据范围，AD 同步 |
+| 133 | 网络诊断工具箱 | diagnostic-service | - | Web Ping/Traceroute/端口探测，从设备发起 |
+| 134 | 变更影响预评估 | change-service | MySQL | 依赖链路分析，影响范围报告，Dry Run |
+| 135 | Helpdesk 工作台 | helpdesk-service | MySQL | 待处理工单，终端信息关联，快捷操作 |
+| 136 | 员工自助门户 | 前端页面 | MySQL | 我的资产/网络/软件/工单，自助报障 |
+| 137 | 网络故障自助排查 | 前端组件 | MySQL | 交互式向导，后台自动检测，一键转工单 |
+| 138 | 满意度评价 | ticket-service | MySQL | 多维度评分，满意度报表，低分回访 |
+| 139 | 值班交接看板 | duty-service | MySQL | 自动汇总当班事件，值班日志，交接确认 |
+| 140 | 配置脚本模板 | script-service | MySQL | 参数化模板，语法检查，批量下发 |
+| 141 | 个人工作台 | 前端页面 | MySQL, Redis | 收藏夹，快捷入口，告警订阅 |
+| 142 | Runbook 剧本 | runbook-service | MySQL | 步骤化排障，自动检测嵌入，分支逻辑 |
+| 143 | 工单智能分派 | ticket-service | MySQL | 技能标签匹配，负载均衡，超时重派 |
+| 144 | 设备报修追踪 | ticket-service | MySQL | 自助报修，进度推送，验收评价 |
+| 145 | 网络测速反馈 | diagnostic-service | MySQL | 一键测速，基线对比，一键反馈转工单 |
+| 146 | CLI 终端管理 | 前端组件(xterm.js) | MySQL | Web SSH/Telnet，多标签页，会话录屏 |
+| 147 | 业务服务映射 | business-mapping-service | MySQL | 全链路依赖建模，Impact/RCA 分析 |
+| 148 | 数据生命周期 | lifecycle-data-service | TimescaleDB, MinIO | 降采样策略，冷数据归档，空间监控 |
+| 149 | 被动指纹识别 | fingerprint-service | MySQL | TCP/DHCP/HTTP/MAC/mDNS 指纹，指纹库 |
+| 150 | 分布式事务补偿 | 全局(Saga 引擎) | MySQL, Redis | 事务编排器，步骤+补偿，断点续执 |
+| 151 | API 网关熔断 | api-gateway | Redis, Prometheus | 速率限制，熔断器，降级策略，链路追踪 |
+| 152 | 智能搜索 | search-service, ai-engine | ES | 意图识别，模糊匹配，自然语言查询(AI) |
+| 153 | 操作快照回滚 | lifecycle-data-service | MySQL, MinIO | 系统快照，对比，选择性回滚 |
+| 154 | 特权账号管理 | auth-service | MySQL(加密) | 凭证保险库，自动轮换，临时凭证，录屏 |
+| 155 | 未知资产发现 | fingerprint-service | MySQL | NetFlow/ARP/DNS/DHCP/无线多维发现 |
+| 156 | 数据一致性 | 全局 | MySQL(事务), Redis(锁) | ACID 事务，最终一致性，幂等设计，乐观锁 |
+| 157 | 用户体验规范 | 前端全局 | - | 二次确认，进度条，草稿保存，撤销 |
+| 158 | 资产折旧财务 | lifecycle-service | MySQL | 多折旧方法，月度计算，会计分录导出 |
+| 159 | 变更健康验证 | change-service | MySQL | 自动验证，分级结果，自动回滚触发 |
+| 160 | 业务事件标记 | 全局 | MySQL | 时间轴事件标记，数据快照关联 |
+| 161 | 告警风暴压缩 | alert-engine | MySQL, Redis | 拓扑关联根因分析，压缩展示，批量恢复 |
+| 162 | 故障自愈引擎 | runbook-service | MySQL | 自愈剧本，自动执行+验证，快照回滚 |
+| 163 | 3D 机房可视化 | 前端组件(Three.js) | MySQL | 3D 模型，实时数据叠加，交互 |
+| 164 | 低代码表单引擎 | form-engine | MySQL(designer_configs) | 拖拽设计，自动生成 CRUD+API |
+| 165 | 低代码逻辑编排 | automation-service | MySQL | 可视化连线，触发器+条件+动作，调试模式 |
+| 166 | 跨系统数据对账 | comparison-service | MySQL | 对账规则，定时对比，差异报告 |
+| 167 | 上下文感知助手 | ai-engine-service | ES, Redis | 预加载关联数据，AI 推荐方案 |
+| 168 | UEBA 行为分析 | ai-engine-service | MySQL, ES | 行为基线，异常检测，动态脱敏 |
+| 169 | IT 碳排放追踪 | cost-service | MySQL | 功耗×碳因子，节能建议，目标追踪 |
+| 170 | 离线应急门户 | 前端 + Service Worker | 本地缓存 | 静态 HTML 降级，移动端离线缓存 |
+| 171 | 效率量化看板 | efficiency-service | MySQL | 基线对比，MTTD/MTTR，人力成本折算 |
+| 172 | 成本节省分析 | cost-service | MySQL | 多维度成本节省，参数可配，月度趋势 |
+| 173 | 风险规避量化 | cost-service | MySQL | 非法接入/违规软件/预警避免，金额换算 |
+| 174 | 部门效率排行 | efficiency-service | MySQL | 多维度评分，雷达图，优化建议 |
+| 175 | ROI 计算器 | roi-service | MySQL | 投入vs收益，回收期，年化收益率 |
+| 176 | IT 价值月报 | value-report-service | MySQL | 一页 A4 PDF，6 区块，自动推送 |
+| 177 | 降本增效指标 | efficiency-service | MySQL | 四维指标体系，80%自动采集 |
+| 178 | 场景化价值分析 | value-report-service | MySQL | 场景模板，故事化呈现，量化成果 |
+| 179 | 管理层驾驶舱 | 前端页面 | MySQL | 四核心卡片，趋势图，场景卡片 |
+| 180 | 季度评审闭环 | value-report-service | MySQL | 目标设定，达成对比，AI 改进建议 |
+| 181 | AI 生成 PPT | ppt-engine, ai-engine | MySQL, MinIO | AI 数据采集+图表+文案，拖拽编辑器，协作编辑 |
