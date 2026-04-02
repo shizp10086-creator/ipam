@@ -1,31 +1,50 @@
-# FastAPI and web framework
+# FastAPI 和 Web 框架
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
 python-multipart==0.0.6
 
-# HTTP client (for ping proxy)
+# HTTP 客户端
 aiohttp==3.9.1
+httpx==0.27.0
 
-# Database
+# 数据库 - MySQL
 sqlalchemy==2.0.23
 pymysql==1.1.0
 alembic==1.12.1
 
-# Data validation
+# 数据验证
 pydantic==2.5.0
 pydantic-settings==2.1.0
 email-validator==2.1.0
 
-# Authentication
+# 认证
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 bcrypt==4.1.1
 
-# Excel processing
+# Excel 处理
 openpyxl==3.1.2
 
-# Utilities
+# 工具库
 python-dotenv==1.0.0
 
-# CORS
-fastapi-cors==0.0.6
+# IP 地址计算
+netaddr==1.3.0
+
+# Redis 缓存与分布式锁
+redis==5.0.1
+
+# Celery 任务队列
+celery[redis]==5.3.6
+
+# RabbitMQ 客户端（事件总线，后续启用）
+# aio-pika==9.4.0
+
+# Elasticsearch（全文搜索，后续启用）
+# elasticsearch[async]==8.12.0
+
+# 测试
+pytest==7.4.3
+pytest-asyncio==0.23.2
+hypothesis==6.92.1
+factory-boy==3.3.1

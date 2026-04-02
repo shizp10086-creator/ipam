@@ -2,7 +2,7 @@
 IP Address Pydantic Schemas
 定义 IP 地址相关的请求和响应数据模式
 """
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, validator, field_validator
 from typing import Optional
 from datetime import datetime
 import ipaddress
@@ -307,3 +307,95 @@ class ScanHistoryResponse(BaseModel):
             created_by=obj.created_by,
             created_at=obj.created_at
         )
+
+
+# ==================== 扩展 Schema ====================
+
+class IPAllocateRequestV2(BaseModel):
+    """IP 分配请求 - 扩展版（支持自动分配和标签）"""
+    segment_id: int = Field(..., description="所属网段 ID")
+    ip_address: Optional[str] = Field(None, description="指定 IP 地址（不填则自动分配）")
+    auto_allocate: bool = Field(False, description="是否自动分配（优先连续空闲 IP）")
+    device_id: Optional[int] = Field(None, description="关联设备 ID")
+    responsible_person: Optional[str] = Field(None, description="责任人")
+    department: Optional[str] = Field(None, description="所属部门")
+    reason: Optional[str] = Field(None, description="分配原因")
+    dns_name: Optional[str] = Field(None, description="DNS 域名")
+    tags: Optional[list[str]] = Field(default=[], description="标签列表")
+    # 临时 IP
+    is_temporary: bool = Field(False, description="是否为临时 IP")
+    temporary_hours: Optional[int] = Field(None, ge=1, description="临时 IP 有效时长（小时）")
+
+    @field_validator("ip_address")
+    @classmethod
+    def validate_ip(cls, v):
+        if v is not None:
+            import ipaddress as ip_mod
+            try:
+                ip_mod.ip_address(v)
+            except ValueError:
+                raise ValueError("IP 地址格式无效")
+        return v
+
+
+class IPBatchAllocateRequest(BaseModel):
+    """批量分配 IP 请求"""
+    segment_id: int = Field(..., description="所属网段 ID")
+    count: int = Field(..., ge=1, le=256, description="分配数量")
+    device_ids: Optional[list[int]] = Field(None, description="关联设备 ID 列表（与 count 对应）")
+    responsible_person: Optional[str] = None
+    department: Optional[str] = None
+    reason: Optional[str] = None
+    tags: Optional[list[str]] = Field(default=[])
+
+
+class IPReleaseRequestV2(BaseModel):
+    """IP 回收请求 - 扩展版"""
+    ip_id: Optional[int] = Field(None, description="IP 记录 ID")
+    ip_address: Optional[str] = Field(None, description="IP 地址")
+    reason: Optional[str] = Field(None, description="回收原因")
+
+
+class IPStatusChangeRequest(BaseModel):
+    """IP 状态变更请求"""
+    status: str = Field(..., description="目标状态: available/used/reserved/temporary")
+    reason: Optional[str] = Field(None, description="变更原因")
+    reservation_reason: Optional[str] = Field(None, description="保留原因（status=reserved 时）")
+    reservation_expires_at: Optional[str] = Field(None, description="保留过期时间（ISO 格式）")
+    temporary_hours: Optional[int] = Field(None, ge=1, description="临时有效时长（小时）")
+    version: int = Field(..., description="当前版本号（乐观锁）")
+
+    @field_validator("status")
+    @classmethod
+    def validate_status(cls, v):
+        valid = {"available", "used", "reserved", "temporary"}
+        if v not in valid:
+            raise ValueError(f"状态必须是: {', '.join(valid)}")
+        return v
+
+
+class IPLifecycleLogResponse(BaseModel):
+    """IP 生命周期日志响应"""
+    id: int
+    ip_address: str
+    action: str
+    old_status: Optional[str] = None
+    new_status: Optional[str] = None
+    operator_name: Optional[str] = None
+    reason: Optional[str] = None
+    details: Optional[dict] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class IPMatrixItem(BaseModel):
+    """IP 矩阵视图单元格"""
+    ip_address: str
+    status: str
+    device_name: Optional[str] = None
+    responsible_person: Optional[str] = None
+    hostname: Optional[str] = None
+    allocated_at: Optional[datetime] = None
+    is_online: bool = False

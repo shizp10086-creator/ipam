@@ -12,8 +12,11 @@ from app.core.middleware import (
     RateLimitMiddleware,
     SecurityHeadersMiddleware,
     SecurityLogMiddleware,
-    RequestValidationMiddleware
+    RequestValidationMiddleware,
+    TraceIDMiddleware,
+    ResponseTimeMiddleware,
 )
+from app.core.tenant_middleware import TenantIsolationMiddleware
 from app.core.exceptions import register_exception_handlers
 
 # Configure logging
@@ -124,11 +127,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Add security middleware
+# 添加中间件（注意顺序：最先添加的最后执行）
 app.add_middleware(RequestValidationMiddleware)
 app.add_middleware(SecurityLogMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(RateLimitMiddleware, calls=100, period=60)
+app.add_middleware(TenantIsolationMiddleware)
+app.add_middleware(ResponseTimeMiddleware)
+app.add_middleware(TraceIDMiddleware)
 
 # Register exception handlers
 register_exception_handlers(app)
@@ -159,9 +165,19 @@ async def root():
 
 
 # Include API routers
-from app.api import ip_addresses, devices, network_segments, users, auth, alerts, logs, dashboard, import_export, search
+from app.api import ip_addresses, devices, network_segments, users, auth, alerts, logs, dashboard, import_export, search, tenants, designer
+from app.domains.dcim.api import router as dcim_router
+from app.domains.collector.api import router as collector_router
+from app.domains.nac.api import router as nac_router
+from app.domains.asset.terminal_api import router as terminal_router
 
 app.include_router(auth.router, prefix="/api/v1", tags=["Authentication"])
+app.include_router(tenants.router, prefix="/api/v1/tenants", tags=["Tenants"])
+app.include_router(designer.router, prefix="/api/v1/designer", tags=["Designer"])
+app.include_router(dcim_router, prefix="/api/v1/dcim", tags=["DCIM"])
+app.include_router(collector_router, prefix="/api/v1/collector", tags=["Collector"])
+app.include_router(nac_router, prefix="/api/v1/nac", tags=["NAC"])
+app.include_router(terminal_router, prefix="/api/v1/assets", tags=["Terminals"])
 app.include_router(search.router, prefix="/api/v1/search", tags=["Search"])
 app.include_router(ip_addresses.router, prefix="/api/v1/ips", tags=["IP Addresses"])
 app.include_router(devices.router, prefix="/api/v1/devices", tags=["Devices"])

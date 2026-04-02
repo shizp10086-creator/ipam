@@ -1,6 +1,6 @@
 """
-Global Exception Handlers
-全局异常处理器
+全局异常处理器。
+统一使用 APIResponse 格式返回错误信息。
 """
 import logging
 import traceback
@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from pydantic import ValidationError
+from app.core.response import APIResponse
 
 logger = logging.getLogger(__name__)
 
@@ -26,14 +27,13 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
         f"Traceback:\n{traceback.format_exc()}"
     )
     
-    # 返回通用错误响应（不暴露内部错误详情）
+    # 返回统一格式错误响应（不暴露内部错误详情）
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={
-            "code": 500,
-            "message": "Internal server error",
-            "detail": "An unexpected error occurred. Please try again later."
-        }
+        content=APIResponse.error(
+            code=500,
+            message="服务器内部错误，请稍后重试",
+        )
     )
 
 
@@ -63,12 +63,11 @@ async def validation_exception_handler(
     
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        content={
-            "code": 422,
-            "message": "Validation error",
-            "detail": "Request validation failed",
-            "errors": errors
-        }
+        content=APIResponse.error(
+            code=422,
+            message="请求参数验证失败",
+            data={"errors": errors},
+        )
     )
 
 
@@ -91,22 +90,19 @@ async def database_exception_handler(
     if isinstance(exc, IntegrityError):
         return JSONResponse(
             status_code=status.HTTP_409_CONFLICT,
-            content={
-                "code": 409,
-                "message": "Database constraint violation",
-                "detail": "The operation violates a database constraint. "
-                         "This may be due to duplicate data or foreign key constraints."
-            }
+            content=APIResponse.error(
+                code=409,
+                message="数据约束冲突，可能存在重复数据或外键约束",
+            )
         )
     
     # 其他数据库错误
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={
-            "code": 500,
-            "message": "Database error",
-            "detail": "A database error occurred. Please try again later."
-        }
+        content=APIResponse.error(
+            code=500,
+            message="数据库错误，请稍后重试",
+        )
     )
 
 
@@ -123,11 +119,10 @@ async def value_error_handler(request: Request, exc: ValueError) -> JSONResponse
     
     return JSONResponse(
         status_code=status.HTTP_400_BAD_REQUEST,
-        content={
-            "code": 400,
-            "message": "Invalid value",
-            "detail": str(exc)
-        }
+        content=APIResponse.error(
+            code=400,
+            message=str(exc),
+        )
     )
 
 

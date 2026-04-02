@@ -21,6 +21,44 @@ services:
     networks:
       - ipam-network
 
+  # Redis 缓存与任务队列
+  redis:
+    image: redis:7.0-alpine
+    container_name: ipam-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ipam-network
+
+  # RabbitMQ 事件总线
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: ipam-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ipam-network
+
   # Backend API (FastAPI)
   backend:
     build:
@@ -34,6 +72,10 @@ services:
       - MYSQL_USER=ipam
       - MYSQL_PASSWORD=ipam_password
       - MYSQL_DATABASE=ipam_db
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
       - USE_PING_PROXY=true
       - PING_PROXY_URL=http://host.docker.internal:8001
       - PING_SOURCE_IP=
@@ -44,6 +86,8 @@ services:
       - backend_logs:/app/logs
     depends_on:
       mysql:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
@@ -72,8 +116,91 @@ services:
     networks:
       - ipam-network
 
+  # Celery Worker（异步任务处理）
+  celery-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ipam-celery-worker
+    restart: unless-stopped
+    command: celery -A app.core.celery_app worker --loglevel=info --concurrency=4
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_PORT=3306
+      - MYSQL_USER=ipam
+      - MYSQL_PASSWORD=ipam_password
+      - MYSQL_DATABASE=ipam_db
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+    volumes:
+      - ./backend:/app
+      - backend_logs:/app/logs
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - ipam-network
+
+  # Celery Beat（定时任务调度）
+  celery-beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ipam-celery-beat
+    restart: unless-stopped
+    command: celery -A app.core.celery_app beat --loglevel=info
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_PORT=3306
+      - MYSQL_USER=ipam
+      - MYSQL_PASSWORD=ipam_password
+      - MYSQL_DATABASE=ipam_db
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      - ./backend:/app
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - ipam-network
+
+  # MinIO 对象存储（文件上传/配置备份/冷数据归档）
+  minio:
+    image: minio/minio:latest
+    container_name: ipam-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ipam-network
+
 volumes:
   mysql_data:
+    driver: local
+  redis_data:
+    driver: local
+  rabbitmq_data:
+    driver: local
+  minio_data:
     driver: local
   backend_logs:
     driver: local

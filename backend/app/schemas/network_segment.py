@@ -1,6 +1,8 @@
 """
-Network Segment Pydantic Schemas
-定义网段相关的请求和响应数据模式
+网段 Pydantic Schema - 扩展版。
+
+新增：cidr 字段、parent_id 子网嵌套、group_id 分组、tags 标签、
+多级告警阈值、tenant_id、自定义字段、强制删除参数。
 """
 from pydantic import BaseModel, Field, field_validator
 from typing import Optional
@@ -8,115 +10,143 @@ from datetime import datetime
 from app.utils.ip_utils import validate_cidr
 
 
-class NetworkSegmentBase(BaseModel):
-    """网段基础模式"""
+class NetworkSegmentCreate(BaseModel):
+    """创建网段请求"""
     name: str = Field(..., min_length=1, max_length=100, description="网段名称")
-    company: Optional[str] = Field(None, max_length=100, description="所属公司")
-    network: str = Field(..., description="网络地址 (如 192.168.1.0)")
-    prefix_length: int = Field(..., ge=8, le=30, description="前缀长度 (如 24)")
+    cidr: str = Field(..., description="CIDR 表示法（如 192.168.1.0/24）")
     gateway: Optional[str] = Field(None, description="网关地址")
     description: Optional[str] = Field(None, description="描述")
-    usage_threshold: int = Field(80, ge=0, le=100, description="使用率告警阈值（百分比）")
-    
-    @field_validator('network', 'gateway')
+    company: Optional[str] = Field(None, max_length=100, description="所属公司")
+    business_group: Optional[str] = Field(None, max_length=200, description="所属业务组")
+    parent_id: Optional[int] = Field(None, description="父网段ID（子网嵌套）")
+    group_id: Optional[int] = Field(None, description="所属分组ID")
+    tags: Optional[list[str]] = Field(default=[], description="标签列表")
+    custom_fields: Optional[dict] = Field(default={}, description="自定义字段")
+    alert_threshold_warning: int = Field(80, ge=0, le=100, description="警告阈值")
+    alert_threshold_critical: int = Field(90, ge=0, le=100, description="严重阈值")
+
+    @field_validator("cidr")
     @classmethod
-    def validate_ip_format(cls, v):
-        """验证 IP 地址格式"""
+    def validate_cidr_format(cls, v):
+        is_valid, error_msg, _ = validate_cidr(v)
+        if not is_valid:
+            raise ValueError(error_msg)
+        return v
+
+    @field_validator("gateway")
+    @classmethod
+    def validate_gateway(cls, v):
         if v is None:
             return v
-        
         import ipaddress
         try:
             ipaddress.ip_address(v)
         except ValueError:
-            raise ValueError(f'Invalid IP address format')
-        return v
-
-
-class NetworkSegmentCreate(NetworkSegmentBase):
-    """创建网段的请求模式"""
-    
-    @field_validator('prefix_length')
-    @classmethod
-    def validate_cidr_format(cls, v, info):
-        """验证 CIDR 格式的完整性"""
-        # 当两个字段都存在时，验证 CIDR 格式
-        if 'network' in info.data:
-            cidr = f"{info.data['network']}/{v}"
-            is_valid, error_msg, _ = validate_cidr(cidr)
-            if not is_valid:
-                raise ValueError(error_msg)
+            raise ValueError("网关地址格式无效")
         return v
 
 
 class NetworkSegmentUpdate(BaseModel):
-    """更新网段的请求模式"""
-    name: Optional[str] = Field(None, min_length=1, max_length=100, description="网段名称")
-    company: Optional[str] = Field(None, max_length=100, description="所属公司")
-    gateway: Optional[str] = Field(None, description="网关地址")
-    description: Optional[str] = Field(None, description="描述")
-    usage_threshold: Optional[int] = Field(None, ge=0, le=100, description="使用率告警阈值（百分比）")
-    
-    @field_validator('gateway')
+    """更新网段请求"""
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    gateway: Optional[str] = None
+    description: Optional[str] = None
+    company: Optional[str] = None
+    business_group: Optional[str] = None
+    group_id: Optional[int] = None
+    tags: Optional[list[str]] = None
+    custom_fields: Optional[dict] = None
+    alert_threshold_warning: Optional[int] = Field(None, ge=0, le=100)
+    alert_threshold_critical: Optional[int] = Field(None, ge=0, le=100)
+    version: int = Field(..., description="当前版本号（乐观锁）")
+
+    @field_validator("gateway")
     @classmethod
-    def validate_gateway_format(cls, v):
-        """验证网关地址格式"""
+    def validate_gateway(cls, v):
         if v is None:
             return v
-        
         import ipaddress
         try:
             ipaddress.ip_address(v)
         except ValueError:
-            raise ValueError('Invalid gateway IP address format')
+            raise ValueError("网关地址格式无效")
         return v
 
 
-class NetworkSegmentResponse(NetworkSegmentBase):
-    """网段响应模式"""
-    id: int = Field(..., description="网段 ID")
-    created_by: int = Field(..., description="创建人 ID")
-    created_at: datetime = Field(..., description="创建时间")
-    updated_at: datetime = Field(..., description="更新时间")
-    
+class NetworkSegmentResponse(BaseModel):
+    """网段响应"""
+    id: int
+    tenant_id: int = 1
+    name: str
+    cidr: Optional[str] = None
+    network: str
+    broadcast: Optional[str] = None
+    prefix_length: int
+    ip_version: int = 4
+    gateway: Optional[str] = None
+    description: Optional[str] = None
+    company: Optional[str] = None
+    business_group: Optional[str] = None
+    parent_id: Optional[int] = None
+    group_id: Optional[int] = None
+    tags: Optional[list] = []
+    custom_fields: Optional[dict] = {}
+    total_ips: int = 0
+    used_ips: int = 0
+    reserved_ips: int = 0
+    temporary_ips: int = 0
+    usage_rate: float = 0.0
+    alert_threshold_warning: int = 80
+    alert_threshold_critical: int = 90
+    status: str = "active"
+    version: int = 1
+    usage_threshold: int = 80
+    created_by: Optional[int] = None
+    created_at: datetime
+    updated_at: datetime
+
     class Config:
         from_attributes = True
 
 
 class NetworkSegmentWithStats(NetworkSegmentResponse):
-    """带统计信息的网段响应模式"""
-    total_ips: int = Field(..., description="总 IP 数量")
-    used_ips: int = Field(..., description="已用 IP 数量")
-    available_ips: int = Field(..., description="可用 IP 数量")
-    reserved_ips: int = Field(..., description="保留 IP 数量")
-    usage_rate: float = Field(..., description="使用率（百分比）")
+    """带统计信息的网段响应"""
+    available_ips: int = 0
+    online_ips: int = 0
+    offline_ips: int = 0
+    children_count: int = 0
 
 
 class NetworkSegmentStatsResponse(BaseModel):
-    """网段统计信息响应模式"""
-    segment_id: int = Field(..., description="网段 ID")
-    total_ips: int = Field(..., description="总 IP 数量")
-    used_ips: int = Field(..., description="已用 IP 数量")
-    available_ips: int = Field(..., description="可用 IP 数量")
-    reserved_ips: int = Field(..., description="保留 IP 数量")
-    online_ips: int = Field(..., description="在线 IP 数量")
-    offline_ips: int = Field(..., description="离线 IP 数量")
-    usage_rate: float = Field(..., description="使用率（百分比）")
-    network_info: dict = Field(..., description="网段范围信息")
+    """网段统计信息"""
+    segment_id: int
+    total_ips: int = 0
+    used_ips: int = 0
+    available_ips: int = 0
+    reserved_ips: int = 0
+    online_ips: int = 0
+    offline_ips: int = 0
+    usage_rate: float = 0.0
+    network_info: dict = {}
 
 
-class NetworkSegmentListQuery(BaseModel):
-    """网段列表查询参数"""
-    name: Optional[str] = Field(None, description="按名称模糊搜索")
-    page: int = Field(1, ge=1, description="页码")
-    page_size: int = Field(20, ge=1, le=100, description="每页数量")
-    sort_by: Optional[str] = Field("created_at", description="排序字段")
-    sort_order: Optional[str] = Field("desc", description="排序顺序: asc/desc")
-    
-    @field_validator('sort_order')
-    @classmethod
-    def validate_sort_order(cls, v):
-        """验证排序顺序"""
-        if v not in ["asc", "desc"]:
-            raise ValueError("Sort order must be 'asc' or 'desc'")
-        return v
+class SegmentGroupCreate(BaseModel):
+    """创建网段分组"""
+    name: str = Field(..., min_length=1, max_length=200)
+    parent_id: Optional[int] = None
+    description: Optional[str] = None
+    sort_order: int = 0
+
+
+class SegmentGroupResponse(BaseModel):
+    """网段分组响应"""
+    id: int
+    tenant_id: int
+    name: str
+    parent_id: Optional[int] = None
+    description: Optional[str] = None
+    sort_order: int = 0
+    created_at: datetime
+
+    class Config:
+        from_attributes = True

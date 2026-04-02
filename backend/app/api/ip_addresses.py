@@ -287,3 +287,214 @@ async def update_ip_address(ip_id: int, ip_update: IPAddressUpdate, db: Session 
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to update IP address: {str(e)}")
+
+
+# ==================== 扩展端点 ====================
+
+from app.schemas.ip_address import (
+    IPAllocateRequestV2, IPBatchAllocateRequest, IPReleaseRequestV2,
+    IPStatusChangeRequest, IPLifecycleLogResponse, IPMatrixItem,
+)
+from app.models.ip_address import IPLifecycleLog
+from app.models.network_segment import NetworkSegment
+from app.core.response import APIResponse
+
+
+@router.post("/v2/allocate", summary="分配 IP（扩展版，支持自动分配）")
+async def allocate_ip_v2(
+    data: IPAllocateRequestV2,
+    db: Session = Depends(get_db),
+):
+    """
+    分配 IP 地址。
+    
+    支持两种模式：
+    - 手动指定：提供 ip_address
+    - 自动分配：设置 auto_allocate=true，系统自动选择连续空闲 IP
+    """
+    from datetime import datetime, timedelta
+
+    segment = db.query(NetworkSegment).filter(NetworkSegment.id == data.segment_id).first()
+    if not segment:
+        raise HTTPException(404, "网段不存在")
+
+    if data.auto_allocate and not data.ip_address:
+        # 自动分配：查找第一个空闲 IP
+        ip_record = db.query(IPAddress).filter(
+            IPAddress.segment_id == data.segment_id,
+            IPAddress.status == "available",
+            IPAddress.deleted_at.is_(None),
+        ).order_by(IPAddress.ip_address).first()
+
+        if not ip_record:
+            raise HTTPException(400, "该网段无可用 IP 地址")
+    else:
+        # 手动指定
+        if not data.ip_address:
+            raise HTTPException(400, "请指定 IP 地址或启用自动分配")
+        ip_record = db.query(IPAddress).filter(
+            IPAddress.ip_address == data.ip_address,
+            IPAddress.deleted_at.is_(None),
+        ).first()
+        if not ip_record:
+            raise HTTPException(404, f"IP 地址 {data.ip_address} 不存在")
+
+    if ip_record.status not in ("available",):
+        raise HTTPException(400, f"IP {ip_record.ip_address} 当前状态为 {ip_record.status}，无法分配")
+
+    # 更新 IP 状态
+    old_status = ip_record.status
+    ip_record.status = "temporary" if data.is_temporary else "used"
+    ip_record.device_id = data.device_id
+    ip_record.responsible_person = data.responsible_person
+    ip_record.department = data.department
+    ip_record.allocation_reason = data.reason
+    ip_record.dns_name = data.dns_name
+    ip_record.tags = data.tags or []
+    ip_record.allocated_at = datetime.utcnow()
+
+    if data.is_temporary and data.temporary_hours:
+        ip_record.temporary_expires_at = datetime.utcnow() + timedelta(hours=data.temporary_hours)
+
+    ip_record.version += 1
+
+    # 更新网段使用率
+    if data.is_temporary:
+        segment.temporary_ips = (segment.temporary_ips or 0) + 1
+    else:
+        segment.used_ips = (segment.used_ips or 0) + 1
+    segment.recalculate_usage()
+
+    # 记录生命周期日志
+    log = IPLifecycleLog(
+        tenant_id=ip_record.tenant_id,
+        ip_address_id=ip_record.id,
+        ip_address=ip_record.ip_address,
+        action="allocate",
+        old_status=old_status,
+        new_status=ip_record.status,
+        device_id=data.device_id,
+        reason=data.reason,
+        details={"auto_allocate": data.auto_allocate, "tags": data.tags},
+    )
+    db.add(log)
+    db.commit()
+    db.refresh(ip_record)
+
+    return APIResponse.success(data={
+        "id": ip_record.id,
+        "ip_address": ip_record.ip_address,
+        "status": ip_record.status,
+        "segment_id": ip_record.segment_id,
+    }, code=201, message="IP 分配成功")
+
+
+@router.post("/{ip_id}/release", summary="回收 IP")
+async def release_ip_v2(
+    ip_id: int,
+    reason: Optional[str] = None,
+    db: Session = Depends(get_db),
+):
+    """回收 IP 地址，状态变为 available。"""
+    from datetime import datetime
+
+    ip_record = db.query(IPAddress).filter(IPAddress.id == ip_id).first()
+    if not ip_record:
+        raise HTTPException(404, "IP 不存在")
+    if ip_record.status == "available":
+        raise HTTPException(400, "IP 已经是空闲状态")
+
+    old_status = ip_record.status
+    segment = db.query(NetworkSegment).filter(NetworkSegment.id == ip_record.segment_id).first()
+
+    # 更新网段计数
+    if segment:
+        if old_status == "used":
+            segment.used_ips = max((segment.used_ips or 0) - 1, 0)
+        elif old_status == "reserved":
+            segment.reserved_ips = max((segment.reserved_ips or 0) - 1, 0)
+        elif old_status == "temporary":
+            segment.temporary_ips = max((segment.temporary_ips or 0) - 1, 0)
+        segment.recalculate_usage()
+
+    ip_record.status = "available"
+    ip_record.device_id = None
+    ip_record.responsible_person = None
+    ip_record.department = None
+    ip_record.allocation_reason = None
+    ip_record.dns_name = None
+    ip_record.reservation_reason = None
+    ip_record.reservation_expires_at = None
+    ip_record.temporary_expires_at = None
+    ip_record.released_at = datetime.utcnow()
+    ip_record.version += 1
+
+    log = IPLifecycleLog(
+        tenant_id=ip_record.tenant_id,
+        ip_address_id=ip_record.id,
+        ip_address=ip_record.ip_address,
+        action="release",
+        old_status=old_status,
+        new_status="available",
+        reason=reason,
+    )
+    db.add(log)
+    db.commit()
+
+    return APIResponse.success(message="IP 回收成功")
+
+
+@router.get("/{ip_id}/history", summary="获取 IP 生命周期日志")
+async def get_ip_history(
+    ip_id: int,
+    skip: int = 0,
+    limit: int = 50,
+    db: Session = Depends(get_db),
+):
+    """获取指定 IP 的完整使用历史。"""
+    logs = db.query(IPLifecycleLog).filter(
+        IPLifecycleLog.ip_address_id == ip_id,
+    ).order_by(IPLifecycleLog.created_at.desc()).offset(skip).limit(limit).all()
+
+    total = db.query(IPLifecycleLog).filter(IPLifecycleLog.ip_address_id == ip_id).count()
+
+    return APIResponse.success(data={
+        "items": [IPLifecycleLogResponse.model_validate(l).model_dump() for l in logs],
+        "total": total,
+    })
+
+
+@router.get("/segment/{segment_id}/matrix", summary="获取网段 IP 矩阵视图")
+async def get_ip_matrix(
+    segment_id: int,
+    db: Session = Depends(get_db),
+):
+    """
+    获取网段内所有 IP 的矩阵视图数据。
+    每个 IP 返回状态、关联设备、责任人等信息，用于前端网格展示。
+    """
+    ips = db.query(IPAddress).filter(
+        IPAddress.segment_id == segment_id,
+        IPAddress.deleted_at.is_(None),
+    ).order_by(IPAddress.ip_address).all()
+
+    items = []
+    for ip in ips:
+        device_name = None
+        if ip.device_id and ip.device:
+            device_name = ip.device.name if hasattr(ip.device, 'name') else None
+        items.append(IPMatrixItem(
+            ip_address=ip.ip_address,
+            status=ip.status,
+            device_name=device_name,
+            responsible_person=ip.responsible_person,
+            hostname=ip.hostname,
+            allocated_at=ip.allocated_at,
+            is_online=ip.is_online,
+        ).model_dump())
+
+    return APIResponse.success(data={
+        "segment_id": segment_id,
+        "items": items,
+        "total": len(items),
+    })

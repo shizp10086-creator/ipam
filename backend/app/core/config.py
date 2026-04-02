@@ -46,9 +46,9 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
     ENVIRONMENT: str = "development"  # development, production
     
-    # Database Connection Pool Configuration
-    DB_POOL_SIZE: int = 10
-    DB_MAX_OVERFLOW: int = 20
+    # 数据库连接池配置
+    DB_POOL_SIZE: int = 20
+    DB_MAX_OVERFLOW: int = 40
     DB_POOL_TIMEOUT: int = 30
     DB_POOL_RECYCLE: int = 3600
     
@@ -58,7 +58,27 @@ class Settings(BaseSettings):
     DEFAULT_ADMIN_EMAIL: str = "admin@ipam.local"
     DEFAULT_ADMIN_FULLNAME: str = "System Administrator"
     
-    # Ping Configuration
+    # Redis 配置
+    REDIS_HOST: str = "redis"
+    REDIS_PORT: int = 6379
+    REDIS_PASSWORD: str = ""
+    REDIS_DB: int = 0
+
+    @property
+    def REDIS_URL(self) -> str:
+        """构建 Redis 连接 URL"""
+        if self.REDIS_PASSWORD:
+            return f"redis://:{self.REDIS_PASSWORD}@{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
+        return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
+
+    # RabbitMQ 配置（事件总线）
+    RABBITMQ_HOST: str = "rabbitmq"
+    RABBITMQ_PORT: int = 5672
+    RABBITMQ_USER: str = "guest"
+    RABBITMQ_PASSWORD: str = "guest"
+    RABBITMQ_VHOST: str = "/"
+
+    # Ping 配置
     USE_PING_PROXY: bool = False
     PING_PROXY_URL: str = "http://localhost:8001"
     PING_SOURCE_IP: str = ""

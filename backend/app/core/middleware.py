@@ -249,3 +249,45 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
         
         response = await call_next(request)
         return response
+
+
+class TraceIDMiddleware(BaseHTTPMiddleware):
+    """
+    链路追踪中间件。
+    
+    为每个请求生成唯一 TraceID，贯穿整个请求生命周期。
+    TraceID 会出现在：响应头、日志、统一响应体中。
+    """
+
+    async def dispatch(self, request: Request, call_next: Callable) -> Response:
+        import uuid
+        from app.core.response import trace_id_var
+
+        # 优先使用客户端传入的 TraceID，否则自动生成
+        trace_id = request.headers.get("X-Trace-ID", str(uuid.uuid4()))
+        
+        # 设置到上下文变量（供 APIResponse 使用）
+        token = trace_id_var.set(trace_id)
+
+        try:
+            response = await call_next(request)
+            # 在响应头中返回 TraceID
+            response.headers["X-Trace-ID"] = trace_id
+            return response
+        finally:
+            trace_id_var.reset(token)
+
+
+class ResponseTimeMiddleware(BaseHTTPMiddleware):
+    """
+    响应时间记录中间件。
+    
+    在响应头中添加 X-Process-Time，便于性能监控。
+    """
+
+    async def dispatch(self, request: Request, call_next: Callable) -> Response:
+        start_time = time.time()
+        response = await call_next(request)
+        process_time = time.time() - start_time
+        response.headers["X-Process-Time"] = f"{process_time:.4f}"
+        return response
