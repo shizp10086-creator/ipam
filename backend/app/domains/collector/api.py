@@ -1,5 +1,5 @@
 """
-数据采集域 API — 采集任务管理、凭证管理、执行日志。
+数据采集API 采集任务管理、凭证管理、执行日志
 """
 import logging
 from typing import Optional
@@ -99,7 +99,7 @@ def run_task(task_id: int, db: Session = Depends(get_db)):
     if not task:
         raise HTTPException(404, "任务不存在")
     # TODO: 通过 Celery 异步执行采集任务
-    task.last_run_at = datetime.utcnow()
+    task.last_run_at = datetime.now()
     task.last_run_status = "queued"
     task.total_runs += 1
     db.commit()

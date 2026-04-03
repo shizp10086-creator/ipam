@@ -20,7 +20,7 @@ class OperationLogResponse(BaseModel):
     details: Optional[str] = None
     ip_address: Optional[str] = None
     created_at: datetime
-    
+
     class Config:
         from_attributes = True
         orm_mode = True

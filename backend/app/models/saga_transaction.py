@@ -1,5 +1,5 @@
 """
-Saga 事务持久化模型。
+Saga 事务持久化模型
 
 记录每个 Saga 事务的执行状态，用于：
 - 断点续执：系统重启后恢复未完成的事务
@@ -14,7 +14,7 @@ from app.core.database import Base
 
 
 class SagaTransactionLog(Base):
-    """Saga 事务日志表"""
+    """Saga 事务日志"""
     __tablename__ = "saga_transactions"
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
@@ -29,10 +29,10 @@ class SagaTransactionLog(Base):
     tenant_id = Column(BigInteger, index=True, comment="租户ID")
     operator_id = Column(BigInteger, comment="操作人ID")
     context = Column(JSON, comment="事务上下文数据")
-    steps_snapshot = Column(JSON, comment="步骤执行快照（每步状态/结果/耗时）")
+    steps_snapshot = Column(JSON, comment="步骤执行快照")
     current_step = Column(Integer, default=0, comment="当前执行到第几步")
     error = Column(Text, comment="错误信息")
-    created_at = Column(DateTime, default=datetime.utcnow, comment="创建时间")
+    created_at = Column(DateTime, default=datetime.now, comment="创建时间")
     completed_at = Column(DateTime, comment="完成时间")
 
     def __repr__(self):

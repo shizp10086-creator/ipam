@@ -41,7 +41,7 @@ class StepStatus(str, enum.Enum):
 class SagaStep:
     """
     Saga 事务步骤定义。
-    
+
     每个步骤包含：
     - name: 步骤名称
     - execute: 执行函数（异步）
@@ -78,7 +78,7 @@ class SagaTransaction:
 class SagaOrchestrator:
     """
     Saga 事务编排器。
-    
+
     使用示例：
     ```python
     saga = SagaOrchestrator("IP分配事务")
@@ -126,7 +126,7 @@ class SagaOrchestrator:
     async def execute(self, context: Optional[dict] = None) -> SagaTransaction:
         """
         执行 Saga 事务。
-        
+
         按顺序执行所有步骤，任何步骤失败则逆序执行补偿。
         """
         if context:

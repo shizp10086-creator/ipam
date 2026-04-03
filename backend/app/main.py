@@ -40,21 +40,21 @@ async def lifespan(app: FastAPI):
     """
     # Startup: Initialize database
     logger.info("Application startup: Initializing database...")
-    
+
     # Check database connection
     if not check_database_connection():
         logger.error("Cannot connect to database. Please check your database configuration.")
         raise Exception("Database connection failed")
-    
+
     # Run migrations and create default admin
     if not initialize_database():
         logger.error("Database initialization failed")
         raise Exception("Database initialization failed")
-    
+
     logger.info("Application startup complete")
-    
+
     yield
-    
+
     # Shutdown
     logger.info("Application shutdown")
 
@@ -65,11 +65,11 @@ app = FastAPI(
     version=settings.VERSION,
     description="""
     # IP Address Management System (IPAM)
-    
+
     轻量版 IP 地址管理系统，提供网段管理、IP 地址分配、设备管理等功能。
-    
+
     ## 主要功能
-    
+
     * **网段管理** - 创建、查询、更新、删除网段
     * **IP 地址管理** - IP 分配、回收、保留、冲突检测
     * **设备管理** - 设备资产管理和 IP 关联
@@ -78,22 +78,22 @@ app = FastAPI(
     * **操作日志** - 记录所有操作历史
     * **数据导入导出** - Excel 批量导入导出
     * **数据可视化** - 仪表板和统计图表
-    
+
     ## 认证方式
-    
+
     使用 JWT (JSON Web Token) 进行身份认证。
-    
+
     1. 调用 `/api/v1/login` 端点获取 access_token
     2. 在后续请求的 Header 中添加：`Authorization: Bearer <access_token>`
-    
+
     ## 用户角色
-    
+
     * **Administrator** - 管理员，拥有所有权限
     * **Regular_User** - 普通用户，可以查看和操作 IP、设备
     * **ReadOnly_User** - 只读用户，只能查看数据
-    
+
     ## 错误码
-    
+
     * **200** - 成功
     * **201** - 创建成功
     * **400** - 请求参数错误

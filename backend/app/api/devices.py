@@ -36,14 +36,14 @@ async def get_devices(
 ):
     """
     获取设备列表
-    支持模糊搜索和多条件筛�?
-    
+    支持模糊搜索和多条件筛?
+
     - **keyword**: 搜索关键词（在设备名称、MAC 地址、责任人中搜索）
-    - **device_type**: 按设备类型筛�?
-    - **owner**: 按责任人筛�?
-    - **department**: 按部门筛�?
+    - **device_type**: 按设备类型筛?
+    - **owner**: 按责任人筛?
+    - **department**: 按部门筛?
     - **page**: 页码（从 1 开始）
-    - **page_size**: 每页数量�?-100�?
+    - **page_size**: 每页数量?-100?
     """
     devices, total = search_devices(
         db=db,
@@ -54,10 +54,10 @@ async def get_devices(
         page=page,
         page_size=page_size
     )
-    
-    # 计算总页�?
+
+    # 计算总页?
     total_pages = (total + page_size - 1) // page_size
-    
+
     return {
         "code": 200,
         "message": "Success",
@@ -80,18 +80,18 @@ async def create_device(
 ):
     """
     创建设备
-    
+
     - **name**: 设备名称（必填）
-    - **mac_address**: MAC 地址（必填，支持格式：AA:BB:CC:DD:EE:FF, AA-BB-CC-DD-EE-FF, AABBCCDDEEFF�?
-    - **owner**: 责任人（必填�?
+    - **mac_address**: MAC 地址（必填，支持格式：AA:BB:CC:DD:EE:FF, AA-BB-CC-DD-EE-FF, AABBCCDDEEFF?
+    - **owner**: 责任人（必填?
     - **device_type**: 设备类型（可选）
     - **manufacturer**: 制造商（可选）
     - **model**: 型号（可选）
     - **department**: 部门（可选）
     - **location**: 物理位置（可选）
     - **description**: 描述（可选）
-    
-    注意：MAC 地址必须唯一，不能重�?
+
+    注意：MAC 地址必须唯一，不能重?
     """
     success, message, created_device = DeviceService.create_device(
         db=db,
@@ -106,13 +106,13 @@ async def create_device(
         description=device.description,
         created_by=current_user.id
     )
-    
+
     if not success:
         raise HTTPException(
             status_code=400,
             detail=message
         )
-    
+
     # 记录操作日志
     try:
         device_data = {
@@ -123,7 +123,7 @@ async def create_device(
             "department": created_device.department,
             "location": created_device.location
         }
-        
+
         LogService.log_device_operation(
             db=db,
             user_id=current_user.id,
@@ -136,7 +136,7 @@ async def create_device(
     except Exception as e:
         # 日志记录失败不应影响主要操作
         print(f"Failed to log device creation: {e}")
-    
+
     return {
         "code": 201,
         "message": message,
@@ -151,19 +151,19 @@ async def get_device(
 ):
     """
     获取设备详情
-    
+
     - **device_id**: 设备 ID
-    
-    返回设备的完整信�?
+
+    返回设备的完整信?
     """
     device = get_device_by_id(db, device_id)
-    
+
     if not device:
         raise HTTPException(
             status_code=404,
             detail="Device not found"
         )
-    
+
     return {
         "code": 200,
         "message": "Success",
@@ -181,28 +181,28 @@ async def update_device(
 ):
     """
     更新设备信息
-    
+
     - **device_id**: 设备 ID
-    - **device_update**: 更新数据（所有字段都是可选的�?
-    
-    注意�?
+    - **device_update**: 更新数据（所有字段都是可选的?
+
+    注意?
     - 更新设备信息不会影响其关联的 IP 地址
     - 如果更新 MAC 地址，新 MAC 地址必须唯一
     """
     update_data = device_update.dict(exclude_unset=True)
-    
+
     success, message, updated_device = DeviceService.update_device(
         db=db,
         device_id=device_id,
         **update_data
     )
-    
+
     if not success:
         if "not found" in message.lower():
             raise HTTPException(status_code=404, detail=message)
         else:
             raise HTTPException(status_code=400, detail=message)
-    
+
     # 记录操作日志
     try:
         device_data = {
@@ -214,7 +214,7 @@ async def update_device(
             "location": updated_device.location,
             "updated_fields": list(update_data.keys())
         }
-        
+
         LogService.log_device_operation(
             db=db,
             user_id=current_user.id,
@@ -227,7 +227,7 @@ async def update_device(
     except Exception as e:
         # 日志记录失败不应影响主要操作
         print(f"Failed to log device update: {e}")
-    
+
     return {
         "code": 200,
         "message": message,
@@ -244,12 +244,12 @@ async def delete_device(
 ):
     """
     删除设备
-    
+
     - **device_id**: 设备 ID
-    
-    注意�?
-    - 删除设备时，会自动回收该设备关联的所�?IP 地址
-    - 被回收的 IP 地址状态将变为"空闲"（available�?
+
+    注意?
+    - 删除设备时，会自动回收该设备关联的所?IP 地址
+    - 被回收的 IP 地址状态将变为"空闲"（available?
     - 此操作不可撤销，请谨慎操作
     """
     # 获取设备信息用于日志记录
@@ -262,15 +262,15 @@ async def delete_device(
             "owner": device.owner,
             "device_type": device.device_type
         }
-    
+
     success, message = DeviceService.delete_device(db, device_id)
-    
+
     if not success:
         if "not found" in message.lower():
             raise HTTPException(status_code=404, detail=message)
         else:
             raise HTTPException(status_code=400, detail=message)
-    
+
     # 记录操作日志
     if device_data:
         try:
@@ -286,7 +286,7 @@ async def delete_device(
         except Exception as e:
             # 日志记录失败不应影响主要操作
             print(f"Failed to log device deletion: {e}")
-    
+
     return {
         "code": 200,
         "message": message,
@@ -300,20 +300,20 @@ async def get_device_ips(
     db: Session = Depends(get_db)
 ):
     """
-    获取设备关联的所�?IP 地址
-    
+    获取设备关联的所?IP 地址
+
     - **device_id**: 设备 ID
-    
-    返回该设备当前关联的所�?IP 地址列表
+
+    返回该设备当前关联的所?IP 地址列表
     """
     success, message, ips = DeviceService.get_device_ips(db, device_id)
-    
+
     if not success:
         raise HTTPException(
             status_code=404,
             detail=message
         )
-    
+
     return {
         "code": 200,
         "message": message,

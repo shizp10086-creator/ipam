@@ -1,8 +1,8 @@
 """
-NAC 准入控制域模型。
+NAC 准入控制域模型
 
-包含：
-- NacPolicy: 认证策略（802.1X/Portal/MAC/PPSK 规则链）
+包含
+- NacPolicy: 认证策略02.1X/Portal/MAC/PPSK 规则链）
 - NacSession: 终端在线会话
 - NacAuthLog: 认证日志
 - VisitorAccount: 访客临时账号
@@ -27,14 +27,14 @@ class NacPolicy(Base):
     priority = Column(Integer, default=100, comment="优先级（数字越小越优先）")
     is_active = Column(Boolean, default=True)
     # 匹配条件
-    conditions = Column(JSON, nullable=False, comment="匹配条件（终端类型/接入方式/部门/时间等）")
+    conditions = Column(JSON, nullable=False, comment="匹配条件（终端类接入方式/部门/时间等）")
     # 动作
     auth_method = Column(Enum("802.1x", "portal", "mac", "ppsk", "bypass"), comment="认证方式")
-    actions = Column(JSON, nullable=False, comment="动作（分配VLAN/下发ACL/限速/MFA等）")
+    actions = Column(JSON, nullable=False, comment="动作（分配VLAN/下发ACL/限MFA等）")
     version = Column(Integer, default=1)
     created_by = Column(BigInteger)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.now, nullable=False)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
     def __repr__(self):
         return f"<NacPolicy {self.name} pri={self.priority}>"
@@ -51,13 +51,13 @@ class NacSession(Base):
     username = Column(String(100))
     auth_method = Column(String(20), comment="认证方式")
     vlan_id = Column(Integer)
-    switch_ip = Column(String(45), comment="接入交换机 IP")
+    switch_ip = Column(String(45), comment="接入交换IP")
     switch_port = Column(String(50), comment="接入端口")
     ssid = Column(String(100), comment="无线 SSID")
     compliance_status = Column(Enum("compliant", "non_compliant", "quarantined", "unknown"), default="unknown")
     compliance_score = Column(Integer, default=0)
-    session_start = Column(DateTime, default=datetime.utcnow)
-    last_activity = Column(DateTime, default=datetime.utcnow)
+    session_start = Column(DateTime, default=datetime.now)
+    last_activity = Column(DateTime, default=datetime.now)
     is_active = Column(Boolean, default=True, index=True)
 
     def __repr__(self):
@@ -79,10 +79,10 @@ class NacAuthLog(Base):
     switch_ip = Column(String(45))
     switch_port = Column(String(50))
     ssid = Column(String(100))
-    policy_id = Column(BigInteger, comment="匹配的策略 ID")
+    policy_id = Column(BigInteger, comment="匹配的策ID")
     assigned_vlan = Column(Integer)
     details = Column(JSON)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    created_at = Column(DateTime, default=datetime.now, nullable=False, index=True)
 
     def __repr__(self):
         return f"<NacAuthLog {self.mac_address} [{self.result}]>"
@@ -103,10 +103,10 @@ class VisitorAccount(Base):
     sponsor_department = Column(String(200))
     access_level = Column(Enum("internet_only", "limited", "full"), default="internet_only")
     vlan_id = Column(Integer, comment="访客 VLAN")
-    valid_from = Column(DateTime, default=datetime.utcnow)
+    valid_from = Column(DateTime, default=datetime.now)
     valid_until = Column(DateTime, nullable=False)
     is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=datetime.now, nullable=False)
 
     def __repr__(self):
         return f"<Visitor {self.visitor_name} until={self.valid_until}>"

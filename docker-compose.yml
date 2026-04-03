@@ -5,6 +5,7 @@ services:
     container_name: ipam-mysql
     restart: unless-stopped
     environment:
+      TZ: Asia/Shanghai
       MYSQL_ROOT_PASSWORD: root_password
       MYSQL_DATABASE: ipam_db
       MYSQL_USER: ipam
@@ -67,6 +68,7 @@ services:
     container_name: ipam-backend
     restart: unless-stopped
     environment:
+      - TZ=Asia/Shanghai
       - MYSQL_HOST=mysql
       - MYSQL_PORT=3306
       - MYSQL_USER=ipam
@@ -110,7 +112,7 @@ services:
       - ./frontend:/app
       - /app/node_modules
     environment:
-      - VITE_API_BASE_URL=http://localhost:8000/api/v1
+      - VITE_BACKEND_URL=http://backend:8000
     depends_on:
       - backend
     networks:
@@ -125,6 +127,7 @@ services:
     restart: unless-stopped
     command: celery -A app.core.celery_app worker --loglevel=info --concurrency=4
     environment:
+      - TZ=Asia/Shanghai
       - MYSQL_HOST=mysql
       - MYSQL_PORT=3306
       - MYSQL_USER=ipam
@@ -154,6 +157,7 @@ services:
     restart: unless-stopped
     command: celery -A app.core.celery_app beat --loglevel=info
     environment:
+      - TZ=Asia/Shanghai
       - MYSQL_HOST=mysql
       - MYSQL_PORT=3306
       - MYSQL_USER=ipam

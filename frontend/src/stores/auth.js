@@ -30,9 +30,28 @@ export const useAuthStore = defineStore('auth', () => {
       
       return { success: true }
     } catch (error) {
+      // 后端登录失败返回 {"detail": "..."} 格式
+      const detail = error.response?.data?.detail
+      const message = error.response?.data?.message
+      let errorMsg = '登录失败'
+      
+      if (detail) {
+        // 将英文错误信息翻译为中文
+        const d = detail.toLowerCase()
+        if (d.includes('invalid username or password')) {
+          errorMsg = '用户名或密码错误'
+        } else if (d.includes('disabled')) {
+          errorMsg = '账户已被禁用'
+        } else {
+          errorMsg = detail
+        }
+      } else if (message) {
+        errorMsg = message
+      }
+      
       return { 
         success: false, 
-        message: error.response?.data?.message || error.response?.data?.detail || '登录失败' 
+        message: errorMsg
       }
     } finally {
       loading.value = false

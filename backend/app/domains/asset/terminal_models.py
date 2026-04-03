@@ -1,9 +1,9 @@
 """
-终端管理模型。
+终端管理模型
 
-包含：
-- Terminal: 终端设备（PC/笔记本/手机/平板/打印机/摄像头等）
-- TerminalGroup: 终端分组（动态分组/静态分组）
+包含
+- Terminal: 终端设备（PC/笔记手机/平板/打印摄像头等
+- TerminalGroup: 终端分组（动态分静态分组）
 - TerminalSecurityPolicy: 终端安全策略模板
 """
 from datetime import datetime
@@ -21,7 +21,7 @@ class Terminal(Base):
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     tenant_id = Column(BigInteger, default=1, nullable=False, index=True)
-    hostname = Column(String(255), index=True, comment="主机名")
+    hostname = Column(String(255), index=True, comment="主机")
     ip_address = Column(String(45), index=True)
     mac_address = Column(String(17), index=True)
     # 终端类型（指纹识别结果）
@@ -31,21 +31,21 @@ class Terminal(Base):
     )
     os_type = Column(String(100), comment="操作系统类型")
     os_version = Column(String(100), comment="操作系统版本")
-    manufacturer = Column(String(200), comment="厂商（MAC OUI 识别）")
+    manufacturer = Column(String(200), comment="厂商（MAC OUI 识别")
     model = Column(String(200), comment="型号")
     # 硬件信息
     cpu_info = Column(String(200))
     memory_gb = Column(Numeric(10, 2))
     disk_gb = Column(Numeric(10, 2))
-    # 使用人
-    user_name = Column(String(100), comment="使用人姓名")
-    user_department = Column(String(200), comment="使用人部门")
+    # 使用
+    user_name = Column(String(100), comment="使用人姓")
+    user_department = Column(String(200), comment="使用人部")
     user_id = Column(BigInteger, comment="关联用户 ID")
     # 网络信息
-    switch_ip = Column(String(45), comment="接入交换机 IP")
+    switch_ip = Column(String(45), comment="接入交换IP")
     switch_port = Column(String(50), comment="接入端口")
     vlan_id = Column(Integer)
-    # 状态
+    # 状
     status = Column(Enum("active", "idle", "repair", "retired"), default="active", index=True)
     is_online = Column(Boolean, default=False, index=True)
     last_online_at = Column(DateTime)
@@ -58,16 +58,16 @@ class Terminal(Base):
     antivirus_updated = Column(Boolean)
     firewall_enabled = Column(Boolean)
     os_patched = Column(Boolean)
-    # 标签和分组
+    # 标签和分
     tags = Column(JSON, default=list)
-    group_ids = Column(JSON, default=list, comment="所属分组 ID 列表")
+    group_ids = Column(JSON, default=list, comment="所属分ID 列表")
     custom_fields = Column(JSON, default=dict)
     # 发现信息
     discovery_method = Column(String(50), comment="发现方式: arp/snmp/wmi/agent")
-    first_seen_at = Column(DateTime, default=datetime.utcnow)
+    first_seen_at = Column(DateTime, default=datetime.now)
     approval_status = Column(Enum("approved", "pending", "blacklisted"), default="pending")
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.now, nullable=False)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
     def __repr__(self):
         return f"<Terminal {self.hostname or self.mac_address} [{self.terminal_type}]>"
@@ -98,13 +98,13 @@ class TerminalGroup(Base):
     name = Column(String(200), nullable=False)
     description = Column(Text)
     group_type = Column(Enum("static", "dynamic"), default="static")
-    # 动态分组条件
+    # 动态分组条
     dynamic_conditions = Column(JSON, comment="动态分组条件（terminal_type/department/os_type 等）")
     # 关联策略
     security_policy_id = Column(BigInteger, comment="关联安全策略 ID")
     network_policy = Column(JSON, comment="网络策略（VLAN/ACL/限速）")
     terminal_count = Column(Integer, default=0)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=datetime.now, nullable=False)
 
     def __repr__(self):
         return f"<TerminalGroup {self.name} [{self.group_type}]>"

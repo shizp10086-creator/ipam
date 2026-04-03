@@ -1,5 +1,5 @@
 """
-DCIM 域 API — 机房、机架、VLAN、线缆管理。
+DCIM API 机房、机架、VLAN、线缆管理
 """
 import logging
 from typing import Optional
@@ -214,11 +214,11 @@ def install_device(data: InstallDeviceRequest, db: Session = Depends(get_db)):
     rack = db.query(Rack).filter(Rack.id == data.rack_id).first()
     if not rack:
         raise HTTPException(404, "机架不存在")
-    # 校验 U 位范围
+    # 校验 U 位范
     end_u = data.start_u + data.u_size - 1
     if end_u > rack.total_u:
         raise HTTPException(400, f"U 位超出范围（机架共 {rack.total_u}U，请求 U{data.start_u}-U{end_u}）")
-    # 校验 U 位是否空闲
+    # 校验 U 位是否空
     existing = db.query(RackInstallation).filter(
         RackInstallation.rack_id == data.rack_id,
         RackInstallation.status == "installed",
@@ -243,7 +243,7 @@ def uninstall_device(installation_id: int, db: Session = Depends(get_db)):
         raise HTTPException(404, "安装记录不存在或已下架")
     rack = db.query(Rack).filter(Rack.id == inst.rack_id).first()
     inst.status = "uninstalled"
-    inst.uninstalled_at = datetime.utcnow()
+    inst.uninstalled_at = datetime.now()
     rack.used_u = max(rack.used_u - inst.u_size, 0)
     if inst.power_consumption:
         rack.current_power = max(float(rack.current_power or 0) - float(inst.power_consumption), 0)

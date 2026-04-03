@@ -1,14 +1,14 @@
-﻿"""
-网段管理 API - 扩展版。
+"""
+ι API - չ档
 
-新增功能：
-- CIDR 字段支持
-- 子网嵌套查询
-- 分组管理（CRUD）
-- 标签筛选（多标签组合）
-- 强制删除模式（force=true 自动回收所有 IP）
-- 使用率排序
-- 统一 APIResponse 格式
+ܣ
+- CIDR ֶ֧
+- Ƕײѯ
+- CRUD
+- ǩɸѡǩ
+- ǿɾģʽforce=true Զ IP
+- ʹ
+- ͳһ APIResponse ʽ
 """
 import ipaddress as ip_module
 import logging
@@ -32,22 +32,22 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-# ==================== 网段 CRUD ====================
+# ====================  CRUD ====================
 
-@router.get("", summary="获取网段列表")
+@router.get("", summary="ȡб")
 async def list_segments(
-    name: Optional[str] = Query(None, description="按名称模糊搜索"),
-    group_id: Optional[int] = Query(None, description="按分组筛选"),
-    parent_id: Optional[int] = Query(None, description="按父网段筛选（子网嵌套）"),
-    tags: Optional[str] = Query(None, description="按标签筛选（逗号分隔，多标签 AND 关系）"),
-    status_filter: Optional[str] = Query(None, alias="status", description="按状态筛选"),
-    usage_min: Optional[float] = Query(None, description="使用率最小值"),
-    usage_max: Optional[float] = Query(None, description="使用率最大值"),
+    name: Optional[str] = Query(None, description="ģ"),
+    group_id: Optional[int] = Query(None, description="ɸѡ"),
+    parent_id: Optional[int] = Query(None, description="ɸѡǶף"),
+    tags: Optional[str] = Query(None, description="ǩɸѡŷָǩ AND ϵ"),
+    status_filter: Optional[str] = Query(None, alias="status", description="״̬ɸѡ"),
+    usage_min: Optional[float] = Query(None, description="ʹСֵ"),
+    usage_max: Optional[float] = Query(None, description="ʹֵ"),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=1000),
-    sort_by: str = Query("created_at", description="排序字段"),
+    sort_by: str = Query("created_at", description="ֶ"),
     sort_order: str = Query("desc", description="asc/desc"),
-    include_stats: bool = Query(False, description="是否包含统计信息"),
+    include_stats: bool = Query(False, description="ǷͳϢ"),
     db: Session = Depends(get_db),
 ):
     query = db.query(NetworkSegment).filter(NetworkSegment.deleted_at.is_(None))
@@ -65,7 +65,7 @@ async def list_segments(
     if usage_max is not None:
         query = query.filter(NetworkSegment.usage_rate <= usage_max)
 
-    # 标签筛选（多标签 AND 关系）
+    # ǩɸѡǩ AND ϵ
     if tags:
         tag_list = [t.strip() for t in tags.split(",") if t.strip()]
         for tag in tag_list:
@@ -73,7 +73,7 @@ async def list_segments(
 
     total = query.count()
 
-    # 排序
+    #
     if hasattr(NetworkSegment, sort_by):
         col = getattr(NetworkSegment, sort_by)
         query = query.order_by(col.desc() if sort_order == "desc" else col.asc())
@@ -103,40 +103,40 @@ async def list_segments(
     })
 
 
-@router.post("", status_code=status.HTTP_201_CREATED, summary="创建网段")
+@router.post("", status_code=status.HTTP_201_CREATED, summary="")
 async def create_segment(
     data: NetworkSegmentCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin),
     client_ip: Optional[str] = Depends(get_client_ip),
 ):
-    # 解析 CIDR
+    #  CIDR
     network = ip_module.ip_network(data.cidr, strict=False)
     network_addr = str(network.network_address)
     broadcast_addr = str(network.broadcast_address)
     prefix_len = network.prefixlen
-    total_hosts = max(network.num_addresses - 2, 0)  # 去掉网络地址和广播地址
+    total_hosts = max(network.num_addresses - 2, 0)  # ȥַ͹㲥ַ
 
-    # 检查重复
+    # ظ
     existing = db.query(NetworkSegment).filter(
         NetworkSegment.network == network_addr,
         NetworkSegment.prefix_length == prefix_len,
         NetworkSegment.deleted_at.is_(None),
     ).first()
     if existing:
-        raise HTTPException(status.HTTP_409_CONFLICT, f"网段 {data.cidr} 已存在")
+        raise HTTPException(status.HTTP_409_CONFLICT, f" {data.cidr} Ѵ")
 
-    # 子网嵌套校验
+    # ǶУ
     if data.parent_id:
         parent = db.query(NetworkSegment).filter(NetworkSegment.id == data.parent_id).first()
         if not parent:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "父网段不存在")
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "β")
         parent_net = ip_module.ip_network(f"{parent.network}/{parent.prefix_length}", strict=False)
         if not network.subnet_of(parent_net):
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, f"子网 {data.cidr} 不在父网段 {parent.network}/{parent.prefix_length} 范围内")
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, f" {data.cidr} ڸ {parent.network}/{parent.prefix_length} Χ")
 
     segment = NetworkSegment(
-        tenant_id=1,  # TODO: 从租户上下文获取
+        tenant_id=1,  # TODO: ⻧Ļȡ
         name=data.name,
         cidr=data.cidr,
         network=network_addr,
@@ -161,7 +161,7 @@ async def create_segment(
     db.commit()
     db.refresh(segment)
 
-    # 批量生成 IP 地址记录
+    #  IP ַ¼
     try:
         ips = [
             IPAddress(
@@ -176,10 +176,10 @@ async def create_segment(
             db.bulk_save_objects(ips)
             db.commit()
     except Exception as e:
-        logger.error(f"IP 批量生成失败: {e}")
+        logger.error(f"IP ʧ: {e}")
         db.rollback()
 
-    # 记录操作日志
+    # ¼־
     try:
         LogService.log_segment_operation(
             db=db, user_id=current_user.id, username=current_user.username,
@@ -190,25 +190,25 @@ async def create_segment(
     except Exception:
         pass
 
-    logger.info(f"网段创建成功: {data.cidr} (ID={segment.id})")
+    logger.info(f"δɹ: {data.cidr} (ID={segment.id})")
     return APIResponse.success(
         data=NetworkSegmentResponse.model_validate(segment).model_dump(),
-        code=201, message="网段创建成功",
+        code=201, message="δɹ",
     )
 
 
-@router.get("/{segment_id}", summary="获取网段详情")
+@router.get("/{segment_id}", summary="ȡ")
 async def get_segment(segment_id: int, db: Session = Depends(get_db)):
     segment = db.query(NetworkSegment).filter(
         NetworkSegment.id == segment_id,
         NetworkSegment.deleted_at.is_(None),
     ).first()
     if not segment:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "网段不存在")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "β")
     return APIResponse.success(data=NetworkSegmentResponse.model_validate(segment).model_dump())
 
 
-@router.put("/{segment_id}", summary="更新网段")
+@router.put("/{segment_id}", summary="")
 async def update_segment(
     segment_id: int,
     data: NetworkSegmentUpdate,
@@ -221,11 +221,11 @@ async def update_segment(
         NetworkSegment.deleted_at.is_(None),
     ).first()
     if not segment:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "网段不存在")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "β")
 
-    # 乐观锁校验
+    # ֹУ
     if data.version != segment.version:
-        raise HTTPException(status.HTTP_409_CONFLICT, "数据已被其他人修改，请刷新后重试")
+        raise HTTPException(status.HTTP_409_CONFLICT, "ѱ޸ģˢº")
 
     update_data = data.model_dump(exclude_unset=True, exclude={"version"})
     old_data = {k: getattr(segment, k) for k in update_data}
@@ -237,7 +237,7 @@ async def update_segment(
     db.commit()
     db.refresh(segment)
 
-    # 记录变更差异
+    # ¼
     try:
         LogService.log_segment_operation(
             db=db, user_id=current_user.id, username=current_user.username,
@@ -251,10 +251,10 @@ async def update_segment(
     return APIResponse.success(data=NetworkSegmentResponse.model_validate(segment).model_dump())
 
 
-@router.delete("/{segment_id}", summary="删除网段")
+@router.delete("/{segment_id}", summary="ɾ")
 async def delete_segment(
     segment_id: int,
-    force: bool = Query(False, description="强制删除（自动回收所有关联 IP）"),
+    force: bool = Query(False, description="ǿɾԶй IP"),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin),
     client_ip: Optional[str] = Depends(get_client_ip),
@@ -264,7 +264,7 @@ async def delete_segment(
         NetworkSegment.deleted_at.is_(None),
     ).first()
     if not segment:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "网段不存在")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "β")
 
     allocated_count = db.query(IPAddress).filter(
         IPAddress.segment_id == segment_id,
@@ -274,20 +274,20 @@ async def delete_segment(
     if allocated_count > 0 and not force:
         raise HTTPException(
             status.HTTP_400_BAD_REQUEST,
-            f"网段内存在 {allocated_count} 个已分配的 IP 地址，无法正常删除。"
-            f"如需强制删除请使用 force=true 参数",
+            f"ڴ {allocated_count} ѷ IP ַ޷ɾ"
+            f"ǿɾʹ force=true ",
         )
 
     if force and allocated_count > 0:
-        # 强制删除：回收所有 IP
+        # ǿɾ IP
         db.query(IPAddress).filter(IPAddress.segment_id == segment_id).update(
             {"status": "available", "device_id": None}
         )
-        logger.info(f"强制删除网段 {segment.cidr}，已回收 {allocated_count} 个 IP")
+        logger.info(f"ǿɾ {segment.cidr}ѻ {allocated_count}  IP")
 
-    # 软删除
+    # ɾ
     from datetime import datetime
-    segment.deleted_at = datetime.utcnow()
+    segment.deleted_at = datetime.now()
     db.commit()
 
     try:
@@ -300,14 +300,14 @@ async def delete_segment(
     except Exception:
         pass
 
-    return APIResponse.success(message="网段删除成功")
+    return APIResponse.success(message="ɾɹ")
 
 
-@router.get("/{segment_id}/stats", summary="获取网段统计信息")
+@router.get("/{segment_id}/stats", summary="ȡͳϢ")
 async def get_segment_stats(segment_id: int, db: Session = Depends(get_db)):
     segment = db.query(NetworkSegment).filter(NetworkSegment.id == segment_id).first()
     if not segment:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "网段不存在")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "β")
     try:
         usage_stats = calculate_segment_usage(db, segment_id)
         range_info = calculate_segment_ip_range(segment.network, segment.prefix_length)
@@ -317,12 +317,12 @@ async def get_segment_stats(segment_id: int, db: Session = Depends(get_db)):
             "network_info": range_info,
         })
     except Exception as e:
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, f"统计计算失败: {e}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, f"ͳƼʧ: {e}")
 
 
-@router.get("/{segment_id}/children", summary="获取子网列表")
+@router.get("/{segment_id}/children", summary="ȡб")
 async def get_children_segments(segment_id: int, db: Session = Depends(get_db)):
-    """获取指定网段的所有直接子网。"""
+    """ȡָεֱ"""
     children = db.query(NetworkSegment).filter(
         NetworkSegment.parent_id == segment_id,
         NetworkSegment.deleted_at.is_(None),
@@ -333,18 +333,18 @@ async def get_children_segments(segment_id: int, db: Session = Depends(get_db)):
     })
 
 
-# ==================== 网段分组 CRUD ====================
+# ==================== η CRUD ====================
 
-@router.get("/groups/list", summary="获取网段分组列表")
+@router.get("/groups/list", summary="ȡηб")
 async def list_segment_groups(
-    parent_id: Optional[int] = Query(None, description="父分组ID"),
+    parent_id: Optional[int] = Query(None, description="ID"),
     db: Session = Depends(get_db),
 ):
     query = db.query(SegmentGroup)
     if parent_id is not None:
         query = query.filter(SegmentGroup.parent_id == parent_id)
     else:
-        query = query.filter(SegmentGroup.parent_id.is_(None))  # 顶级分组
+        query = query.filter(SegmentGroup.parent_id.is_(None))  #
     groups = query.order_by(SegmentGroup.sort_order).all()
     return APIResponse.success(data={
         "items": [SegmentGroupResponse.model_validate(g).model_dump() for g in groups],
@@ -352,13 +352,13 @@ async def list_segment_groups(
     })
 
 
-@router.post("/groups", status_code=status.HTTP_201_CREATED, summary="创建网段分组")
+@router.post("/groups", status_code=status.HTTP_201_CREATED, summary="η")
 async def create_segment_group(
     data: SegmentGroupCreate,
     db: Session = Depends(get_db),
 ):
     group = SegmentGroup(
-        tenant_id=1,  # TODO: 从租户上下文获取
+        tenant_id=1,  # TODO: ⻧Ļȡ
         name=data.name,
         parent_id=data.parent_id,
         description=data.description,
@@ -369,5 +369,5 @@ async def create_segment_group(
     db.refresh(group)
     return APIResponse.success(
         data=SegmentGroupResponse.model_validate(group).model_dump(),
-        code=201, message="分组创建成功",
+        code=201, message="鴴ɹ",
     )

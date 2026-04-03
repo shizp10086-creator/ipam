@@ -23,13 +23,13 @@ async def global_search(
 ):
     """
     全局搜索
-    
-    在网段、IP 地址和设备中搜索匹配的记�?
-    
-    - **q**: 搜索关键词（必填�?
-    - **limit**: 每个类别返回的最大结果数（默�?10�?
-    
-    返回格式�?
+
+    在网段、IP 地址和设备中搜索匹配的记?
+
+    - **q**: 搜索关键词（必填?
+    - **limit**: 每个类别返回的最大结果数（默?10?
+
+    返回格式?
     ```json
     {
         "segments": [...],
@@ -40,7 +40,7 @@ async def global_search(
     ```
     """
     search_term = f"%{q}%"
-    
+
     # 搜索网段
     segments = db.query(NetworkSegment).filter(
         or_(
@@ -49,12 +49,12 @@ async def global_search(
             NetworkSegment.description.like(search_term)
         )
     ).limit(limit).all()
-    
+
     # 搜索 IP 地址
     ips = db.query(IPAddress).filter(
         IPAddress.ip_address.like(search_term)
     ).limit(limit).all()
-    
+
     # 搜索设备
     devices = db.query(Device).filter(
         or_(
@@ -65,8 +65,8 @@ async def global_search(
             Device.description.like(search_term)
         )
     ).limit(limit).all()
-    
-    # 格式化结�?
+
+    # 格式化结?
     segment_results = []
     for segment in segments:
         segment_results.append({
@@ -79,14 +79,14 @@ async def global_search(
             "description": segment.description,
             "created_at": segment.created_at.isoformat() if segment.created_at else None
         })
-    
+
     ip_results = []
     for ip in ips:
-        # 获取关联的网段信�?
+        # 获取关联的网段信?
         segment = db.query(NetworkSegment).filter(
             NetworkSegment.id == ip.segment_id
         ).first()
-        
+
         ip_results.append({
             "id": ip.id,
             "type": "ip",
@@ -97,7 +97,7 @@ async def global_search(
             "device_id": ip.device_id,
             "is_online": ip.is_online
         })
-    
+
     device_results = []
     for device in devices:
         device_results.append({
@@ -110,9 +110,9 @@ async def global_search(
             "location": device.location,
             "description": device.description
         })
-    
+
     total = len(segment_results) + len(ip_results) + len(device_results)
-    
+
     return {
         "code": 200,
         "message": "Success",

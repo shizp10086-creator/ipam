@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class EventBus:
     """
     事件总线核心类。
-    
+
     当前为内存实现（适合单进程开发/测试），
     后续可无缝切换为 RabbitMQ 实现。
     """
@@ -37,7 +37,7 @@ class EventBus:
     async def publish(self, event: DomainEvent) -> None:
         """
         发布事件到总线。
-        
+
         支持幂等性检查：相同 event_id 的事件不会重复处理。
         """
         # 幂等性检查

@@ -21,10 +21,10 @@ def create_tables():
     try:
         # Import all models to ensure they are registered
         from app.models import (
-            User, NetworkSegment, IPAddress, Device, 
+            User, NetworkSegment, IPAddress, Device,
             OperationLog, Alert, ScanHistory
         )
-        
+
         # Create all tables
         Base.metadata.create_all(bind=engine)
         logger.info("Database tables created successfully")
@@ -37,22 +37,22 @@ def create_tables():
 def create_default_admin(db: Session) -> User:
     """
     Create the default admin user if it doesn't exist.
-    
+
     Args:
         db: Database session
-        
+
     Returns:
         User: The created or existing admin user
     """
     from app.core.security import get_password_hash
-    
+
     # Check if admin user already exists
     admin = db.query(User).filter(User.username == settings.DEFAULT_ADMIN_USERNAME).first()
-    
+
     if admin:
         logger.info(f"Admin user '{settings.DEFAULT_ADMIN_USERNAME}' already exists")
         return admin
-    
+
     # Create admin user
     admin = User(
         username=settings.DEFAULT_ADMIN_USERNAME,
@@ -62,11 +62,11 @@ def create_default_admin(db: Session) -> User:
         role="admin",
         is_active=True
     )
-    
+
     db.add(admin)
     db.commit()
     db.refresh(admin)
-    
+
     logger.info(f"Default admin user created: {settings.DEFAULT_ADMIN_USERNAME}")
     return admin
 
@@ -74,25 +74,25 @@ def create_default_admin(db: Session) -> User:
 def init_db(db: Session):
     """
     Initialize the database with tables and default data.
-    
+
     Args:
         db: Database session
     """
     # Create tables
     create_tables()
-    
+
     # Create default admin user
     create_default_admin(db)
-    
+
     logger.info("Database initialization completed")
 
 
 if __name__ == "__main__":
     # This allows running the script directly for testing
     from app.core.database import SessionLocal
-    
+
     logging.basicConfig(level=logging.INFO)
-    
+
     db = SessionLocal()
     try:
         init_db(db)

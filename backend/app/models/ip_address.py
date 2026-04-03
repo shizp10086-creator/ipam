@@ -114,7 +114,7 @@ class IPAddress(Base):
 class IPLifecycleLog(Base):
     """
     IP 地址生命周期日志。
-    
+
     记录 IP 的每一次状态变更（分配/回收/保留/标签修改等），
     用于完整的使用历史追溯。
     """

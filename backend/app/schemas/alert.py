@@ -23,7 +23,7 @@ class AlertResponse(AlertBase):
     is_resolved: bool
     resolved_at: Optional[datetime]
     created_at: datetime
-    
+
     class Config:
         from_attributes = True
 

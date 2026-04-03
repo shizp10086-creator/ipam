@@ -14,7 +14,7 @@ class UserBase(BaseModel):
     full_name: str = Field(..., min_length=1, max_length=100, description="全名")
     role: str = Field(..., description="角色: admin/user/readonly")
     is_active: bool = Field(True, description="是否激活")
-    
+
     @validator('role')
     def validate_role(cls, v):
         """验证角色值"""
@@ -27,7 +27,7 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     """创建用户的请求模式"""
     password: str = Field(..., min_length=6, max_length=100, description="密码（至少6个字符）")
-    
+
     @validator('password')
     def validate_password(cls, v):
         """验证密码强度"""
@@ -42,7 +42,7 @@ class UserUpdate(BaseModel):
     full_name: Optional[str] = Field(None, min_length=1, max_length=100, description="全名")
     role: Optional[str] = Field(None, description="角色: admin/user/readonly")
     is_active: Optional[bool] = Field(None, description="是否激活")
-    
+
     @validator('role')
     def validate_role(cls, v):
         """验证角色值"""
@@ -63,7 +63,7 @@ class UserResponse(BaseModel):
     is_active: bool = Field(..., description="是否激活")
     created_at: datetime = Field(..., description="创建时间")
     updated_at: datetime = Field(..., description="更新时间")
-    
+
     class Config:
         from_attributes = True
 
@@ -81,7 +81,7 @@ class PasswordChangeRequest(BaseModel):
     """修改密码的请求模式"""
     old_password: str = Field(..., description="旧密码")
     new_password: str = Field(..., min_length=6, max_length=100, description="新密码（至少6个字符）")
-    
+
     @validator('new_password')
     def validate_new_password(cls, v):
         """验证新密码强度"""

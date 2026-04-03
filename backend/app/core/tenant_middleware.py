@@ -27,7 +27,7 @@ current_user_role: ContextVar[Optional[str]] = ContextVar("current_user_role", d
 # 不需要租户隔离的路径白名单
 TENANT_BYPASS_PATHS = {
     "/", "/health", "/api/docs", "/api/redoc", "/api/openapi.json",
-    "/api/v1/login", "/api/v1/token/refresh",
+    "/api/v1/login", "/api/v1/auth/login", "/api/v1/token/refresh", "/api/v1/auth/refresh",
 }
 
 
@@ -49,7 +49,7 @@ def get_current_user_role() -> Optional[str]:
 class TenantIsolationMiddleware(BaseHTTPMiddleware):
     """
     租户隔离中间件。
-    
+
     工作流程：
     1. 从请求头 Authorization 中解析 JWT Token
     2. 从 Token payload 中提取 tenant_id、user_id、role

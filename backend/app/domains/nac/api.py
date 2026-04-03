@@ -1,5 +1,5 @@
 """
-NAC 准入控制域 API。
+NAC 准入控制API
 """
 import logging
 from typing import Optional
@@ -99,7 +99,7 @@ def list_sessions(
 def disconnect_session(session_id: int, db: Session = Depends(get_db)):
     session = db.query(NacSession).filter(NacSession.id == session_id).first()
     if not session:
-        raise HTTPException(404, "会话不存在")
+        raise HTTPException(404, "会话不存")
     session.is_active = False
     db.commit()
     return APIResponse.success(message="终端已断开")
@@ -166,7 +166,7 @@ def create_visitor(data: VisitorCreate, db: Session = Depends(get_db)):
         password_hash=pwd_context.hash(password),
         sponsor_name=data.sponsor_name,
         access_level=data.access_level,
-        valid_until=datetime.utcnow() + timedelta(hours=data.duration_hours),
+        valid_until=datetime.now() + timedelta(hours=data.duration_hours),
     )
     db.add(visitor)
     db.commit()

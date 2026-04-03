@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 async def allocate_ip_in_db(context: dict[str, Any]) -> dict:
     """
     步骤 1：在本地数据库中分配 IP。
-    
+
     这是唯一在 Phase 1 中有真实实现的步骤，
     其他步骤在 Phase 4 填充。
     """
@@ -47,7 +47,7 @@ async def rollback_ip_in_db(context: dict[str, Any]) -> None:
 async def create_dhcp_lease(context: dict[str, Any]) -> dict:
     """
     步骤 2：在 DHCP 服务器创建租约。
-    
+
     Phase 4 任务 30.1 填充真实逻辑。
     当前为占位实现，直接返回成功。
     """
@@ -65,7 +65,7 @@ async def rollback_dhcp_lease(context: dict[str, Any]) -> None:
 async def create_dns_record(context: dict[str, Any]) -> dict:
     """
     步骤 3：在 DNS 服务器创建解析记录。
-    
+
     Phase 4 任务 30.1 填充真实逻辑。
     """
     ip_address = context.get("ip_address")
@@ -83,7 +83,7 @@ async def rollback_dns_record(context: dict[str, Any]) -> None:
 async def update_firewall_policy(context: dict[str, Any]) -> dict:
     """
     步骤 4：更新防火墙地址组策略。
-    
+
     Phase 3 任务 24.3 填充真实逻辑。
     """
     ip_address = context.get("ip_address")
@@ -100,7 +100,7 @@ async def rollback_firewall_policy(context: dict[str, Any]) -> None:
 def create_ip_allocation_saga() -> SagaOrchestrator:
     """
     创建 IP 分配 Saga 事务实例。
-    
+
     使用示例：
     ```python
     saga = create_ip_allocation_saga()

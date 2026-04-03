@@ -4,7 +4,7 @@
 """
 import logging
 import traceback
-from fastapi import Request, status
+from fastapi import Request, HTTPException, status
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
@@ -18,7 +18,12 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
     """
     全局异常处理器
     捕获所有未处理的异常并返回统一格式的错误响应
+    注意：HTTPException 由 FastAPI 内置处理器处理，不会进入此处
     """
+    # 如果是 HTTPException，交给 FastAPI 内置处理器
+    if isinstance(exc, HTTPException):
+        raise exc
+
     # 记录完整的堆栈跟踪
     logger.error(
         f"Unhandled exception: {type(exc).__name__}: {str(exc)}\n"
@@ -26,7 +31,7 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
         f"Client: {request.client.host}\n"
         f"Traceback:\n{traceback.format_exc()}"
     )
-    
+
     # 返回统一格式错误响应（不暴露内部错误详情）
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -38,7 +43,7 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
 
 
 async def validation_exception_handler(
-    request: Request, 
+    request: Request,
     exc: RequestValidationError
 ) -> JSONResponse:
     """
@@ -50,7 +55,7 @@ async def validation_exception_handler(
         f"Client: {request.client.host}\n"
         f"Errors: {exc.errors()}"
     )
-    
+
     # 格式化验证错误
     errors = []
     for error in exc.errors():
@@ -60,7 +65,7 @@ async def validation_exception_handler(
             "message": error["msg"],
             "type": error["type"]
         })
-    
+
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content=APIResponse.error(
@@ -72,7 +77,7 @@ async def validation_exception_handler(
 
 
 async def database_exception_handler(
-    request: Request, 
+    request: Request,
     exc: SQLAlchemyError
 ) -> JSONResponse:
     """
@@ -85,7 +90,7 @@ async def database_exception_handler(
         f"Client: {request.client.host}\n"
         f"Traceback:\n{traceback.format_exc()}"
     )
-    
+
     # 检查是否是完整性约束错误
     if isinstance(exc, IntegrityError):
         return JSONResponse(
@@ -95,7 +100,7 @@ async def database_exception_handler(
                 message="数据约束冲突，可能存在重复数据或外键约束",
             )
         )
-    
+
     # 其他数据库错误
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -116,7 +121,7 @@ async def value_error_handler(request: Request, exc: ValueError) -> JSONResponse
         f"Path: {request.method} {request.url.path}\n"
         f"Client: {request.client.host}"
     )
-    
+
     return JSONResponse(
         status_code=status.HTTP_400_BAD_REQUEST,
         content=APIResponse.error(
@@ -126,16 +131,32 @@ async def value_error_handler(request: Request, exc: ValueError) -> JSONResponse
     )
 
 
+async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
+    """
+    HTTP 异常处理器
+    确保 HTTPException（如 401、403）正常返回给前端，
+    不会被全局 Exception 处理器拦截为 500 错误
+    """
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail},
+        headers=getattr(exc, "headers", None),
+    )
+
+
 def register_exception_handlers(app):
     """
     注册所有异常处理器到 FastAPI 应用
-    
+
     Args:
         app: FastAPI 应用实例
     """
+    # 注意：HTTPException 处理器必须在 Exception 之前注册，
+    # 确保 401/403 等认证错误不会被全局处理器吞掉
+    app.add_exception_handler(HTTPException, http_exception_handler)
     app.add_exception_handler(Exception, global_exception_handler)
     app.add_exception_handler(RequestValidationError, validation_exception_handler)
     app.add_exception_handler(SQLAlchemyError, database_exception_handler)
     app.add_exception_handler(ValueError, value_error_handler)
-    
+
     logger.info("Exception handlers registered")

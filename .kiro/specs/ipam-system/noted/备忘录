@@ -1,0 +1,1 @@
+注意：每次重启电脑后需要手动运行 python ipam/backend/scripts/ping_proxy.py 启动代理服务，否则扫描又会全部离线。

@@ -19,7 +19,7 @@ class DeviceBase(BaseModel):
     department: Optional[str] = Field(None, max_length=100, description="部门")
     location: Optional[str] = Field(None, max_length=200, description="物理位置")
     description: Optional[str] = Field(None, description="描述")
-    
+
     @validator('mac_address')
     def validate_mac(cls, v):
         """验证 MAC 地址格式"""
@@ -46,7 +46,7 @@ class DeviceUpdate(BaseModel):
     department: Optional[str] = Field(None, max_length=100, description="部门")
     location: Optional[str] = Field(None, max_length=200, description="物理位置")
     description: Optional[str] = Field(None, description="描述")
-    
+
     @validator('mac_address')
     def validate_mac(cls, v):
         """验证 MAC 地址格式"""
@@ -65,7 +65,7 @@ class DeviceResponse(DeviceBase):
     created_by: int = Field(..., description="创建人 ID")
     created_at: datetime = Field(..., description="创建时间")
     updated_at: datetime = Field(..., description="更新时间")
-    
+
     class Config:
         from_attributes = True
 
@@ -83,6 +83,6 @@ class DeviceListQuery(BaseModel):
 class DeviceWithIPsResponse(DeviceResponse):
     """设备及其关联 IP 的响应模式"""
     ip_addresses: list = Field(default=[], description="关联的 IP 地址列表")
-    
+
     class Config:
         from_attributes = True

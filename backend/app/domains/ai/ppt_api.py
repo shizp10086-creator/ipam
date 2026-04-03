@@ -1,7 +1,7 @@
 """
-PPT 生成引擎 API。
+PPT 生成引擎 API
 
-AI 自动采集数据 → 生成图表 → 撰写文案 → 输出 PPT。
+AI 自动采集数据 生成图表 撰写文案 输出 PPT
 """
 import logging
 from typing import Optional
@@ -26,14 +26,14 @@ class PPTGenerateRequest(BaseModel):
 @router.post("/generate", summary="AI 自动生成 PPT")
 async def generate_ppt(data: PPTGenerateRequest, db: Session = Depends(get_db)):
     """
-    AI 自动生成工作汇报 PPT。
-    当前为模拟实现，返回 PPT 结构数据。
+    AI 自动生成工作汇报 PPT
+    当前为模拟实现，返回 PPT 结构数据
     """
-    now = datetime.utcnow()
+    now = datetime.now()
     title = data.title or f"IT 部门{'月度' if data.report_type == 'monthly' else '季度' if data.report_type == 'quarterly' else '年度'}工作汇报"
 
     pages = [
-        {"type": "cover", "title": title, "subtitle": f"汇报日期: {now.strftime('%Y年%m月%d日')}"},
+        {"type": "cover", "title": title, "subtitle": f"汇报日期: {now.strftime('%Y-%m-%d')}"},
         {"type": "toc", "title": "目录", "items": ["核心成果", "IT 资源概览", "网络运维", "资产管理", "安全态势", "工单服务", "降本增效", "下月计划"]},
         {"type": "highlights", "title": "本月核心成果", "data": {
             "efficiency": "93.3%", "cost_saved": "¥9.5万", "risk_avoided": "¥1,260万"
@@ -42,7 +42,7 @@ async def generate_ppt(data: PPTGenerateRequest, db: Session = Depends(get_db)):
             "total_ips": 10000, "devices": 350, "terminals": 1200, "online_rate": "95.2%", "compliance_rate": "92.8%"
         }},
         {"type": "network_ops", "title": "网络运维工作", "data": {
-            "alerts_total": 156, "alerts_handled": 148, "mttd": "30秒", "mttr": "35分钟", "availability": "99.95%"
+            "alerts_total": 156, "alerts_handled": 148, "mttd": "30分钟", "mttr": "35分钟", "availability": "99.95%"
         }},
         {"type": "asset_mgmt", "title": "资产管理工作", "data": {
             "new_assets": 23, "retired": 8, "repairs": 5, "idle_recovered": 12, "total_value_change": "+¥15万"
@@ -90,7 +90,7 @@ async def list_ppt_templates():
 async def list_ppt_history():
     return APIResponse.success(data={
         "items": [
-            {"id": 1, "title": "2026年3月月度汇报", "type": "monthly", "pages": 11, "generated_at": "2026-04-01T09:00:00"},
+            {"id": 1, "title": "2026年4月月度汇报", "type": "monthly", "pages": 11, "generated_at": "2026-04-01T09:00:00"},
             {"id": 2, "title": "2026年Q1季度汇报", "type": "quarterly", "pages": 18, "generated_at": "2026-04-01T10:00:00"},
         ],
         "total": 2,

@@ -12,7 +12,7 @@ class IPAddressBase(BaseModel):
     """IP 地址基础模式"""
     ip_address: str = Field(..., description="IP 地址")
     status: str = Field(default="available", description="状态: available/used/reserved")
-    
+
     @validator('ip_address')
     def validate_ip(cls, v):
         """验证 IP 地址格式"""
@@ -21,7 +21,7 @@ class IPAddressBase(BaseModel):
         except ValueError:
             raise ValueError('Invalid IP address format')
         return v
-    
+
     @validator('status')
     def validate_status(cls, v):
         """验证状态值"""
@@ -41,7 +41,7 @@ class IPAddressUpdate(BaseModel):
     """更新 IP 地址的请求模式"""
     status: Optional[str] = Field(None, description="状态: available/used/reserved")
     device_id: Optional[int] = Field(None, description="关联设备 ID")
-    
+
     @validator('status')
     def validate_status(cls, v):
         """验证状态值"""
@@ -63,14 +63,14 @@ class IPAddressResponse(IPAddressBase):
     is_online: bool = Field(default=False, description="是否在线")
     created_at: datetime = Field(..., description="创建时间")
     updated_at: datetime = Field(..., description="更新时间")
-    
+
     # 关联对象
     segment: Optional[dict] = Field(None, description="所属网段信息")
     device: Optional[dict] = Field(None, description="关联设备信息")
-    
+
     class Config:
         from_attributes = True
-        
+
     @classmethod
     def from_orm(cls, obj):
         """从 ORM 对象创建响应"""
@@ -87,7 +87,7 @@ class IPAddressResponse(IPAddressBase):
             "created_at": obj.created_at,
             "updated_at": obj.updated_at,
         }
-        
+
         # 添加关联的网段信息
         if hasattr(obj, 'segment') and obj.segment:
             data["segment"] = {
@@ -97,7 +97,7 @@ class IPAddressResponse(IPAddressBase):
                 "prefix_length": obj.segment.prefix_length,
                 "gateway": obj.segment.gateway,
             }
-        
+
         # 添加关联的设备信息
         if hasattr(obj, 'device') and obj.device:
             data["device"] = {
@@ -111,7 +111,7 @@ class IPAddressResponse(IPAddressBase):
                 "department": obj.device.department,
                 "location": obj.device.location,
             }
-        
+
         return cls(**data)
 
 
@@ -120,7 +120,7 @@ class IPAllocateRequest(BaseModel):
     ip_address: str = Field(..., description="要分配的 IP 地址")
     device_id: int = Field(..., description="关联设备 ID")
     segment_id: Optional[int] = Field(None, description="所属网段 ID（可选，系统会自动查找）")
-    
+
     @validator('ip_address')
     def validate_ip(cls, v):
         """验证 IP 地址格式"""
@@ -135,7 +135,7 @@ class IPReleaseRequest(BaseModel):
     """IP 回收请求模式"""
     ip_address: Optional[str] = Field(None, description="要回收的 IP 地址")
     ip_id: Optional[int] = Field(None, description="要回收的 IP ID")
-    
+
     @validator('ip_address')
     def validate_ip(cls, v):
         """验证 IP 地址格式"""
@@ -145,7 +145,7 @@ class IPReleaseRequest(BaseModel):
             except ValueError:
                 raise ValueError('Invalid IP address format')
         return v
-    
+
     def __init__(self, **data):
         super().__init__(**data)
         # 确保至少提供一个标识符
@@ -158,7 +158,7 @@ class IPReserveRequest(BaseModel):
     ip_address: Optional[str] = Field(None, description="要保留的 IP 地址")
     ip_id: Optional[int] = Field(None, description="要保留的 IP ID")
     reserve: bool = Field(True, description="True=保留, False=取消保留")
-    
+
     @validator('ip_address')
     def validate_ip(cls, v):
         """验证 IP 地址格式"""
@@ -168,7 +168,7 @@ class IPReserveRequest(BaseModel):
             except ValueError:
                 raise ValueError('Invalid IP address format')
         return v
-    
+
     def __init__(self, **data):
         super().__init__(**data)
         # 确保至少提供一个标识符
@@ -180,7 +180,7 @@ class IPBatchUpdateStatusRequest(BaseModel):
     """批量更新 IP 状态请求模式"""
     ip_ids: list[int] = Field(..., description="IP 地址 ID 列表")
     status: str = Field(..., description="目标状态: available/used/reserved")
-    
+
     @validator('status')
     def validate_status(cls, v):
         """验证状态值"""
@@ -188,7 +188,7 @@ class IPBatchUpdateStatusRequest(BaseModel):
         if v not in valid_statuses:
             raise ValueError(f"Status must be one of: {', '.join(valid_statuses)}")
         return v
-    
+
     @validator('ip_ids')
     def validate_ip_ids(cls, v):
         """验证 IP ID 列表"""
@@ -204,7 +204,7 @@ class IPConflictCheckRequest(BaseModel):
     check_arp: bool = Field(False, description="是否执行 ARP 检测")
     ping_timeout: int = Field(2, ge=1, le=10, description="Ping 超时时间（秒）")
     arp_timeout: int = Field(2, ge=1, le=10, description="ARP 超时时间（秒）")
-    
+
     @validator('ip_address')
     def validate_ip(cls, v):
         """验证 IP 地址格式"""
@@ -231,7 +231,7 @@ class IPListQuery(BaseModel):
     is_online: Optional[bool] = Field(None, description="按在线状态筛选")
     page: int = Field(1, ge=1, description="页码")
     page_size: int = Field(20, ge=1, le=100, description="每页数量")
-    
+
     @validator('status')
     def validate_status(cls, v):
         """验证状态值"""
@@ -249,7 +249,7 @@ class IPScanRequest(BaseModel):
     scan_type: str = Field("ping", description="扫描类型: ping/arp")
     timeout: int = Field(2, ge=1, le=10, description="超时时间（秒）")
     max_concurrent: int = Field(50, ge=1, le=200, description="最大并发数")
-    
+
     @validator('scan_type')
     def validate_scan_type(cls, v):
         """验证扫描类型"""
@@ -288,10 +288,10 @@ class ScanHistoryResponse(BaseModel):
     duration: float = Field(..., description="扫描耗时（秒）")
     created_by: int = Field(..., description="发起人 ID")
     created_at: datetime = Field(..., description="扫描时间")
-    
+
     class Config:
         from_attributes = True
-    
+
     @classmethod
     def from_orm(cls, obj):
         """从 ORM 对象创建响应"""

@@ -1,5 +1,5 @@
 """
-工单与流程引擎 API。
+工单与流程引API
 """
 import logging
 import secrets
@@ -70,7 +70,7 @@ def list_tickets(
 
 @router.post("/tickets", status_code=201, summary="创建工单")
 def create_ticket(data: TicketCreate, db: Session = Depends(get_db)):
-    ticket_no = f"WO-{datetime.utcnow().strftime('%Y%m%d')}-{secrets.token_hex(3).upper()}"
+    ticket_no = f"WO-{datetime.now().strftime('%Y%m%d')}-{secrets.token_hex(3).upper()}"
     ticket = Ticket(
         tenant_id=1,
         ticket_no=ticket_no,
@@ -85,7 +85,7 @@ def create_ticket(data: TicketCreate, db: Session = Depends(get_db)):
         related_ip=data.related_ip,
         related_device_id=data.related_device_id,
         related_segment_id=data.related_segment_id,
-        submitted_at=datetime.utcnow(),
+        submitted_at=datetime.now(),
     )
     db.add(ticket)
     db.commit()
@@ -113,7 +113,7 @@ def approve_ticket(ticket_id: int, comment: str = "", db: Session = Depends(get_
     if not ticket:
         raise HTTPException(404, "工单不存在")
     ticket.status = "approved"
-    ticket.completed_at = datetime.utcnow()
+    ticket.completed_at = datetime.now()
     db.commit()
     return APIResponse.success(message="审批通过")
 
@@ -124,7 +124,7 @@ def reject_ticket(ticket_id: int, reason: str = "", db: Session = Depends(get_db
     if not ticket:
         raise HTTPException(404, "工单不存在")
     ticket.status = "rejected"
-    ticket.completed_at = datetime.utcnow()
+    ticket.completed_at = datetime.now()
     db.commit()
     return APIResponse.success(message="已驳回")
 

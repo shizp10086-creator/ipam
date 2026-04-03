@@ -133,7 +133,8 @@ const form = reactive({
   prefix_length: 24,
   gateway: '',
   usage_threshold: 80,
-  description: ''
+  description: '',
+  version: 1
 })
 
 // CIDR 格式验证函数
@@ -223,8 +224,10 @@ async function loadSegment() {
       network: segment.network,
       prefix_length: segment.prefix_length,
       gateway: segment.gateway || '',
-      usage_threshold: segment.usage_threshold || 80,
-      description: segment.description || ''
+      usage_threshold: segment.usage_threshold || segment.alert_threshold_warning || 80,
+      description: segment.description || '',
+      company: segment.company || '',
+      version: segment.version || 1
     })
   } catch (error) {
     ElMessage.error('加载网段信息失败')
@@ -242,17 +245,20 @@ async function handleSubmit() {
 
     const data = {
       name: form.name,
-      network: form.network,
-      prefix_length: form.prefix_length,
       gateway: form.gateway || null,
-      usage_threshold: form.usage_threshold,
-      description: form.description || null
+      description: form.description || null,
+      company: form.company || null,
     }
 
     if (isEdit.value) {
+      data.version = form.version || 1
+      data.alert_threshold_warning = form.usage_threshold || 80
       await networkApi.updateSegment(route.params.id, data)
       ElMessage.success('更新网段成功')
     } else {
+      data.network = form.network
+      data.prefix_length = form.prefix_length
+      data.usage_threshold = form.usage_threshold
       await networkApi.createSegment(data)
       ElMessage.success('创建网段成功')
     }

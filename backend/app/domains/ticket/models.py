@@ -1,10 +1,10 @@
 """
-工单与流程引擎域模型。
+工单与流程引擎域模型
 
-包含：
+包含
 - Ticket: 工单
-- WorkflowDefinition: 流程定义（审批流模板）
-- WorkflowInstance: 流程实例（运行中的审批流）
+- WorkflowDefinition: 流程定义（审批流模板
+- WorkflowInstance: 流程实例（运行中的审批流
 - WorkflowNode: 流程节点实例（每个审批节点的状态）
 """
 from datetime import datetime
@@ -35,11 +35,11 @@ class Ticket(Base):
         Enum("draft", "pending", "in_progress", "approved", "rejected", "completed", "cancelled"),
         default="draft", nullable=False, index=True,
     )
-    # 申请人
+    # 申请
     applicant_id = Column(BigInteger, nullable=False)
     applicant_name = Column(String(100))
     applicant_department = Column(String(200))
-    # 当前处理人
+    # 当前处理
     assignee_id = Column(BigInteger)
     assignee_name = Column(String(100))
     # 关联资源
@@ -57,36 +57,36 @@ class Ticket(Base):
     # 时间
     submitted_at = Column(DateTime)
     completed_at = Column(DateTime)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.now, nullable=False)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
     def __repr__(self):
         return f"<Ticket {self.ticket_no} [{self.status}]>"
 
 
 class WorkflowDefinition(Base):
-    """流程定义（审批流模板）"""
+    """流程定义（审批流模板"""
     __tablename__ = "workflow_definitions"
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     tenant_id = Column(BigInteger, default=1, nullable=False, index=True)
     name = Column(String(200), nullable=False)
     description = Column(Text)
-    trigger_type = Column(String(50), comment="触发类型: ip_apply/device_onboard 等")
-    # 流程定义 JSON（节点列表 + 连线 + 条件分支）
+    trigger_type = Column(String(50), comment="触发类型: ip_apply/device_onboard ")
+    # 流程定义 JSON（节点列+ 连线 + 条件分支
     definition_json = Column(JSON, nullable=False, comment="流程定义")
     version = Column(Integer, default=1)
     is_active = Column(Boolean, default=True)
     created_by = Column(BigInteger)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.now, nullable=False)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
     def __repr__(self):
         return f"<WorkflowDef {self.name} v{self.version}>"
 
 
 class WorkflowInstance(Base):
-    """流程实例（运行中的审批流）"""
+    """流程实例（运行中的审批流"""
     __tablename__ = "workflow_instances"
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
@@ -95,7 +95,7 @@ class WorkflowInstance(Base):
     status = Column(Enum("running", "completed", "rejected", "cancelled"), default="running")
     current_node_id = Column(String(100), comment="当前节点 ID")
     history = Column(JSON, default=list, comment="审批历史")
-    started_at = Column(DateTime, default=datetime.utcnow)
+    started_at = Column(DateTime, default=datetime.now)
     completed_at = Column(DateTime)
 
     def __repr__(self):

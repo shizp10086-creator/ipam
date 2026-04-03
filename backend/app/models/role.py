@@ -52,8 +52,8 @@ class Role(Base):
     valid_from = Column(DateTime, comment="权限生效时间")
     valid_until = Column(DateTime, comment="权限失效时间")
 
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=datetime.now, nullable=False)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=False)
 
     # 关系
     parent = relationship("Role", remote_side=[id], backref="children")
@@ -70,7 +70,7 @@ class Role(Base):
     def has_permission(self, permission: str) -> bool:
         """
         检查角色是否拥有指定权限。
-        
+
         支持通配符：
         - "segments.*" 匹配 segments 下所有权限
         - "*" 匹配所有权限（超级管理员）

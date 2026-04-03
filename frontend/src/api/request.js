@@ -53,9 +53,12 @@ request.interceptors.response.use(
       
       switch (status) {
         case 401:
-          ElMessage.error('登录已过期，请重新登录')
-          localStorage.removeItem('token')
-          router.push({ name: 'Login', query: { redirect: router.currentRoute.value.fullPath } })
+          // 登录接口的 401 不做重定向，让调用方自行处理
+          if (!error.config?.url?.includes('/auth/login')) {
+            ElMessage.error('登录已过期，请重新登录')
+            localStorage.removeItem('token')
+            router.push({ name: 'Login', query: { redirect: router.currentRoute.value.fullPath } })
+          }
           break
         case 403:
           ElMessage.error(translateError(data.message) || data.message || '没有权限访问此资源')

@@ -17,11 +17,11 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """
     Verify a plain password against a hashed password.
-    
+
     Args:
         plain_password: The plain text password
         hashed_password: The hashed password to verify against
-        
+
     Returns:
         bool: True if password matches, False otherwise
     """
@@ -31,10 +31,10 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 def get_password_hash(password: str) -> str:
     """
     Hash a password using bcrypt.
-    
+
     Args:
         password: The plain text password to hash
-        
+
     Returns:
         str: The hashed password
     """
@@ -44,25 +44,25 @@ def get_password_hash(password: str) -> str:
 def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta] = None) -> str:
     """
     Create a JWT access token.
-    
+
     Args:
         data: Dictionary containing user data (user_id, role, etc.)
         expires_delta: Optional custom expiration time
-        
+
     Returns:
         str: Encoded JWT token
     """
     to_encode = data.copy()
-    
+
     # Convert sub to string if it's an integer
     if "sub" in to_encode and isinstance(to_encode["sub"], int):
         to_encode["sub"] = str(to_encode["sub"])
-    
+
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.now() + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    
+        expire = datetime.now() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+
     to_encode.update({"exp": expire, "type": "access"})
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
@@ -71,25 +71,25 @@ def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta]
 def create_refresh_token(data: Dict[str, Any], expires_delta: Optional[timedelta] = None) -> str:
     """
     Create a JWT refresh token.
-    
+
     Args:
         data: Dictionary containing user data (user_id, role, etc.)
         expires_delta: Optional custom expiration time
-        
+
     Returns:
         str: Encoded JWT refresh token
     """
     to_encode = data.copy()
-    
+
     # Convert sub to string if it's an integer
     if "sub" in to_encode and isinstance(to_encode["sub"], int):
         to_encode["sub"] = str(to_encode["sub"])
-    
+
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.now() + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
-    
+        expire = datetime.now() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+
     to_encode.update({"exp": expire, "type": "refresh"})
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
@@ -98,21 +98,21 @@ def create_refresh_token(data: Dict[str, Any], expires_delta: Optional[timedelta
 def verify_token(token: str, token_type: str = "access") -> Optional[Dict[str, Any]]:
     """
     Verify and decode a JWT token.
-    
+
     Args:
         token: The JWT token to verify
         token_type: Expected token type ("access" or "refresh")
-        
+
     Returns:
         Optional[Dict[str, Any]]: Decoded token payload if valid, None otherwise
     """
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-        
+
         # Verify token type
         if payload.get("type") != token_type:
             return None
-        
+
         # JWT library handles expiration automatically, so if we get here, token is valid
         return payload
     except JWTError:

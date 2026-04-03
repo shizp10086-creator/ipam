@@ -306,11 +306,11 @@ async def allocate_ip_v2(
     db: Session = Depends(get_db),
 ):
     """
-    分配 IP 地址。
-    
+    分配 IP 地址
+
     支持两种模式：
     - 手动指定：提供 ip_address
-    - 自动分配：设置 auto_allocate=true，系统自动选择连续空闲 IP
+    - 自动分配：设auto_allocate=true，系统自动选择连续空闲 IP
     """
     from datetime import datetime, timedelta
 
@@ -319,7 +319,7 @@ async def allocate_ip_v2(
         raise HTTPException(404, "网段不存在")
 
     if data.auto_allocate and not data.ip_address:
-        # 自动分配：查找第一个空闲 IP
+        # 自动分配：查找第一个空IP
         ip_record = db.query(IPAddress).filter(
             IPAddress.segment_id == data.segment_id,
             IPAddress.status == "available",
@@ -351,14 +351,14 @@ async def allocate_ip_v2(
     ip_record.allocation_reason = data.reason
     ip_record.dns_name = data.dns_name
     ip_record.tags = data.tags or []
-    ip_record.allocated_at = datetime.utcnow()
+    ip_record.allocated_at = datetime.now()
 
     if data.is_temporary and data.temporary_hours:
-        ip_record.temporary_expires_at = datetime.utcnow() + timedelta(hours=data.temporary_hours)
+        ip_record.temporary_expires_at = datetime.now() + timedelta(hours=data.temporary_hours)
 
     ip_record.version += 1
 
-    # 更新网段使用率
+    # 更新网段使用
     if data.is_temporary:
         segment.temporary_ips = (segment.temporary_ips or 0) + 1
     else:
@@ -395,7 +395,7 @@ async def release_ip_v2(
     reason: Optional[str] = None,
     db: Session = Depends(get_db),
 ):
-    """回收 IP 地址，状态变为 available。"""
+    """回收 IP 地址，状态变available"""
     from datetime import datetime
 
     ip_record = db.query(IPAddress).filter(IPAddress.id == ip_id).first()
@@ -426,7 +426,7 @@ async def release_ip_v2(
     ip_record.reservation_reason = None
     ip_record.reservation_expires_at = None
     ip_record.temporary_expires_at = None
-    ip_record.released_at = datetime.utcnow()
+    ip_record.released_at = datetime.now()
     ip_record.version += 1
 
     log = IPLifecycleLog(
@@ -451,7 +451,7 @@ async def get_ip_history(
     limit: int = 50,
     db: Session = Depends(get_db),
 ):
-    """获取指定 IP 的完整使用历史。"""
+    """获取指定 IP 的完整使用历史"""
     logs = db.query(IPLifecycleLog).filter(
         IPLifecycleLog.ip_address_id == ip_id,
     ).order_by(IPLifecycleLog.created_at.desc()).offset(skip).limit(limit).all()
@@ -470,8 +470,8 @@ async def get_ip_matrix(
     db: Session = Depends(get_db),
 ):
     """
-    获取网段内所有 IP 的矩阵视图数据。
-    每个 IP 返回状态、关联设备、责任人等信息，用于前端网格展示。
+    获取网段内所IP 的矩阵视图数据
+    每个 IP 返回状态、关联设备、责任人等信息，用于前端网格展示
     """
     ips = db.query(IPAddress).filter(
         IPAddress.segment_id == segment_id,

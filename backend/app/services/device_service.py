@@ -16,7 +16,7 @@ from app.utils.device_utils import (
 
 class DeviceService:
     """设备管理服务"""
-    
+
     @staticmethod
     def create_device(
         db: Session,
@@ -33,7 +33,7 @@ class DeviceService:
     ) -> Tuple[bool, str, Optional[Device]]:
         """
         创建设备
-        
+
         Args:
             db: 数据库会话
             name: 设备名称
@@ -46,7 +46,7 @@ class DeviceService:
             location: 物理位置
             description: 描述
             created_by: 创建人 ID
-            
+
         Returns:
             (success, message, device): 操作结果、消息和设备对象
         """
@@ -54,14 +54,14 @@ class DeviceService:
         is_valid, error = validate_mac_address(mac_address)
         if not is_valid:
             return False, error, None
-        
+
         # 标准化 MAC 地址
         mac_address = normalize_mac_address(mac_address)
-        
+
         # 检查 MAC 地址是否已存在
         if check_mac_address_exists(db, mac_address):
             return False, f"Device with MAC address {mac_address} already exists", None
-        
+
         # 创建设备
         device = Device(
             name=name,
@@ -75,7 +75,7 @@ class DeviceService:
             description=description,
             created_by=created_by
         )
-        
+
         try:
             db.add(device)
             db.commit()
@@ -84,7 +84,7 @@ class DeviceService:
         except Exception as e:
             db.rollback()
             return False, f"Failed to create device: {str(e)}", None
-    
+
     @staticmethod
     def update_device(
         db: Session,
@@ -101,7 +101,7 @@ class DeviceService:
     ) -> Tuple[bool, str, Optional[Device]]:
         """
         更新设备信息
-        
+
         Args:
             db: 数据库会话
             device_id: 设备 ID
@@ -114,7 +114,7 @@ class DeviceService:
             department: 部门
             location: 物理位置
             description: 描述
-            
+
         Returns:
             (success, message, device): 操作结果、消息和设备对象
         """
@@ -122,22 +122,22 @@ class DeviceService:
         device = get_device_by_id(db, device_id)
         if not device:
             return False, "Device not found", None
-        
+
         # 如果更新 MAC 地址，需要验证
         if mac_address is not None:
             is_valid, error = validate_mac_address(mac_address)
             if not is_valid:
                 return False, error, None
-            
+
             # 标准化 MAC 地址
             mac_address = normalize_mac_address(mac_address)
-            
+
             # 检查 MAC 地址是否已被其他设备使用
             if check_mac_address_exists(db, mac_address, exclude_device_id=device_id):
                 return False, f"Device with MAC address {mac_address} already exists", None
-            
+
             device.mac_address = mac_address
-        
+
         # 更新其他字段
         if name is not None:
             device.name = name
@@ -155,7 +155,7 @@ class DeviceService:
             device.location = location
         if description is not None:
             device.description = description
-        
+
         try:
             db.commit()
             db.refresh(device)
@@ -163,7 +163,7 @@ class DeviceService:
         except Exception as e:
             db.rollback()
             return False, f"Failed to update device: {str(e)}", None
-    
+
     @staticmethod
     def delete_device(
         db: Session,
@@ -171,11 +171,11 @@ class DeviceService:
     ) -> Tuple[bool, str]:
         """
         删除设备（自动回收关联的 IP 地址）
-        
+
         Args:
             db: 数据库会话
             device_id: 设备 ID
-            
+
         Returns:
             (success, message): 操作结果和消息
         """
@@ -183,28 +183,28 @@ class DeviceService:
         device = get_device_by_id(db, device_id)
         if not device:
             return False, "Device not found"
-        
+
         try:
             # 回收所有关联的 IP 地址
             associated_ips = db.query(IPAddress).filter(
                 IPAddress.device_id == device_id
             ).all()
-            
+
             for ip in associated_ips:
                 ip.status = "available"
                 ip.device_id = None
                 ip.allocated_by = None
                 ip.allocated_at = None
-            
+
             # 删除设备
             db.delete(device)
             db.commit()
-            
+
             return True, f"Device deleted successfully. {len(associated_ips)} IP(s) released."
         except Exception as e:
             db.rollback()
             return False, f"Failed to delete device: {str(e)}"
-    
+
     @staticmethod
     def get_device_ips(
         db: Session,
@@ -212,11 +212,11 @@ class DeviceService:
     ) -> Tuple[bool, str, Optional[List[IPAddress]]]:
         """
         获取设备关联的所有 IP 地址
-        
+
         Args:
             db: 数据库会话
             device_id: 设备 ID
-            
+
         Returns:
             (success, message, ips): 操作结果、消息和 IP 地址列表
         """
@@ -224,10 +224,10 @@ class DeviceService:
         device = get_device_by_id(db, device_id)
         if not device:
             return False, "Device not found", None
-        
+
         # 查询关联的 IP 地址
         ips = db.query(IPAddress).filter(
             IPAddress.device_id == device_id
         ).all()
-        
+
         return True, "Success", ips

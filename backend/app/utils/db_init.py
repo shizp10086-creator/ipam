@@ -31,19 +31,19 @@ def run_migrations():
     """
     try:
         logger.info("Running database migrations...")
-        
+
         # Import all models to register them with Base
         from app.models import User, NetworkSegment, IPAddress, Device, OperationLog, Alert, ScanHistory
         from app.core.database import Base, engine
         from sqlalchemy import text, inspect
-        
+
         # Create all tables that don't exist yet (safe - won't drop existing tables)
         Base.metadata.create_all(bind=engine)
-        
+
         # Handle column additions for existing tables (schema migrations)
         with engine.connect() as conn:
             inspector = inspect(engine)
-            
+
             # Add 'company' column to network_segments if not exists
             existing_cols = [c['name'] for c in inspector.get_columns('network_segments')]
             if 'company' not in existing_cols:
@@ -53,10 +53,10 @@ def run_migrations():
                 ))
                 conn.commit()
                 logger.info("Column 'company' added successfully")
-        
+
         logger.info("Database migrations completed successfully")
         return True
-        
+
     except Exception as e:
         logger.error(f"Error running database migrations: {e}")
         logger.exception(e)
@@ -66,24 +66,24 @@ def run_migrations():
 def create_default_admin(db: Session) -> bool:
     """
     Create the default admin user if it doesn't exist.
-    
+
     Args:
         db: Database session
-        
+
     Returns:
         bool: True if admin was created or already exists, False on error
     """
     try:
         # Check if admin user already exists
         admin = db.query(User).filter(User.username == settings.DEFAULT_ADMIN_USERNAME).first()
-        
+
         if admin:
             logger.info(f"Default admin user '{settings.DEFAULT_ADMIN_USERNAME}' already exists")
             return True
-        
+
         # Create admin user
         logger.info(f"Creating default admin user: {settings.DEFAULT_ADMIN_USERNAME}")
-        
+
         admin = User(
             username=settings.DEFAULT_ADMIN_USERNAME,
             hashed_password=get_password_hash(settings.DEFAULT_ADMIN_PASSWORD),
@@ -92,17 +92,17 @@ def create_default_admin(db: Session) -> bool:
             role="admin",
             is_active=True
         )
-        
+
         db.add(admin)
         db.commit()
         db.refresh(admin)
-        
+
         logger.info(f"Default admin user created successfully: {settings.DEFAULT_ADMIN_USERNAME}")
         logger.info(f"Default admin password: {settings.DEFAULT_ADMIN_PASSWORD}")
         logger.warning("IMPORTANT: Please change the default admin password after first login!")
-        
+
         return True
-        
+
     except Exception as e:
         logger.error(f"Error creating default admin user: {e}")
         logger.exception(e)
@@ -113,21 +113,21 @@ def create_default_admin(db: Session) -> bool:
 def initialize_database():
     """
     Initialize the database on first startup.
-    
+
     This function:
     1. Runs Alembic migrations to create/update schema
     2. Creates default admin user if needed
-    
+
     Returns:
         bool: True if initialization succeeded, False otherwise
     """
     logger.info("Starting database initialization...")
-    
+
     # Step 1: Run migrations
     if not run_migrations():
         logger.error("Database migration failed")
         return False
-    
+
     # Step 2: Create default admin user
     db = SessionLocal()
     try:
@@ -136,7 +136,7 @@ def initialize_database():
             return False
     finally:
         db.close()
-    
+
     logger.info("Database initialization completed successfully")
     return True
 
@@ -144,7 +144,7 @@ def initialize_database():
 def check_database_connection():
     """
     Check if database connection is working.
-    
+
     Returns:
         bool: True if connection is successful, False otherwise
     """
@@ -166,12 +166,12 @@ if __name__ == "__main__":
         level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
-    
+
     # Check database connection first
     if not check_database_connection():
         print("ERROR: Cannot connect to database. Please check your database configuration.")
         sys.exit(1)
-    
+
     # Initialize database
     if initialize_database():
         print("✓ Database initialized successfully!")

@@ -1,9 +1,9 @@
 """
-数据采集域模型。
+数据采集域模型
 
-包含：
-- CollectorCredential: 采集凭证（SNMP 社区字符串/SSH 密码/密钥等，AES-256 加密存储）
-- CollectorTask: 采集任务定义（协议/目标/周期/状态）
+包含
+- CollectorCredential: 采集凭证（SNMP 社区字符SSH 密码/密钥等，AES-256 加密存储
+- CollectorTask: 采集任务定义（协目标/周期/状态）
 - CollectorTaskLog: 采集任务执行日志
 """
 from datetime import datetime
@@ -26,15 +26,15 @@ class CollectorCredential(Base):
         Enum("snmp_v2c", "snmp_v3", "ssh_password", "ssh_key", "wmi", "api_key"),
         nullable=False, comment="凭证类型",
     )
-    # 加密存储的凭证数据
-    credential_data = Column(JSON, nullable=False, comment="凭证数据（敏感字段 AES 加密）")
+    # 加密存储的凭证数
+    credential_data = Column(JSON, nullable=False, comment="凭证数据（敏感字AES 加密")
     # 示例:
     # snmp_v2c: {"community": "encrypted:xxx"}
     # ssh_password: {"username": "admin", "password": "encrypted:xxx"}
     # snmp_v3: {"username": "...", "auth_protocol": "SHA", "auth_password": "encrypted:...", "priv_protocol": "AES", "priv_password": "encrypted:..."}
     description = Column(Text)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.now, nullable=False)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
     def __repr__(self):
         return f"<Credential [{self.credential_type}] {self.name}>"
@@ -52,24 +52,24 @@ class CollectorTask(Base):
         nullable=False, index=True, comment="采集协议",
     )
     # 采集目标
-    targets = Column(JSON, nullable=False, comment="采集目标列表（IP/网段）")
+    targets = Column(JSON, nullable=False, comment="采集目标列表（IP/网段")
     credential_id = Column(BigInteger, comment="关联凭证 ID")
     # 采集配置
     config = Column(JSON, default=dict, comment="采集配置（OID 列表/命令/端口等）")
-    interval_seconds = Column(Integer, default=300, comment="采集间隔（秒）")
-    timeout_seconds = Column(Integer, default=30, comment="超时时间（秒）")
+    interval_seconds = Column(Integer, default=300, comment="采集间隔（秒")
+    timeout_seconds = Column(Integer, default=30, comment="超时时间（秒")
     retry_count = Column(Integer, default=2, comment="重试次数")
-    priority = Column(Integer, default=5, comment="优先级（1-10）")
-    # 状态
+    priority = Column(Integer, default=5, comment="优先级（1-10")
+    # 状
     is_active = Column(Boolean, default=True, comment="是否启用")
-    last_run_at = Column(DateTime, comment="最后执行时间")
-    last_run_status = Column(String(20), comment="最后执行状态")
+    last_run_at = Column(DateTime, comment="最后执行时")
+    last_run_status = Column(String(20), comment="最后执行状")
     last_run_duration_ms = Column(Integer, comment="最后执行耗时（毫秒）")
-    total_runs = Column(Integer, default=0, comment="总执行次数")
+    total_runs = Column(Integer, default=0, comment="总执行次")
     success_runs = Column(Integer, default=0, comment="成功次数")
     fail_runs = Column(Integer, default=0, comment="失败次数")
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.now, nullable=False)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
     @property
     def success_rate(self):
@@ -94,7 +94,7 @@ class CollectorTaskLog(Base):
     duration_ms = Column(Integer, comment="执行耗时（毫秒）")
     error_message = Column(Text, comment="错误信息")
     details = Column(JSON, comment="执行详情")
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    created_at = Column(DateTime, default=datetime.now, nullable=False, index=True)
 
     def __repr__(self):
         return f"<TaskLog task={self.task_id} [{self.status}]>"
